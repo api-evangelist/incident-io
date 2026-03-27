@@ -1,0 +1,33 @@
+aid: incident-io
+name: incident.io
+description: >-
+  incident.io is an incident management platform that helps teams declare, manage, and learn from incidents.
+type: Index
+image: https://kinlane-productions.s3.amazonaws.com/apis-json/apis-json-logo.jpg
+tags:
+  - AIOps
+  - Incident Management
+url: >-
+  https://raw.githubusercontent.com/api-evangelist/incident-io/refs/heads/main/apis.yml
+created: '2026-03-27'
+modified: '2026-03-27'
+specificationVersion: '0.19'
+apis:
+  - aid: incident-io:incident-io
+    name: incident.io
+    description: >-
+      incident.io is an incident management platform that helps teams declare, manage, and learn from incidents.
+    humanURL: https://incident.io
+    tags:
+      - AIOps
+    properties:
+      - type: Documentation
+        url: https://api-docs.incident.io
+common:
+  - type: Website
+    url: https://incident.io
+  - type: Documentation
+    url: https://api-docs.incident.io
+maintainers:
+  - FN: Kin Lane
+    email: kin@apievangelist.com
