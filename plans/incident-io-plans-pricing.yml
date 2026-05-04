@@ -1,0 +1,162 @@
+specification: API Commons Plans
+specificationVersion: '0.1'
+schema: https://raw.githubusercontent.com/api-evangelist/interface-research/main/schema/api-commons.yml#/$defs/Plans
+provider: incident.io
+providerId: incident-io
+created: '2026-05-04'
+modified: '2026-05-04'
+reconciled: true
+tags:
+  - Incident Response
+  - On-Call
+description: 'incident.io tiers: Basic (free) / Team / Pro / Enterprise + On-call only add-on.'
+sources:
+  - https://incident.io/pricing
+plans:
+  - id: incident-basic
+    name: Basic
+    type: freemium
+    description: Free Slack/Teams-native incident response.
+    entries:
+      - label: Per user
+        name: user
+        type: subscription
+        metric: month
+        limit: -1
+        timeFrame: month
+        geo: global
+        unit: 1
+        price: '0.00'
+        userMultiplied: false
+    elements:
+      - name: Slack/MS Teams native
+      - name: Single team on-call
+      - name: Status page
+      - name: 1 custom field
+      - name: 1 workflow
+      - name: 2 integrations
+      - name: 1 on-call schedule
+  - id: incident-team
+    name: Team
+    type: paid
+    description: $15/user/mo annual ($19 monthly); +$10/user for on-call.
+    entries:
+      - label: Per user (annual)
+        name: seat
+        type: subscription
+        metric: user
+        limit: -1
+        timeFrame: month
+        geo: global
+        unit: 1
+        price: '15.00'
+        userMultiplied: true
+      - label: Per user (monthly)
+        name: seat
+        type: subscription
+        metric: user
+        limit: -1
+        timeFrame: month
+        geo: global
+        unit: 1
+        price: '19.00'
+        userMultiplied: true
+      - label: On-call add-on
+        name: seat
+        type: subscription
+        metric: user
+        limit: -1
+        timeFrame: month
+        geo: global
+        unit: 1
+        price: '10.00'
+        userMultiplied: true
+    elements:
+      - name: Multi-team on-call
+      - name: AI suggestions + automation
+      - name: Basic post-mortems
+      - name: 3 workflows
+      - name: Unlimited integrations
+      - name: 2 on-call schedules
+      - name: Heartbeats
+      - name: API + webhooks
+  - id: incident-pro
+    name: Pro
+    type: paid
+    description: $25/user/mo; +$20/user for on-call.
+    entries:
+      - label: Per user
+        name: seat
+        type: subscription
+        metric: user
+        limit: -1
+        timeFrame: month
+        geo: global
+        unit: 1
+        price: '25.00'
+        userMultiplied: true
+      - label: On-call add-on
+        name: seat
+        type: subscription
+        metric: user
+        limit: -1
+        timeFrame: month
+        geo: global
+        unit: 1
+        price: '20.00'
+        userMultiplied: true
+    elements:
+      - name: Unlimited custom fields
+      - name: AI Scribe + chat agent
+      - name: Advanced insights, 3 dashboards
+      - name: Multiple post-mortems
+      - name: Custom incident types
+      - name: Unlimited workflows
+      - name: Live call routing
+      - name: Private incidents
+      - name: SSO + SAML
+  - id: incident-enterprise
+    name: Enterprise
+    type: enterprise
+    description: Custom pricing.
+    entries:
+      - label: Per user (custom)
+        name: seat
+        type: subscription
+        metric: user
+        limit: -1
+        timeFrame: month
+        geo: global
+        unit: 1
+        price: custom
+        userMultiplied: true
+    elements:
+      - name: AI-native post-mortems
+      - name: Unlimited dashboards + status pages
+      - name: Sandbox environment
+      - name: 5 live call routing numbers
+      - name: Custom RBAC
+      - name: Audit logs
+      - name: Slack Enterprise Grid
+      - name: Designated CSM
+      - name: Live phone support
+  - id: incident-oncall-only
+    name: On-Call Only
+    type: paid
+    description: $20/user/mo standalone on-call.
+    entries:
+      - label: Per user
+        name: seat
+        type: subscription
+        metric: user
+        limit: -1
+        timeFrame: month
+        geo: global
+        unit: 1
+        price: '20.00'
+        userMultiplied: true
+    elements:
+      - name: Alert routing/grouping
+      - name: Flexible schedules + shadow rotations
+      - name: Holiday calendars
+      - name: Cover requests + overrides

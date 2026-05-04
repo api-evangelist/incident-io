@@ -1,0 +1,33 @@
+specification: API Commons Rate Limits
+specificationVersion: '0.1'
+schema: https://raw.githubusercontent.com/api-evangelist/interface-research/main/schema/api-commons.yml#/$defs/RateLimits
+provider: incident.io
+providerId: incident-io
+created: '2026-05-04'
+modified: '2026-05-04'
+reconciled: true
+tags:
+  - Rate Limiting
+  - Incident Response
+description: incident.io REST API rate limits per organization.
+sources:
+  - https://incident.io/pricing
+  - https://api-docs.incident.io/
+headers:
+  retryAfter: Retry-After
+responseCodes:
+  throttled: 429
+limits:
+  - name: REST API (default)
+    scope: org
+    metric: requests_per_minute
+    limit: 600
+    timeFrame: minute
+  - name: Webhook deliveries
+    scope: endpoint
+    metric: concurrent
+    limit: high
+  - name: Alert ingest
+    scope: source
+    metric: alerts_per_minute
+    limit: scales with tier

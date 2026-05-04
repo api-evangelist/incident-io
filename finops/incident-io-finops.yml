@@ -1,0 +1,57 @@
+specification: FinOps Framework
+specificationVersion: '1.0'
+schema: https://www.finops.org/framework/
+provider: incident.io
+providerId: incident-io
+created: '2026-05-04'
+modified: '2026-05-04'
+reconciled: true
+tags:
+  - FinOps
+  - FOCUS
+  - Incident Response
+description: FOCUS-aligned FinOps for incident.io.
+sources:
+  - https://incident.io/pricing
+alignedWith:
+  framework: FinOps Foundation Framework
+  frameworkUrl: https://www.finops.org/framework/
+  dataSpec: FOCUS
+  dataSpecVersion: '1.3'
+  dataSpecUrl: https://focus.finops.org/focus-specification/v1-3/
+publisherName: incident.io
+serviceCategory: Incident Response
+billingModel:
+  pricingCategory: Per-User Subscription + On-Call Add-On
+  billingFrequency: Monthly
+  billingCurrency: USD
+focusColumns:
+  ServiceName: incident.io
+  ServiceCategory: Incident Response
+  ProviderName: incident.io
+  PublisherName: incident.io
+  BillingCurrency: USD
+meters:
+  - name: user_seats
+    unit: seat-month
+    aggregation: max
+    dimensions:
+      - plan
+  - name: oncall_seats
+    unit: seat-month
+    aggregation: max
+  - name: incidents
+    unit: incident
+    aggregation: sum
+  - name: live_call_routing_numbers
+    unit: number-month
+    aggregation: max
+principles:
+  - name: Visibility
+    description: Track incident.io consumption monthly.
+  - name: Allocation
+    description: Tag usage to teams/cost centers.
+  - name: Optimization
+    description: Right-size; reclaim unused entitlements.
+  - name: Accountability
+    description: Set spend alerts; quarterly review.
