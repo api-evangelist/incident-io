@@ -22,6 +22,8 @@ apis:
     properties:
       - type: Documentation
         url: https://api-docs.incident.io
+      - url: openapi/incident-io-openapi.yml
+        type: OpenAPI
 common:
   - type: Website
     url: https://incident.io
