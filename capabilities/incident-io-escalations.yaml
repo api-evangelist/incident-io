@@ -1,0 +1,137 @@
+naftiko: 1.0.0-alpha2
+info:
+  label: Incident.io API — Escalations
+  description: 'Incident.io API — Escalations. 3 operations. Lead operation: Escalations. Self-contained Naftiko capability
+    covering one Incident Io business surface.'
+  tags:
+  - Incident Io
+  - Escalations
+  created: '2026-05-19'
+  modified: '2026-05-19'
+binds:
+- namespace: env
+  keys:
+    INCIDENT_IO_API_KEY: INCIDENT_IO_API_KEY
+capability:
+  consumes:
+  - type: http
+    namespace: incident-io-escalations
+    baseUri: https://api.incident.io/v2
+    description: Incident.io API — Escalations business capability. Self-contained, no shared references.
+    resources:
+    - name: escalations
+      path: /escalations
+      operations:
+      - name: listescalations
+        method: GET
+        description: ''
+        outputRawFormat: json
+        outputParameters:
+        - name: result
+          type: object
+          value: $.
+      - name: createescalation
+        method: POST
+        description: ''
+        outputRawFormat: json
+        outputParameters:
+        - name: result
+          type: object
+          value: $.
+        inputParameters:
+        - name: body
+          in: body
+          type: object
+          description: Request body (JSON).
+          required: true
+    - name: escalations-id
+      path: /escalations/{id}
+      operations:
+      - name: getescalation
+        method: GET
+        description: ''
+        outputRawFormat: json
+        outputParameters:
+        - name: result
+          type: object
+          value: $.
+    authentication:
+      type: bearer
+      token: '{{env.INCIDENT_IO_API_KEY}}'
+  exposes:
+  - type: rest
+    namespace: incident-io-escalations-rest
+    port: 8080
+    description: REST adapter for Incident.io API — Escalations. One Spectral-compliant resource per consumed operation, prefixed
+      with /v1.
+    resources:
+    - path: /v1/escalations
+      name: escalations
+      description: REST surface for escalations.
+      operations:
+      - method: GET
+        name: listescalations
+        description: listescalations
+        call: incident-io-escalations.listescalations
+        outputParameters:
+        - type: object
+          mapping: $.
+      - method: POST
+        name: createescalation
+        description: createescalation
+        call: incident-io-escalations.createescalation
+        with:
+          body: rest.body
+        outputParameters:
+        - type: object
+          mapping: $.
+    - path: /v1/escalations/{id}
+      name: escalations-id
+      description: REST surface for escalations-id.
+      operations:
+      - method: GET
+        name: getescalation
+        description: getescalation
+        call: incident-io-escalations.getescalation
+        outputParameters:
+        - type: object
+          mapping: $.
+  - type: mcp
+    namespace: incident-io-escalations-mcp
+    port: 9090
+    transport: http
+    description: MCP adapter for Incident.io API — Escalations. One tool per consumed operation, routed inline through this
+      capability's consumes block.
+    tools:
+    - name: listescalations
+      description: listescalations
+      hints:
+        readOnly: true
+        destructive: false
+        idempotent: true
+      call: incident-io-escalations.listescalations
+      outputParameters:
+      - type: object
+        mapping: $.
+    - name: createescalation
+      description: createescalation
+      hints:
+        readOnly: false
+        destructive: false
+        idempotent: false
+      call: incident-io-escalations.createescalation
+      with:
+        body: tools.body
+      outputParameters:
+      - type: object
+        mapping: $.
+    - name: getescalation
+      description: getescalation
+      hints:
+        readOnly: true
+        destructive: false
+        idempotent: true
+      call: incident-io-escalations.getescalation
+      outputParameters:
+      - type: object
+        mapping: $.

@@ -1,0 +1,197 @@
+naftiko: 1.0.0-alpha2
+info:
+  label: Incident.io API — Custom Fields
+  description: 'Incident.io API — Custom Fields. 5 operations. Lead operation: Custom Fields. Self-contained Naftiko capability
+    covering one Incident Io business surface.'
+  tags:
+  - Incident Io
+  - Custom Fields
+  created: '2026-05-19'
+  modified: '2026-05-19'
+binds:
+- namespace: env
+  keys:
+    INCIDENT_IO_API_KEY: INCIDENT_IO_API_KEY
+capability:
+  consumes:
+  - type: http
+    namespace: incident-io-custom-fields
+    baseUri: https://api.incident.io/v2
+    description: Incident.io API — Custom Fields business capability. Self-contained, no shared references.
+    resources:
+    - name: custom-fields
+      path: /custom-fields
+      operations:
+      - name: listcustomfields
+        method: GET
+        description: ''
+        outputRawFormat: json
+        outputParameters:
+        - name: result
+          type: object
+          value: $.
+      - name: createcustomfield
+        method: POST
+        description: ''
+        outputRawFormat: json
+        outputParameters:
+        - name: result
+          type: object
+          value: $.
+        inputParameters:
+        - name: body
+          in: body
+          type: object
+          description: Request body (JSON).
+          required: true
+    - name: custom-fields-id
+      path: /custom-fields/{id}
+      operations:
+      - name: getcustomfield
+        method: GET
+        description: ''
+        outputRawFormat: json
+        outputParameters:
+        - name: result
+          type: object
+          value: $.
+      - name: updatecustomfield
+        method: PUT
+        description: ''
+        outputRawFormat: json
+        outputParameters:
+        - name: result
+          type: object
+          value: $.
+        inputParameters:
+        - name: body
+          in: body
+          type: object
+          description: Request body (JSON).
+          required: true
+      - name: deletecustomfield
+        method: DELETE
+        description: ''
+        outputRawFormat: json
+        outputParameters:
+        - name: result
+          type: object
+          value: $.
+    authentication:
+      type: bearer
+      token: '{{env.INCIDENT_IO_API_KEY}}'
+  exposes:
+  - type: rest
+    namespace: incident-io-custom-fields-rest
+    port: 8080
+    description: REST adapter for Incident.io API — Custom Fields. One Spectral-compliant resource per consumed operation,
+      prefixed with /v1.
+    resources:
+    - path: /v1/custom-fields
+      name: custom-fields
+      description: REST surface for custom-fields.
+      operations:
+      - method: GET
+        name: listcustomfields
+        description: listcustomfields
+        call: incident-io-custom-fields.listcustomfields
+        outputParameters:
+        - type: object
+          mapping: $.
+      - method: POST
+        name: createcustomfield
+        description: createcustomfield
+        call: incident-io-custom-fields.createcustomfield
+        with:
+          body: rest.body
+        outputParameters:
+        - type: object
+          mapping: $.
+    - path: /v1/custom-fields/{id}
+      name: custom-fields-id
+      description: REST surface for custom-fields-id.
+      operations:
+      - method: GET
+        name: getcustomfield
+        description: getcustomfield
+        call: incident-io-custom-fields.getcustomfield
+        outputParameters:
+        - type: object
+          mapping: $.
+      - method: PUT
+        name: updatecustomfield
+        description: updatecustomfield
+        call: incident-io-custom-fields.updatecustomfield
+        with:
+          body: rest.body
+        outputParameters:
+        - type: object
+          mapping: $.
+      - method: DELETE
+        name: deletecustomfield
+        description: deletecustomfield
+        call: incident-io-custom-fields.deletecustomfield
+        outputParameters:
+        - type: object
+          mapping: $.
+  - type: mcp
+    namespace: incident-io-custom-fields-mcp
+    port: 9090
+    transport: http
+    description: MCP adapter for Incident.io API — Custom Fields. One tool per consumed operation, routed inline through this
+      capability's consumes block.
+    tools:
+    - name: listcustomfields
+      description: listcustomfields
+      hints:
+        readOnly: true
+        destructive: false
+        idempotent: true
+      call: incident-io-custom-fields.listcustomfields
+      outputParameters:
+      - type: object
+        mapping: $.
+    - name: createcustomfield
+      description: createcustomfield
+      hints:
+        readOnly: false
+        destructive: false
+        idempotent: false
+      call: incident-io-custom-fields.createcustomfield
+      with:
+        body: tools.body
+      outputParameters:
+      - type: object
+        mapping: $.
+    - name: getcustomfield
+      description: getcustomfield
+      hints:
+        readOnly: true
+        destructive: false
+        idempotent: true
+      call: incident-io-custom-fields.getcustomfield
+      outputParameters:
+      - type: object
+        mapping: $.
+    - name: updatecustomfield
+      description: updatecustomfield
+      hints:
+        readOnly: false
+        destructive: false
+        idempotent: true
+      call: incident-io-custom-fields.updatecustomfield
+      with:
+        body: tools.body
+      outputParameters:
+      - type: object
+        mapping: $.
+    - name: deletecustomfield
+      description: deletecustomfield
+      hints:
+        readOnly: false
+        destructive: true
+        idempotent: true
+      call: incident-io-custom-fields.deletecustomfield
+      outputParameters:
+      - type: object
+        mapping: $.

@@ -1,0 +1,197 @@
+naftiko: 1.0.0-alpha2
+info:
+  label: Incident.io API — Incident Roles
+  description: 'Incident.io API — Incident Roles. 5 operations. Lead operation: Incident Roles. Self-contained Naftiko capability
+    covering one Incident Io business surface.'
+  tags:
+  - Incident Io
+  - Incident Roles
+  created: '2026-05-19'
+  modified: '2026-05-19'
+binds:
+- namespace: env
+  keys:
+    INCIDENT_IO_API_KEY: INCIDENT_IO_API_KEY
+capability:
+  consumes:
+  - type: http
+    namespace: incident-io-incident-roles
+    baseUri: https://api.incident.io/v2
+    description: Incident.io API — Incident Roles business capability. Self-contained, no shared references.
+    resources:
+    - name: incident-roles
+      path: /incident-roles
+      operations:
+      - name: listincidentroles
+        method: GET
+        description: ''
+        outputRawFormat: json
+        outputParameters:
+        - name: result
+          type: object
+          value: $.
+      - name: createincidentrole
+        method: POST
+        description: ''
+        outputRawFormat: json
+        outputParameters:
+        - name: result
+          type: object
+          value: $.
+        inputParameters:
+        - name: body
+          in: body
+          type: object
+          description: Request body (JSON).
+          required: true
+    - name: incident-roles-id
+      path: /incident-roles/{id}
+      operations:
+      - name: getincidentrole
+        method: GET
+        description: ''
+        outputRawFormat: json
+        outputParameters:
+        - name: result
+          type: object
+          value: $.
+      - name: updateincidentrole
+        method: PUT
+        description: ''
+        outputRawFormat: json
+        outputParameters:
+        - name: result
+          type: object
+          value: $.
+        inputParameters:
+        - name: body
+          in: body
+          type: object
+          description: Request body (JSON).
+          required: true
+      - name: deleteincidentrole
+        method: DELETE
+        description: ''
+        outputRawFormat: json
+        outputParameters:
+        - name: result
+          type: object
+          value: $.
+    authentication:
+      type: bearer
+      token: '{{env.INCIDENT_IO_API_KEY}}'
+  exposes:
+  - type: rest
+    namespace: incident-io-incident-roles-rest
+    port: 8080
+    description: REST adapter for Incident.io API — Incident Roles. One Spectral-compliant resource per consumed operation,
+      prefixed with /v1.
+    resources:
+    - path: /v1/incident-roles
+      name: incident-roles
+      description: REST surface for incident-roles.
+      operations:
+      - method: GET
+        name: listincidentroles
+        description: listincidentroles
+        call: incident-io-incident-roles.listincidentroles
+        outputParameters:
+        - type: object
+          mapping: $.
+      - method: POST
+        name: createincidentrole
+        description: createincidentrole
+        call: incident-io-incident-roles.createincidentrole
+        with:
+          body: rest.body
+        outputParameters:
+        - type: object
+          mapping: $.
+    - path: /v1/incident-roles/{id}
+      name: incident-roles-id
+      description: REST surface for incident-roles-id.
+      operations:
+      - method: GET
+        name: getincidentrole
+        description: getincidentrole
+        call: incident-io-incident-roles.getincidentrole
+        outputParameters:
+        - type: object
+          mapping: $.
+      - method: PUT
+        name: updateincidentrole
+        description: updateincidentrole
+        call: incident-io-incident-roles.updateincidentrole
+        with:
+          body: rest.body
+        outputParameters:
+        - type: object
+          mapping: $.
+      - method: DELETE
+        name: deleteincidentrole
+        description: deleteincidentrole
+        call: incident-io-incident-roles.deleteincidentrole
+        outputParameters:
+        - type: object
+          mapping: $.
+  - type: mcp
+    namespace: incident-io-incident-roles-mcp
+    port: 9090
+    transport: http
+    description: MCP adapter for Incident.io API — Incident Roles. One tool per consumed operation, routed inline through
+      this capability's consumes block.
+    tools:
+    - name: listincidentroles
+      description: listincidentroles
+      hints:
+        readOnly: true
+        destructive: false
+        idempotent: true
+      call: incident-io-incident-roles.listincidentroles
+      outputParameters:
+      - type: object
+        mapping: $.
+    - name: createincidentrole
+      description: createincidentrole
+      hints:
+        readOnly: false
+        destructive: false
+        idempotent: false
+      call: incident-io-incident-roles.createincidentrole
+      with:
+        body: tools.body
+      outputParameters:
+      - type: object
+        mapping: $.
+    - name: getincidentrole
+      description: getincidentrole
+      hints:
+        readOnly: true
+        destructive: false
+        idempotent: true
+      call: incident-io-incident-roles.getincidentrole
+      outputParameters:
+      - type: object
+        mapping: $.
+    - name: updateincidentrole
+      description: updateincidentrole
+      hints:
+        readOnly: false
+        destructive: false
+        idempotent: true
+      call: incident-io-incident-roles.updateincidentrole
+      with:
+        body: tools.body
+      outputParameters:
+      - type: object
+        mapping: $.
+    - name: deleteincidentrole
+      description: deleteincidentrole
+      hints:
+        readOnly: false
+        destructive: true
+        idempotent: true
+      call: incident-io-incident-roles.deleteincidentrole
+      outputParameters:
+      - type: object
+        mapping: $.

@@ -1,0 +1,197 @@
+naftiko: 1.0.0-alpha2
+info:
+  label: Incident.io API — Workflows
+  description: 'Incident.io API — Workflows. 5 operations. Lead operation: Workflows. Self-contained Naftiko capability covering
+    one Incident Io business surface.'
+  tags:
+  - Incident Io
+  - Workflows
+  created: '2026-05-19'
+  modified: '2026-05-19'
+binds:
+- namespace: env
+  keys:
+    INCIDENT_IO_API_KEY: INCIDENT_IO_API_KEY
+capability:
+  consumes:
+  - type: http
+    namespace: incident-io-workflows
+    baseUri: https://api.incident.io/v2
+    description: Incident.io API — Workflows business capability. Self-contained, no shared references.
+    resources:
+    - name: workflows
+      path: /workflows
+      operations:
+      - name: listworkflows
+        method: GET
+        description: ''
+        outputRawFormat: json
+        outputParameters:
+        - name: result
+          type: object
+          value: $.
+      - name: createworkflow
+        method: POST
+        description: ''
+        outputRawFormat: json
+        outputParameters:
+        - name: result
+          type: object
+          value: $.
+        inputParameters:
+        - name: body
+          in: body
+          type: object
+          description: Request body (JSON).
+          required: true
+    - name: workflows-id
+      path: /workflows/{id}
+      operations:
+      - name: getworkflow
+        method: GET
+        description: ''
+        outputRawFormat: json
+        outputParameters:
+        - name: result
+          type: object
+          value: $.
+      - name: updateworkflow
+        method: PUT
+        description: ''
+        outputRawFormat: json
+        outputParameters:
+        - name: result
+          type: object
+          value: $.
+        inputParameters:
+        - name: body
+          in: body
+          type: object
+          description: Request body (JSON).
+          required: true
+      - name: deleteworkflow
+        method: DELETE
+        description: ''
+        outputRawFormat: json
+        outputParameters:
+        - name: result
+          type: object
+          value: $.
+    authentication:
+      type: bearer
+      token: '{{env.INCIDENT_IO_API_KEY}}'
+  exposes:
+  - type: rest
+    namespace: incident-io-workflows-rest
+    port: 8080
+    description: REST adapter for Incident.io API — Workflows. One Spectral-compliant resource per consumed operation, prefixed
+      with /v1.
+    resources:
+    - path: /v1/workflows
+      name: workflows
+      description: REST surface for workflows.
+      operations:
+      - method: GET
+        name: listworkflows
+        description: listworkflows
+        call: incident-io-workflows.listworkflows
+        outputParameters:
+        - type: object
+          mapping: $.
+      - method: POST
+        name: createworkflow
+        description: createworkflow
+        call: incident-io-workflows.createworkflow
+        with:
+          body: rest.body
+        outputParameters:
+        - type: object
+          mapping: $.
+    - path: /v1/workflows/{id}
+      name: workflows-id
+      description: REST surface for workflows-id.
+      operations:
+      - method: GET
+        name: getworkflow
+        description: getworkflow
+        call: incident-io-workflows.getworkflow
+        outputParameters:
+        - type: object
+          mapping: $.
+      - method: PUT
+        name: updateworkflow
+        description: updateworkflow
+        call: incident-io-workflows.updateworkflow
+        with:
+          body: rest.body
+        outputParameters:
+        - type: object
+          mapping: $.
+      - method: DELETE
+        name: deleteworkflow
+        description: deleteworkflow
+        call: incident-io-workflows.deleteworkflow
+        outputParameters:
+        - type: object
+          mapping: $.
+  - type: mcp
+    namespace: incident-io-workflows-mcp
+    port: 9090
+    transport: http
+    description: MCP adapter for Incident.io API — Workflows. One tool per consumed operation, routed inline through this
+      capability's consumes block.
+    tools:
+    - name: listworkflows
+      description: listworkflows
+      hints:
+        readOnly: true
+        destructive: false
+        idempotent: true
+      call: incident-io-workflows.listworkflows
+      outputParameters:
+      - type: object
+        mapping: $.
+    - name: createworkflow
+      description: createworkflow
+      hints:
+        readOnly: false
+        destructive: false
+        idempotent: false
+      call: incident-io-workflows.createworkflow
+      with:
+        body: tools.body
+      outputParameters:
+      - type: object
+        mapping: $.
+    - name: getworkflow
+      description: getworkflow
+      hints:
+        readOnly: true
+        destructive: false
+        idempotent: true
+      call: incident-io-workflows.getworkflow
+      outputParameters:
+      - type: object
+        mapping: $.
+    - name: updateworkflow
+      description: updateworkflow
+      hints:
+        readOnly: false
+        destructive: false
+        idempotent: true
+      call: incident-io-workflows.updateworkflow
+      with:
+        body: tools.body
+      outputParameters:
+      - type: object
+        mapping: $.
+    - name: deleteworkflow
+      description: deleteworkflow
+      hints:
+        readOnly: false
+        destructive: true
+        idempotent: true
+      call: incident-io-workflows.deleteworkflow
+      outputParameters:
+      - type: object
+        mapping: $.
