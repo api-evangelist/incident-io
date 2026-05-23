@@ -1,0 +1,915 @@
+{
+  "provider": "Incident.io",
+  "providerId": "incident-io",
+  "kind": "json-structure",
+  "description": "Structural overview of the Incident.io API surface; extracted from openapi/.",
+  "schemaCount": 2,
+  "operationCount": 99,
+  "schemas": [
+    {
+      "name": "Resource",
+      "type": "object",
+      "propertyCount": 0,
+      "required": []
+    },
+    {
+      "name": "ListResponse",
+      "type": "object",
+      "propertyCount": 2,
+      "required": []
+    }
+  ],
+  "operations": [
+    {
+      "method": "GET",
+      "path": "/actions",
+      "operationId": "listActions",
+      "summary": "List actions",
+      "tags": [
+        "Actions"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/actions/{id}",
+      "operationId": "getAction",
+      "summary": "Get a single action",
+      "tags": [
+        "Actions"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/alerts",
+      "operationId": "listAlerts",
+      "summary": "List alerts",
+      "tags": [
+        "Alerts"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/alerts/{id}",
+      "operationId": "getAlert",
+      "summary": "Show a single alert",
+      "tags": [
+        "Alerts"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/alert-events",
+      "operationId": "createAlertEvent",
+      "summary": "Create an alert event",
+      "tags": [
+        "Alerts"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/alert-attributes",
+      "operationId": "listAlertAttributes",
+      "summary": "List alert attributes",
+      "tags": [
+        "Alert Attributes"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/alert-attributes",
+      "operationId": "createAlertAttribute",
+      "summary": "Create alert attribute",
+      "tags": [
+        "Alert Attributes"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/alert-attributes/{id}",
+      "operationId": "getAlertAttribute",
+      "summary": "Show alert attribute",
+      "tags": [
+        "Alert Attributes"
+      ]
+    },
+    {
+      "method": "PUT",
+      "path": "/alert-attributes/{id}",
+      "operationId": "updateAlertAttribute",
+      "summary": "Update alert attribute",
+      "tags": [
+        "Alert Attributes"
+      ]
+    },
+    {
+      "method": "DELETE",
+      "path": "/alert-attributes/{id}",
+      "operationId": "deleteAlertAttribute",
+      "summary": "Delete alert attribute",
+      "tags": [
+        "Alert Attributes"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/alert-routes",
+      "operationId": "listAlertRoutes",
+      "summary": "List alert routes",
+      "tags": [
+        "Alert Routes"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/alert-routes",
+      "operationId": "createAlertRoute",
+      "summary": "Create alert route",
+      "tags": [
+        "Alert Routes"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/alert-routes/{id}",
+      "operationId": "getAlertRoute",
+      "summary": "Show alert route",
+      "tags": [
+        "Alert Routes"
+      ]
+    },
+    {
+      "method": "PUT",
+      "path": "/alert-routes/{id}",
+      "operationId": "updateAlertRoute",
+      "summary": "Update alert route",
+      "tags": [
+        "Alert Routes"
+      ]
+    },
+    {
+      "method": "DELETE",
+      "path": "/alert-routes/{id}",
+      "operationId": "deleteAlertRoute",
+      "summary": "Delete alert route",
+      "tags": [
+        "Alert Routes"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/alert-sources",
+      "operationId": "listAlertSources",
+      "summary": "List alert sources",
+      "tags": [
+        "Alert Sources"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/alert-sources",
+      "operationId": "createAlertSource",
+      "summary": "Create alert source",
+      "tags": [
+        "Alert Sources"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/alert-sources/{id}",
+      "operationId": "getAlertSource",
+      "summary": "Show alert source",
+      "tags": [
+        "Alert Sources"
+      ]
+    },
+    {
+      "method": "PUT",
+      "path": "/alert-sources/{id}",
+      "operationId": "updateAlertSource",
+      "summary": "Update alert source",
+      "tags": [
+        "Alert Sources"
+      ]
+    },
+    {
+      "method": "DELETE",
+      "path": "/alert-sources/{id}",
+      "operationId": "deleteAlertSource",
+      "summary": "Delete alert source",
+      "tags": [
+        "Alert Sources"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api-keys",
+      "operationId": "listApiKeys",
+      "summary": "List API keys",
+      "tags": [
+        "API Keys"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api-keys",
+      "operationId": "createApiKey",
+      "summary": "Create API key",
+      "tags": [
+        "API Keys"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api-keys/{id}",
+      "operationId": "getApiKey",
+      "summary": "Show API key",
+      "tags": [
+        "API Keys"
+      ]
+    },
+    {
+      "method": "PUT",
+      "path": "/api-keys/{id}",
+      "operationId": "updateApiKey",
+      "summary": "Update API key",
+      "tags": [
+        "API Keys"
+      ]
+    },
+    {
+      "method": "DELETE",
+      "path": "/api-keys/{id}",
+      "operationId": "deleteApiKey",
+      "summary": "Delete API key",
+      "tags": [
+        "API Keys"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api-keys/{id}/rotate",
+      "operationId": "rotateApiKey",
+      "summary": "Rotate API key",
+      "tags": [
+        "API Keys"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/catalog-entries",
+      "operationId": "listCatalogEntries",
+      "summary": "List catalog entries",
+      "tags": [
+        "Catalog Entries"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/catalog-entries",
+      "operationId": "createCatalogEntry",
+      "summary": "Create catalog entry",
+      "tags": [
+        "Catalog Entries"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/catalog-entries/{id}",
+      "operationId": "getCatalogEntry",
+      "summary": null,
+      "tags": [
+        "Catalog Entries"
+      ]
+    },
+    {
+      "method": "PUT",
+      "path": "/catalog-entries/{id}",
+      "operationId": "updateCatalogEntry",
+      "summary": null,
+      "tags": [
+        "Catalog Entries"
+      ]
+    },
+    {
+      "method": "DELETE",
+      "path": "/catalog-entries/{id}",
+      "operationId": "deleteCatalogEntry",
+      "summary": null,
+      "tags": [
+        "Catalog Entries"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/catalog-types",
+      "operationId": "listCatalogTypes",
+      "summary": null,
+      "tags": [
+        "Catalog Types"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/catalog-types",
+      "operationId": "createCatalogType",
+      "summary": null,
+      "tags": [
+        "Catalog Types"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/catalog-types/{id}",
+      "operationId": "getCatalogType",
+      "summary": null,
+      "tags": [
+        "Catalog Types"
+      ]
+    },
+    {
+      "method": "PUT",
+      "path": "/catalog-types/{id}",
+      "operationId": "updateCatalogType",
+      "summary": null,
+      "tags": [
+        "Catalog Types"
+      ]
+    },
+    {
+      "method": "DELETE",
+      "path": "/catalog-types/{id}",
+      "operationId": "deleteCatalogType",
+      "summary": null,
+      "tags": [
+        "Catalog Types"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/custom-fields",
+      "operationId": "listCustomFields",
+      "summary": null,
+      "tags": [
+        "Custom Fields"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/custom-fields",
+      "operationId": "createCustomField",
+      "summary": null,
+      "tags": [
+        "Custom Fields"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/custom-fields/{id}",
+      "operationId": "getCustomField",
+      "summary": null,
+      "tags": [
+        "Custom Fields"
+      ]
+    },
+    {
+      "method": "PUT",
+      "path": "/custom-fields/{id}",
+      "operationId": "updateCustomField",
+      "summary": null,
+      "tags": [
+        "Custom Fields"
+      ]
+    },
+    {
+      "method": "DELETE",
+      "path": "/custom-fields/{id}",
+      "operationId": "deleteCustomField",
+      "summary": null,
+      "tags": [
+        "Custom Fields"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/escalation-paths",
+      "operationId": "listEscalationPaths",
+      "summary": null,
+      "tags": [
+        "Escalation Paths"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/escalation-paths",
+      "operationId": "createEscalationPath",
+      "summary": null,
+      "tags": [
+        "Escalation Paths"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/escalation-paths/{id}",
+      "operationId": "getEscalationPath",
+      "summary": null,
+      "tags": [
+        "Escalation Paths"
+      ]
+    },
+    {
+      "method": "PUT",
+      "path": "/escalation-paths/{id}",
+      "operationId": "updateEscalationPath",
+      "summary": null,
+      "tags": [
+        "Escalation Paths"
+      ]
+    },
+    {
+      "method": "DELETE",
+      "path": "/escalation-paths/{id}",
+      "operationId": "deleteEscalationPath",
+      "summary": null,
+      "tags": [
+        "Escalation Paths"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/escalations",
+      "operationId": "listEscalations",
+      "summary": null,
+      "tags": [
+        "Escalations"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/escalations",
+      "operationId": "createEscalation",
+      "summary": null,
+      "tags": [
+        "Escalations"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/escalations/{id}",
+      "operationId": "getEscalation",
+      "summary": null,
+      "tags": [
+        "Escalations"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/follow-ups",
+      "operationId": "listFollowUps",
+      "summary": null,
+      "tags": [
+        "Follow-ups"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/follow-ups/{id}",
+      "operationId": "getFollowUp",
+      "summary": null,
+      "tags": [
+        "Follow-ups"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/incidents",
+      "operationId": "listIncidents",
+      "summary": null,
+      "tags": [
+        "Incidents"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/incidents",
+      "operationId": "createIncident",
+      "summary": null,
+      "tags": [
+        "Incidents"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/incidents/{id}",
+      "operationId": "getIncident",
+      "summary": null,
+      "tags": [
+        "Incidents"
+      ]
+    },
+    {
+      "method": "PUT",
+      "path": "/incidents/{id}",
+      "operationId": "updateIncident",
+      "summary": null,
+      "tags": [
+        "Incidents"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/incident-roles",
+      "operationId": "listIncidentRoles",
+      "summary": null,
+      "tags": [
+        "Incident Roles"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/incident-roles",
+      "operationId": "createIncidentRole",
+      "summary": null,
+      "tags": [
+        "Incident Roles"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/incident-roles/{id}",
+      "operationId": "getIncidentRole",
+      "summary": null,
+      "tags": [
+        "Incident Roles"
+      ]
+    },
+    {
+      "method": "PUT",
+      "path": "/incident-roles/{id}",
+      "operationId": "updateIncidentRole",
+      "summary": null,
+      "tags": [
+        "Incident Roles"
+      ]
+    },
+    {
+      "method": "DELETE",
+      "path": "/incident-roles/{id}",
+      "operationId": "deleteIncidentRole",
+      "summary": null,
+      "tags": [
+        "Incident Roles"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/incident-statuses",
+      "operationId": "listIncidentStatuses",
+      "summary": null,
+      "tags": [
+        "Incident Statuses"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/incident-statuses",
+      "operationId": "createIncidentStatus",
+      "summary": null,
+      "tags": [
+        "Incident Statuses"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/incident-statuses/{id}",
+      "operationId": "getIncidentStatus",
+      "summary": null,
+      "tags": [
+        "Incident Statuses"
+      ]
+    },
+    {
+      "method": "PUT",
+      "path": "/incident-statuses/{id}",
+      "operationId": "updateIncidentStatus",
+      "summary": null,
+      "tags": [
+        "Incident Statuses"
+      ]
+    },
+    {
+      "method": "DELETE",
+      "path": "/incident-statuses/{id}",
+      "operationId": "deleteIncidentStatus",
+      "summary": null,
+      "tags": [
+        "Incident Statuses"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/incident-types",
+      "operationId": "listIncidentTypes",
+      "summary": null,
+      "tags": [
+        "Incident Types"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/incident-types/{id}",
+      "operationId": "getIncidentType",
+      "summary": null,
+      "tags": [
+        "Incident Types"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/maintenance-windows",
+      "operationId": "listMaintenanceWindows",
+      "summary": null,
+      "tags": [
+        "Maintenance Windows"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/maintenance-windows",
+      "operationId": "createMaintenanceWindow",
+      "summary": null,
+      "tags": [
+        "Maintenance Windows"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/maintenance-windows/{id}",
+      "operationId": "getMaintenanceWindow",
+      "summary": null,
+      "tags": [
+        "Maintenance Windows"
+      ]
+    },
+    {
+      "method": "PUT",
+      "path": "/maintenance-windows/{id}",
+      "operationId": "updateMaintenanceWindow",
+      "summary": null,
+      "tags": [
+        "Maintenance Windows"
+      ]
+    },
+    {
+      "method": "DELETE",
+      "path": "/maintenance-windows/{id}",
+      "operationId": "deleteMaintenanceWindow",
+      "summary": null,
+      "tags": [
+        "Maintenance Windows"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/postmortem-documents",
+      "operationId": "listPostmortemDocuments",
+      "summary": null,
+      "tags": [
+        "Postmortem Documents"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/postmortem-documents/{id}",
+      "operationId": "getPostmortemDocument",
+      "summary": null,
+      "tags": [
+        "Postmortem Documents"
+      ]
+    },
+    {
+      "method": "PUT",
+      "path": "/postmortem-documents/{id}",
+      "operationId": "updatePostmortemDocument",
+      "summary": null,
+      "tags": [
+        "Postmortem Documents"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/schedules",
+      "operationId": "listSchedules",
+      "summary": null,
+      "tags": [
+        "Schedules"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/schedules",
+      "operationId": "createSchedule",
+      "summary": null,
+      "tags": [
+        "Schedules"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/schedules/{id}",
+      "operationId": "getSchedule",
+      "summary": null,
+      "tags": [
+        "Schedules"
+      ]
+    },
+    {
+      "method": "PUT",
+      "path": "/schedules/{id}",
+      "operationId": "updateSchedule",
+      "summary": null,
+      "tags": [
+        "Schedules"
+      ]
+    },
+    {
+      "method": "DELETE",
+      "path": "/schedules/{id}",
+      "operationId": "deleteSchedule",
+      "summary": null,
+      "tags": [
+        "Schedules"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/severities",
+      "operationId": "listSeverities",
+      "summary": null,
+      "tags": [
+        "Severities"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/severities",
+      "operationId": "createSeverity",
+      "summary": null,
+      "tags": [
+        "Severities"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/severities/{id}",
+      "operationId": "getSeverity",
+      "summary": null,
+      "tags": [
+        "Severities"
+      ]
+    },
+    {
+      "method": "PUT",
+      "path": "/severities/{id}",
+      "operationId": "updateSeverity",
+      "summary": null,
+      "tags": [
+        "Severities"
+      ]
+    },
+    {
+      "method": "DELETE",
+      "path": "/severities/{id}",
+      "operationId": "deleteSeverity",
+      "summary": null,
+      "tags": [
+        "Severities"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/status-pages",
+      "operationId": "listStatusPages",
+      "summary": null,
+      "tags": [
+        "Status Pages"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/status-pages/{id}",
+      "operationId": "getStatusPage",
+      "summary": null,
+      "tags": [
+        "Status Pages"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/teams",
+      "operationId": "listTeams",
+      "summary": null,
+      "tags": [
+        "Teams"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/teams/{id}",
+      "operationId": "getTeam",
+      "summary": null,
+      "tags": [
+        "Teams"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/users",
+      "operationId": "listUsers",
+      "summary": null,
+      "tags": [
+        "Users"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/users/{id}",
+      "operationId": "getUser",
+      "summary": null,
+      "tags": [
+        "Users"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/utilities/identity",
+      "operationId": "getIdentity",
+      "summary": "Test API key identity",
+      "tags": [
+        "Utilities"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/utilities/openapi-v2",
+      "operationId": "getOpenApiV2",
+      "summary": "Get the OpenAPI v2 definition",
+      "tags": [
+        "Utilities"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/utilities/openapi-v3",
+      "operationId": "getOpenApiV3",
+      "summary": "Get the OpenAPI v3 definition",
+      "tags": [
+        "Utilities"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/workflows",
+      "operationId": "listWorkflows",
+      "summary": null,
+      "tags": [
+        "Workflows"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/workflows",
+      "operationId": "createWorkflow",
+      "summary": null,
+      "tags": [
+        "Workflows"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/workflows/{id}",
+      "operationId": "getWorkflow",
+      "summary": null,
+      "tags": [
+        "Workflows"
+      ]
+    },
+    {
+      "method": "PUT",
+      "path": "/workflows/{id}",
+      "operationId": "updateWorkflow",
+      "summary": null,
+      "tags": [
+        "Workflows"
+      ]
+    },
+    {
+      "method": "DELETE",
+      "path": "/workflows/{id}",
+      "operationId": "deleteWorkflow",
+      "summary": null,
+      "tags": [
+        "Workflows"
+      ]
+    }
+  ]
+}

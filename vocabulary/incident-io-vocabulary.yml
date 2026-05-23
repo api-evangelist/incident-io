@@ -1,0 +1,30 @@
+name: Incident.io Domain Vocabulary
+provider: Incident.io
+providerId: incident-io
+description: Tag-derived vocabulary for the Incident.io API surface; sourced from openapi/ tags.
+terms:
+- term: Actions
+- term: Alerts
+- term: Alert Attributes
+- term: Alert Routes
+- term: Alert Sources
+- term: API Keys
+- term: Catalog Entries
+- term: Catalog Types
+- term: Custom Fields
+- term: Escalation Paths
+- term: Escalations
+- term: Follow-ups
+- term: Incidents
+- term: Incident Roles
+- term: Incident Statuses
+- term: Incident Types
+- term: Maintenance Windows
+- term: Postmortem Documents
+- term: Schedules
+- term: Severities
+- term: Status Pages
+- term: Teams
+- term: Users
+- term: Utilities
+- term: Workflows
