@@ -1,0 +1,1038 @@
+"""
+incident.io GraphQL Schema
+Conceptual schema derived from the incident.io REST API (https://api-docs.incident.io/).
+Covers incident lifecycle, on-call, catalog, workflows, integrations, and supporting types.
+"""
+
+# ─── Scalars ────────────────────────────────────────────────────────────────
+
+scalar DateTime
+scalar JSON
+scalar URL
+
+# ─── Enums ──────────────────────────────────────────────────────────────────
+
+enum IncidentStatusCategory {
+  TRIAGE
+  ACTIVE
+  MONITORING
+  CLOSED
+  DECLINED
+  MERGED
+}
+
+enum IncidentVisibility {
+  PUBLIC
+  PRIVATE
+}
+
+enum IncidentSeverityLevel {
+  SEV0
+  SEV1
+  SEV2
+  SEV3
+  SEV4
+}
+
+enum FollowUpStatus {
+  OUTSTANDING
+  COMPLETED
+  DELETED
+  NOT_DOING
+}
+
+enum ActionStatus {
+  OUTSTANDING
+  IN_PROGRESS
+  COMPLETED
+  DELETED
+  NOT_DOING
+}
+
+enum CustomFieldFieldType {
+  TEXT
+  LINK
+  NUMERIC
+  SELECT
+  MULTI_SELECT
+  USER
+  USER_LIST
+  CATALOG_ENTRY
+  CATALOG_ENTRY_LIST
+}
+
+enum WorkflowTriggerType {
+  INCIDENT_CREATED
+  INCIDENT_STATUS_CHANGED
+  INCIDENT_SEVERITY_CHANGED
+  INCIDENT_UPDATED
+  INCIDENT_CLOSED
+  MANUAL
+}
+
+enum WebhookEventType {
+  INCIDENT_CREATED
+  INCIDENT_UPDATED
+  INCIDENT_STATUS_UPDATED
+  INCIDENT_SEVERITY_UPDATED
+  INCIDENT_ROLE_ASSIGNMENT_UPDATED
+  INCIDENT_TIMESTAMP_SET
+  ACTION_CREATED
+  ACTION_UPDATED
+  FOLLOW_UP_CREATED
+  FOLLOW_UP_UPDATED
+  CATALOG_ENTRY_CREATED
+  CATALOG_ENTRY_UPDATED
+  ESCALATION_CREATED
+}
+
+enum EscalationPathNodeType {
+  LEVEL
+  SCHEDULE
+  NOTIFY_CHANNEL
+  REPEAT
+}
+
+enum AlertSourceType {
+  PAGERDUTY
+  OPSGENIE
+  GRAFANA
+  DATADOG
+  CLOUDWATCH
+  PROMETHEUS
+  SENTRY
+  NEW_RELIC
+  CUSTOM
+}
+
+enum CatalogAttributeType {
+  TEXT
+  BOOL
+  NUMBER
+  STRING
+  DATETIME
+  CATALOG_ENTRY
+  USER
+}
+
+enum IntegrationProvider {
+  SLACK
+  MICROSOFT_TEAMS
+  PAGERDUTY
+  OPSGENIE
+  GITHUB
+  JIRA
+  LINEAR
+  DATADOG
+  GRAFANA
+  CONFLUENCE
+  NOTION
+  GOOGLE_DOCS
+  STATUSPAGE
+  CUSTOM
+}
+
+# ─── Core Incident Types ─────────────────────────────────────────────────────
+
+"""Top-level incident resource."""
+type Incident {
+  id: ID!
+  name: String!
+  reference: String!
+  status: IncidentStatus!
+  severity: IncidentSeverity
+  visibility: IncidentVisibility!
+  type: IncidentType
+  summary: String
+  slackChannelId: String
+  slackChannelName: String
+  slackTeamId: String
+  postmortemDocumentUrl: URL
+  incidentRoleAssignments: [IncidentRoleAssignment!]!
+  customFieldValues: [CustomFieldValue!]!
+  timestamps: IncidentTimestamps!
+  attachments: [IncidentAttachment!]!
+  updates: [IncidentUpdate!]!
+  memberships: [IncidentMembership!]!
+  followUps: [FollowUp!]!
+  actions: [Action!]!
+  timeline: Timeline!
+  externalIssueReference: ExternalIssueReference
+  creator: User!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+"""Detailed incident view with additional computed fields."""
+type IncidentDetails {
+  id: ID!
+  incident: Incident!
+  durationSeconds: Int
+  timeToAcknowledgeSeconds: Int
+  timeToResolveSeconds: Int
+  impactSummary: String
+  affectedServices: [String!]!
+  linkedIncidents: [IncidentLink!]!
+}
+
+"""Status associated with an incident, e.g. Triage, Active, Closed."""
+type IncidentStatus {
+  id: ID!
+  name: String!
+  description: String
+  category: IncidentStatusCategory!
+  rank: Int!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+"""Severity level definition."""
+type IncidentSeverity {
+  id: ID!
+  name: String!
+  description: String
+  rank: Int!
+  level: IncidentSeverityLevel
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+"""Incident type (e.g. Outage, Security, Data Loss)."""
+type IncidentType {
+  id: ID!
+  name: String!
+  description: String
+  isDefault: Boolean!
+  privateIncidentsOnly: Boolean!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+# ─── Incident Roles ──────────────────────────────────────────────────────────
+
+"""Role definition (e.g. Incident Lead, Comms Lead)."""
+type IncidentRole {
+  id: ID!
+  name: String!
+  shortform: String!
+  description: String
+  required: Boolean!
+  instructions: String
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+"""Assignment of a role to a user on a given incident."""
+type IncidentRoleAssignment {
+  id: ID!
+  role: IncidentRole!
+  assignee: User
+  incidentId: ID!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+# ─── Timestamps ──────────────────────────────────────────────────────────────
+
+"""Collection of key timestamps for an incident lifecycle."""
+type IncidentTimestamps {
+  reportedAt: DateTime
+  acknowledgedAt: DateTime
+  resolvedAt: DateTime
+  closedAt: DateTime
+  mergedAt: DateTime
+  lastUpdatedAt: DateTime
+  customTimestamps: [CustomTimestamp!]!
+}
+
+"""A user-defined named timestamp."""
+type CustomTimestamp {
+  id: ID!
+  name: String!
+  showBeforeCreation: Boolean!
+  value: DateTime
+}
+
+# ─── Incident Updates ────────────────────────────────────────────────────────
+
+"""A status update posted on an incident."""
+type IncidentUpdate {
+  id: ID!
+  incidentId: ID!
+  message: String!
+  status: IncidentStatus
+  severity: IncidentSeverity
+  updatedBy: User!
+  newValues: IncidentUpdateAction
+  createdAt: DateTime!
+}
+
+"""Summary of what changed in an update."""
+type IncidentUpdateAction {
+  statusChanged: Boolean!
+  severityChanged: Boolean!
+  summaryChanged: Boolean!
+  customFieldsChanged: [String!]!
+}
+
+# ─── Custom Fields ───────────────────────────────────────────────────────────
+
+"""Organisation-defined custom field definition."""
+type CustomField {
+  id: ID!
+  name: String!
+  description: String
+  fieldType: CustomFieldFieldType!
+  required: Boolean!
+  showBeforeCreation: Boolean!
+  options: [CustomFieldOption!]!
+  catalogType: CatalogType
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+"""An option for SELECT / MULTI_SELECT custom fields."""
+type CustomFieldOption {
+  id: ID!
+  value: String!
+  sortKey: Int!
+  customFieldId: ID!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+"""A value bound to a custom field on a specific incident."""
+type CustomFieldValue {
+  id: ID!
+  customField: CustomField!
+  valueText: String
+  valueNumeric: Float
+  valueOption: CustomFieldOption
+  valueCatalogEntry: CatalogEntry
+  valueUser: User
+  valueLink: URL
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+# ─── Attachments & Links ─────────────────────────────────────────────────────
+
+"""A file or URL attached to an incident."""
+type IncidentAttachment {
+  id: ID!
+  incidentId: ID!
+  externalId: String!
+  resource: AttachmentResource!
+  permalink: URL!
+  title: String
+  imageUrl: URL
+  createdAt: DateTime!
+}
+
+"""The provider resource for an attachment."""
+type AttachmentResource {
+  resourceType: String!
+  externalId: String!
+  title: String
+}
+
+"""A typed link (e.g. related incident, postmortem doc)."""
+type IncidentLink {
+  id: ID!
+  incidentId: ID!
+  linkType: String!
+  url: URL!
+  title: String
+  linkedIncidentId: ID
+  createdAt: DateTime!
+}
+
+"""Reference to an external issue tracker ticket."""
+type ExternalIssueReference {
+  provider: String!
+  issueId: String!
+  issueName: String
+  issueUrl: URL
+}
+
+# ─── Memberships ─────────────────────────────────────────────────────────────
+
+"""A user who has joined or been added to an incident."""
+type IncidentMembership {
+  id: ID!
+  incidentId: ID!
+  user: User!
+  createdAt: DateTime!
+}
+
+# ─── Follow-Ups ──────────────────────────────────────────────────────────────
+
+"""A follow-up action item linked to an incident."""
+type FollowUp {
+  id: ID!
+  incidentId: ID!
+  title: String!
+  description: String
+  status: FollowUpStatus!
+  assignee: FollowUpAssignee
+  priority: String
+  externalIssueReference: ExternalIssueReference
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+"""The user assigned to a follow-up."""
+type FollowUpAssignee {
+  user: User!
+  assignedAt: DateTime!
+}
+
+# ─── Actions ─────────────────────────────────────────────────────────────────
+
+"""An action item to be completed during an active incident."""
+type Action {
+  id: ID!
+  incidentId: ID!
+  description: String!
+  status: ActionStatus!
+  assignee: ActionAssignee
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+"""The user assigned to an action."""
+type ActionAssignee {
+  user: User!
+  assignedAt: DateTime!
+}
+
+# ─── Timeline ────────────────────────────────────────────────────────────────
+
+"""Full ordered timeline for an incident."""
+type Timeline {
+  incidentId: ID!
+  entries: [TimelineEntry!]!
+}
+
+"""A single event recorded in the incident timeline."""
+type TimelineEntry {
+  id: ID!
+  incidentId: ID!
+  timestamp: DateTime!
+  description: String!
+  source: TimelineSource!
+  user: User
+  actorType: String!
+  metadata: JSON
+}
+
+"""Where a timeline entry originated."""
+type TimelineSource {
+  sourceType: String!
+  resourceId: String
+  resourceType: String
+  displayName: String!
+}
+
+# ─── Users ───────────────────────────────────────────────────────────────────
+
+"""A user in the organisation."""
+type User {
+  id: ID!
+  name: String!
+  email: String!
+  slackUserId: String
+  slackTeamId: String
+  avatarUrl: URL
+  role: UserRole!
+  details: UserDetails
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+"""Extended profile information for a user."""
+type UserDetails {
+  userId: ID!
+  timezone: String
+  phoneNumber: String
+  escalationPaths: [EscalationPath!]!
+  onCallSchedules: [Schedule!]!
+}
+
+"""Org-level role for a user."""
+type UserRole {
+  id: ID!
+  name: String!
+  description: String
+  permissions: [String!]!
+}
+
+# ─── On-Call & Escalations ───────────────────────────────────────────────────
+
+"""An escalation path definition."""
+type EscalationPath {
+  id: ID!
+  name: String!
+  description: String
+  teamId: ID
+  nodes: [EscalationPathNode!]!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+"""A node in an escalation path (level, schedule, channel, or repeat)."""
+type EscalationPathNode {
+  id: ID!
+  nodeType: EscalationPathNodeType!
+  position: Int!
+  level: EscalationLevel
+  schedule: Schedule
+  notifyChannel: SlackChannel
+  repeatConfig: EscalationRepeatConfig
+}
+
+"""An escalation level grouping targets and timing."""
+type EscalationLevel {
+  targets: [EscalationTarget!]!
+  timeToAcknowledgeSeconds: Int!
+}
+
+"""A single target within an escalation level."""
+type EscalationTarget {
+  id: ID!
+  type: String!
+  user: User
+  schedule: Schedule
+  slackChannel: SlackChannel
+}
+
+"""Config for repeating an escalation path."""
+type EscalationRepeatConfig {
+  repeatTimes: Int!
+}
+
+"""An on-call schedule."""
+type Schedule {
+  id: ID!
+  name: String!
+  description: String
+  timezone: String!
+  currentOnCallUsers: [OnCallUser!]!
+  rotations: [ScheduleRotation!]!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+"""A rotation within a schedule."""
+type ScheduleRotation {
+  id: ID!
+  name: String!
+  handoverStartAt: DateTime!
+  handoverIntervalDays: Int!
+  participants: [User!]!
+}
+
+"""A user currently on-call."""
+type OnCallUser {
+  user: User!
+  scheduleId: ID!
+  startAt: DateTime!
+  endAt: DateTime!
+}
+
+# ─── Integrations ────────────────────────────────────────────────────────────
+
+"""A Slack workspace integration."""
+type Slack {
+  id: ID!
+  teamId: String!
+  teamName: String!
+  botUserId: String!
+  channels: [SlackChannel!]!
+  installedAt: DateTime!
+}
+
+"""A Slack channel."""
+type SlackChannel {
+  id: String!
+  name: String!
+  isPrivate: Boolean!
+}
+
+"""PagerDuty integration settings."""
+type Pagerduty {
+  id: ID!
+  subdomain: String!
+  services: [PagerdutyService!]!
+  connectedAt: DateTime!
+}
+
+"""A PagerDuty service."""
+type PagerdutyService {
+  id: String!
+  name: String!
+  htmlUrl: URL!
+}
+
+"""OpsGenie integration settings."""
+type Opsgenie {
+  id: ID!
+  apiRegion: String!
+  teams: [OpsgenieTeam!]!
+  connectedAt: DateTime!
+}
+
+"""An OpsGenie team."""
+type OpsgenieTeam {
+  id: String!
+  name: String!
+}
+
+"""Generic integration record."""
+type Integration {
+  id: ID!
+  provider: IntegrationProvider!
+  displayName: String!
+  installed: Boolean!
+  configuredAt: DateTime
+  settings: JSON
+}
+
+# ─── Catalog ─────────────────────────────────────────────────────────────────
+
+"""A catalog type definition (e.g. Service, Team, Environment)."""
+type CatalogType {
+  id: ID!
+  name: String!
+  description: String
+  typeNameSingular: String!
+  typeNamePlural: String!
+  isEditable: Boolean!
+  sourceRepoUrl: URL
+  attributes: [CatalogAttribute!]!
+  entries: [CatalogEntry!]!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+"""An entry within a catalog type."""
+type CatalogEntry {
+  id: ID!
+  catalogTypeId: ID!
+  catalogType: CatalogType!
+  name: String!
+  aliases: [String!]!
+  externalId: String
+  attributeValues: [CatalogAttributeValue!]!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+"""An attribute schema for a catalog type."""
+type CatalogAttribute {
+  id: ID!
+  name: String!
+  type: CatalogAttributeType!
+  array: Boolean!
+  backlink: CatalogAttributeBacklink
+  mode: String
+}
+
+"""Backlink configuration for a catalog attribute."""
+type CatalogAttributeBacklink {
+  catalogTypeId: ID!
+  attributeId: ID!
+}
+
+"""A resolved attribute value on a catalog entry."""
+type CatalogAttributeValue {
+  attribute: CatalogAttribute!
+  valueText: String
+  valueBool: Boolean
+  valueNumber: Float
+  valueDateTime: DateTime
+  valueCatalogEntry: CatalogEntry
+  valueUser: User
+  arrayValues: [CatalogAttributeValue!]
+}
+
+# ─── Alert Sources ───────────────────────────────────────────────────────────
+
+"""An alert source configuration."""
+type AlertSource {
+  id: ID!
+  name: String!
+  sourceType: AlertSourceType!
+  config: JSON
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+"""An inbound alert event."""
+type Alert {
+  id: ID!
+  source: AlertSource!
+  title: String!
+  description: String
+  severity: String
+  status: String!
+  externalId: String
+  metadata: JSON
+  linkedIncident: Incident
+  receivedAt: DateTime!
+  resolvedAt: DateTime
+}
+
+# ─── Workflows ───────────────────────────────────────────────────────────────
+
+"""A workflow automation definition."""
+type Workflow {
+  id: ID!
+  name: String!
+  description: String
+  trigger: WorkflowTrigger!
+  conditions: [WorkflowCondition!]!
+  steps: [WorkflowStep!]!
+  enabled: Boolean!
+  onceFor: [String!]!
+  includePrivateIncidents: Boolean!
+  runsOnDraftIncidents: Boolean!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+"""The trigger for a workflow."""
+type WorkflowTrigger {
+  id: ID!
+  triggerType: WorkflowTriggerType!
+  label: String!
+  parameters: [WorkflowTriggerParameter!]!
+}
+
+"""A parameter on a workflow trigger."""
+type WorkflowTriggerParameter {
+  name: String!
+  type: String!
+  value: JSON
+}
+
+"""A condition evaluated before running a workflow."""
+type WorkflowCondition {
+  id: ID!
+  param: String!
+  operation: String!
+  value: JSON!
+}
+
+"""An individual step in a workflow."""
+type WorkflowStep {
+  id: ID!
+  name: String!
+  label: String!
+  position: Int!
+  parameterBindings: [WorkflowStepParameterBinding!]!
+}
+
+"""Parameter binding for a workflow step."""
+type WorkflowStepParameterBinding {
+  name: String!
+  value: JSON
+  referenceType: String
+}
+
+"""High-level workflow configuration for the organisation."""
+type WorkflowConfig {
+  id: ID!
+  enabledTriggers: [String!]!
+  workflows: [Workflow!]!
+  updatedAt: DateTime!
+}
+
+# ─── Auth & API Access ───────────────────────────────────────────────────────
+
+"""An API key for programmatic access."""
+type APIKey {
+  id: ID!
+  name: String!
+  roles: [UserRole!]!
+  truncatedKey: String!
+  createdBy: User!
+  createdAt: DateTime!
+  expiresAt: DateTime
+  lastUsedAt: DateTime
+}
+
+"""An OAuth token."""
+type Token {
+  id: ID!
+  userId: ID!
+  scopes: [String!]!
+  issuedAt: DateTime!
+  expiresAt: DateTime
+  revoked: Boolean!
+}
+
+"""A configured webhook endpoint."""
+type Webhook {
+  id: ID!
+  name: String!
+  url: URL!
+  secret: String
+  eventTypes: [WebhookEventType!]!
+  enabled: Boolean!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+# ─── Pagination & Connection ──────────────────────────────────────────────────
+
+"""Pagination info for cursor-based pagination."""
+type PageInfo {
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  startCursor: String
+  endCursor: String
+}
+
+"""Paginated list of incidents."""
+type IncidentConnection {
+  nodes: [Incident!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+
+"""Paginated list of catalog entries."""
+type CatalogEntryConnection {
+  nodes: [CatalogEntry!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+
+"""Paginated list of users."""
+type UserConnection {
+  nodes: [User!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+
+# ─── Input Types ─────────────────────────────────────────────────────────────
+
+input IncidentFilterInput {
+  statusId: [ID!]
+  severityId: [ID!]
+  incidentTypeId: [ID!]
+  visibility: IncidentVisibility
+  createdAtGte: DateTime
+  createdAtLte: DateTime
+}
+
+input CreateIncidentInput {
+  name: String!
+  statusId: ID!
+  severityId: ID
+  incidentTypeId: ID
+  visibility: IncidentVisibility
+  summary: String
+  customFieldValues: [CustomFieldValueInput!]
+}
+
+input UpdateIncidentInput {
+  name: String
+  statusId: ID
+  severityId: ID
+  summary: String
+  customFieldValues: [CustomFieldValueInput!]
+}
+
+input CustomFieldValueInput {
+  customFieldId: ID!
+  valueText: String
+  valueNumeric: Float
+  valueOptionId: ID
+  valueCatalogEntryId: ID
+  valueUserId: ID
+  valueLink: URL
+}
+
+input CreateFollowUpInput {
+  incidentId: ID!
+  title: String!
+  description: String
+  assigneeId: ID
+  priority: String
+}
+
+input CreateActionInput {
+  incidentId: ID!
+  description: String!
+  assigneeId: ID
+}
+
+input CreateWebhookInput {
+  name: String!
+  url: URL!
+  eventTypes: [WebhookEventType!]!
+  secret: String
+}
+
+# ─── Root Operations ─────────────────────────────────────────────────────────
+
+type Query {
+  """Fetch a single incident by ID."""
+  incident(id: ID!): Incident
+
+  """List incidents with optional filters and pagination."""
+  incidents(
+    filter: IncidentFilterInput
+    after: String
+    before: String
+    first: Int
+    last: Int
+  ): IncidentConnection!
+
+  """Fetch a single incident status by ID."""
+  incidentStatus(id: ID!): IncidentStatus
+
+  """List all incident statuses."""
+  incidentStatuses: [IncidentStatus!]!
+
+  """Fetch a single incident severity by ID."""
+  incidentSeverity(id: ID!): IncidentSeverity
+
+  """List all incident severities."""
+  incidentSeverities: [IncidentSeverity!]!
+
+  """Fetch a single incident type by ID."""
+  incidentType(id: ID!): IncidentType
+
+  """List all incident types."""
+  incidentTypes: [IncidentType!]!
+
+  """Fetch a single incident role by ID."""
+  incidentRole(id: ID!): IncidentRole
+
+  """List all incident roles."""
+  incidentRoles: [IncidentRole!]!
+
+  """Fetch a single custom field by ID."""
+  customField(id: ID!): CustomField
+
+  """List all custom fields."""
+  customFields: [CustomField!]!
+
+  """Fetch a single user by ID."""
+  user(id: ID!): User
+
+  """List users with pagination."""
+  users(after: String, first: Int): UserConnection!
+
+  """Fetch a single follow-up by ID."""
+  followUp(id: ID!): FollowUp
+
+  """List follow-ups for an incident."""
+  followUps(incidentId: ID!): [FollowUp!]!
+
+  """Fetch a single action by ID."""
+  action(id: ID!): Action
+
+  """List actions for an incident."""
+  actions(incidentId: ID!): [Action!]!
+
+  """Fetch the timeline for an incident."""
+  timeline(incidentId: ID!): Timeline!
+
+  """Fetch a single catalog type by ID."""
+  catalogType(id: ID!): CatalogType
+
+  """List all catalog types."""
+  catalogTypes: [CatalogType!]!
+
+  """Fetch a single catalog entry by ID."""
+  catalogEntry(id: ID!): CatalogEntry
+
+  """List catalog entries for a type with pagination."""
+  catalogEntries(
+    catalogTypeId: ID!
+    after: String
+    first: Int
+  ): CatalogEntryConnection!
+
+  """Fetch a single escalation path by ID."""
+  escalationPath(id: ID!): EscalationPath
+
+  """List all escalation paths."""
+  escalationPaths: [EscalationPath!]!
+
+  """Fetch a single on-call schedule by ID."""
+  schedule(id: ID!): Schedule
+
+  """List all on-call schedules."""
+  schedules: [Schedule!]!
+
+  """Fetch a single workflow by ID."""
+  workflow(id: ID!): Workflow
+
+  """List all workflows."""
+  workflows: [Workflow!]!
+
+  """List all webhooks."""
+  webhooks: [Webhook!]!
+
+  """List all API keys."""
+  apiKeys: [APIKey!]!
+
+  """List all integrations."""
+  integrations: [Integration!]!
+
+  """List all alert sources."""
+  alertSources: [AlertSource!]!
+}
+
+type Mutation {
+  """Create a new incident."""
+  createIncident(input: CreateIncidentInput!): Incident!
+
+  """Update an existing incident."""
+  updateIncident(id: ID!, input: UpdateIncidentInput!): Incident!
+
+  """Close an incident."""
+  closeIncident(id: ID!): Incident!
+
+  """Assign a role on an incident."""
+  assignIncidentRole(incidentId: ID!, roleId: ID!, userId: ID!): IncidentRoleAssignment!
+
+  """Unassign a role on an incident."""
+  unassignIncidentRole(incidentId: ID!, roleId: ID!): Boolean!
+
+  """Post a status update on an incident."""
+  postIncidentUpdate(incidentId: ID!, message: String!, statusId: ID): IncidentUpdate!
+
+  """Create a follow-up."""
+  createFollowUp(input: CreateFollowUpInput!): FollowUp!
+
+  """Update a follow-up."""
+  updateFollowUp(id: ID!, status: FollowUpStatus, title: String, assigneeId: ID): FollowUp!
+
+  """Create an action."""
+  createAction(input: CreateActionInput!): Action!
+
+  """Update an action."""
+  updateAction(id: ID!, status: ActionStatus, description: String, assigneeId: ID): Action!
+
+  """Create a webhook."""
+  createWebhook(input: CreateWebhookInput!): Webhook!
+
+  """Delete a webhook."""
+  deleteWebhook(id: ID!): Boolean!
+}
+
+type Subscription {
+  """Subscribe to updates for a specific incident."""
+  incidentUpdated(incidentId: ID!): Incident!
+
+  """Subscribe to new incident events across the organisation."""
+  incidentCreated: Incident!
+
+  """Subscribe to timeline entry additions."""
+  timelineEntryAdded(incidentId: ID!): TimelineEntry!
+}
