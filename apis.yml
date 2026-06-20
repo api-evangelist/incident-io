@@ -3,7 +3,7 @@ name: Incident.io
 description: incident.io is an incident management platform that helps teams declare,
   manage, and learn from incidents.
 type: Index
-image: https://kinlane-productions.s3.amazonaws.com/apis-json/apis-json-logo.jpg
+image: https://kinlane-images.s3.amazonaws.com/shared/apis-json/apis-json-logo.jpg
 tags:
 - AIOps
 - Incident Management
