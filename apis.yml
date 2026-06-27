@@ -56,7 +56,7 @@ common:
   sources:
   - https://incident.io/pricing
   updated: '2026-05-04'
-- type: LLMsTxt
+- type: LlmsText
   url: https://incident.io/llms.txt
 maintainers:
 - FN: Kin Lane
