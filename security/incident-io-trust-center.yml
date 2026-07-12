@@ -1,0 +1,12 @@
+generated: '2026-07-11'
+method: searched
+probe: true
+source: https://trust.incident.io/
+url: https://trust.incident.io/
+certifications:
+- SOC 2
+evidence:
+- source: https://trust.incident.io/
+  keywords:
+  - soc2
+  - trust center

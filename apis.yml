@@ -27,6 +27,14 @@ apis:
   - url: graphql/incident-io-graphql.md
     type: GraphQL
 common:
+- type: TrustCenter
+  url: security/incident-io-trust-center.yml
+- type: VulnerabilityDisclosure
+  url: security/incident-io-vulnerability-disclosure.yml
+- type: DomainSecurity
+  url: security/incident-io-domain-security.yml
+- type: Authentication
+  url: authentication/incident-io-authentication.yml
 - type: GitHubOrganization
   url: https://github.com/incident-io
 - type: LinkedIn
@@ -58,6 +66,8 @@ common:
   updated: '2026-05-04'
 - type: LlmsText
   url: https://incident.io/llms.txt
+- type: Blog
+  url: https://incident.io/blog
 maintainers:
 - FN: Kin Lane
   email: kin@apievangelist.com
