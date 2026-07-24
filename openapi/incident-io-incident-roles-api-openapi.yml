@@ -1,0 +1,119 @@
+openapi: 3.1.0
+info:
+  title: Incident.io Actions Incident Roles API
+  description: The incident.io REST API provides programmatic access to incidents, alerts, catalog, custom fields, escalations, on-call schedules, status pages, and workflows. Authentication is performed via Bearer tokens issued in the incident.io dashboard.
+  version: 2.0.0
+  contact:
+    name: incident.io Support
+    url: https://incident.io
+  license:
+    name: Proprietary
+    url: https://incident.io/terms
+  x-generated-from: https://api-docs.incident.io
+  x-generated-by: claude-crawl-2026-05-08
+servers:
+- url: https://api.incident.io/v2
+  description: Production
+security:
+- bearerAuth: []
+tags:
+- name: Incident Roles
+paths:
+  /incident-roles:
+    get:
+      tags:
+      - Incident Roles
+      operationId: listIncidentRoles
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListResponse'
+    post:
+      tags:
+      - Incident Roles
+      operationId: createIncidentRole
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Resource'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Resource'
+  /incident-roles/{id}:
+    get:
+      tags:
+      - Incident Roles
+      operationId: getIncidentRole
+      parameters:
+      - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Resource'
+    put:
+      tags:
+      - Incident Roles
+      operationId: updateIncidentRole
+      parameters:
+      - $ref: '#/components/parameters/IdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Resource'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Resource'
+    delete:
+      tags:
+      - Incident Roles
+      operationId: deleteIncidentRole
+      parameters:
+      - $ref: '#/components/parameters/IdParam'
+      responses:
+        '204':
+          description: Deleted
+components:
+  schemas:
+    Resource:
+      type: object
+      additionalProperties: true
+    ListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Resource'
+        pagination_meta:
+          type: object
+          additionalProperties: true
+  parameters:
+    IdParam:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: API Key

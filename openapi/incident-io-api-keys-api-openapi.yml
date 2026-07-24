@@ -1,0 +1,139 @@
+openapi: 3.1.0
+info:
+  title: Incident.io Actions API Keys API
+  description: The incident.io REST API provides programmatic access to incidents, alerts, catalog, custom fields, escalations, on-call schedules, status pages, and workflows. Authentication is performed via Bearer tokens issued in the incident.io dashboard.
+  version: 2.0.0
+  contact:
+    name: incident.io Support
+    url: https://incident.io
+  license:
+    name: Proprietary
+    url: https://incident.io/terms
+  x-generated-from: https://api-docs.incident.io
+  x-generated-by: claude-crawl-2026-05-08
+servers:
+- url: https://api.incident.io/v2
+  description: Production
+security:
+- bearerAuth: []
+tags:
+- name: API Keys
+paths:
+  /api-keys:
+    get:
+      tags:
+      - API Keys
+      operationId: listApiKeys
+      summary: List API keys
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListResponse'
+    post:
+      tags:
+      - API Keys
+      operationId: createApiKey
+      summary: Create API key
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Resource'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Resource'
+  /api-keys/{id}:
+    get:
+      tags:
+      - API Keys
+      operationId: getApiKey
+      summary: Show API key
+      parameters:
+      - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Resource'
+    put:
+      tags:
+      - API Keys
+      operationId: updateApiKey
+      summary: Update API key
+      parameters:
+      - $ref: '#/components/parameters/IdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Resource'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Resource'
+    delete:
+      tags:
+      - API Keys
+      operationId: deleteApiKey
+      summary: Delete API key
+      parameters:
+      - $ref: '#/components/parameters/IdParam'
+      responses:
+        '204':
+          description: Deleted
+  /api-keys/{id}/rotate:
+    post:
+      tags:
+      - API Keys
+      operationId: rotateApiKey
+      summary: Rotate API key
+      parameters:
+      - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Resource'
+components:
+  schemas:
+    Resource:
+      type: object
+      additionalProperties: true
+    ListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Resource'
+        pagination_meta:
+          type: object
+          additionalProperties: true
+  parameters:
+    IdParam:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: API Key
