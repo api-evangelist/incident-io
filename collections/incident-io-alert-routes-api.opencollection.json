@@ -1,0 +1,108 @@
+{
+  "opencollection": "1.0.0",
+  "info": {
+    "name": "Incident.io Actions Alert Routes API",
+    "version": "2.0.0"
+  },
+  "request": {
+    "auth": {
+      "type": "bearer",
+      "token": "{{bearerToken}}"
+    }
+  },
+  "items": [
+    {
+      "info": {
+        "name": "Alert Routes",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "List alert routes",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.incident.io/v2/alert-routes"
+          },
+          "docs": "List alert routes"
+        },
+        {
+          "info": {
+            "name": "Create alert route",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "https://api.incident.io/v2/alert-routes",
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "Create alert route"
+        },
+        {
+          "info": {
+            "name": "Show alert route",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.incident.io/v2/alert-routes/:id",
+            "params": [
+              {
+                "name": "id",
+                "value": "",
+                "type": "path"
+              }
+            ]
+          },
+          "docs": "Show alert route"
+        },
+        {
+          "info": {
+            "name": "Update alert route",
+            "type": "http"
+          },
+          "http": {
+            "method": "PUT",
+            "url": "https://api.incident.io/v2/alert-routes/:id",
+            "params": [
+              {
+                "name": "id",
+                "value": "",
+                "type": "path"
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "Update alert route"
+        },
+        {
+          "info": {
+            "name": "Delete alert route",
+            "type": "http"
+          },
+          "http": {
+            "method": "DELETE",
+            "url": "https://api.incident.io/v2/alert-routes/:id",
+            "params": [
+              {
+                "name": "id",
+                "value": "",
+                "type": "path"
+              }
+            ]
+          },
+          "docs": "Delete alert route"
+        }
+      ]
+    }
+  ],
+  "bundled": true
+}

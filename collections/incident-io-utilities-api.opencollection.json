@@ -1,0 +1,57 @@
+{
+  "opencollection": "1.0.0",
+  "info": {
+    "name": "Incident.io Actions Utilities API",
+    "version": "2.0.0"
+  },
+  "request": {
+    "auth": {
+      "type": "bearer",
+      "token": "{{bearerToken}}"
+    }
+  },
+  "items": [
+    {
+      "info": {
+        "name": "Utilities",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "Test API key identity",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.incident.io/v2/utilities/identity"
+          },
+          "docs": "Test API key identity"
+        },
+        {
+          "info": {
+            "name": "Get the OpenAPI v2 definition",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.incident.io/v2/utilities/openapi-v2"
+          },
+          "docs": "Get the OpenAPI v2 definition"
+        },
+        {
+          "info": {
+            "name": "Get the OpenAPI v3 definition",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.incident.io/v2/utilities/openapi-v3"
+          },
+          "docs": "Get the OpenAPI v3 definition"
+        }
+      ]
+    }
+  ],
+  "bundled": true
+}

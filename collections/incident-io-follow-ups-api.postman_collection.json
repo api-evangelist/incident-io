@@ -1,0 +1,209 @@
+{
+  "item": [
+    {
+      "id": "fe0142f8-ff0b-4473-873a-74d17bb2ce66",
+      "name": "Follow-ups",
+      "description": {
+        "content": "",
+        "type": "text/plain"
+      },
+      "item": [
+        {
+          "id": "edadd257-eca4-4d84-8543-64ed5651ca99",
+          "name": "list Follow Ups",
+          "request": {
+            "name": "list Follow Ups",
+            "description": {},
+            "url": {
+              "path": [
+                "follow-ups"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "GET",
+            "auth": null
+          },
+          "response": [
+            {
+              "id": "81170f79-2921-4763-b85f-4014f69b53b1",
+              "name": "OK",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "follow-ups"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"data\": [\n    {\n      \"key_0\": 9946.784649669096\n    },\n    {\n      \"key_0\": true,\n      \"key_1\": false\n    }\n  ],\n  \"pagination_meta\": {\n    \"key_0\": true,\n    \"key_1\": 4210,\n    \"key_2\": \"string\",\n    \"key_3\": 2140,\n    \"key_4\": true\n  }\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "id": "257b99df-f059-4926-ad28-4677d0a859aa",
+          "name": "get Follow Up",
+          "request": {
+            "name": "get Follow Up",
+            "description": {},
+            "url": {
+              "path": [
+                "follow-ups",
+                ":id"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "disabled": false,
+                  "type": "any",
+                  "value": "<string>",
+                  "key": "id",
+                  "description": "(Required) "
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "GET",
+            "auth": null
+          },
+          "response": [
+            {
+              "id": "0fa154ee-32c0-47ee-b324-ef70ba9fed5d",
+              "name": "OK",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "follow-ups",
+                    ":id"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<string>",
+                      "key": "id",
+                      "description": "(Required) "
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"key_0\": \"string\",\n  \"key_1\": 5572\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        }
+      ],
+      "event": []
+    }
+  ],
+  "event": [],
+  "variable": [
+    {
+      "type": "string",
+      "value": "https://api.incident.io/v2",
+      "key": "baseUrl"
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{bearerToken}}"
+      }
+    ]
+  },
+  "info": {
+    "_postman_id": "713f4484-68f9-4a18-8d38-cbf1a76cad5b",
+    "name": "Incident.io Actions Follow-ups API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": {
+      "content": "The incident.io REST API provides programmatic access to incidents, alerts, catalog, custom fields, escalations, on-call schedules, status pages, and workflows. Authentication is performed via Bearer tokens issued in the incident.io dashboard.\n\nContact Support:\n Name: incident.io Support",
+      "type": "text/plain"
+    }
+  }
+}

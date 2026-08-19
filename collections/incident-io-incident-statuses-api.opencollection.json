@@ -1,0 +1,103 @@
+{
+  "opencollection": "1.0.0",
+  "info": {
+    "name": "Incident.io Actions Incident Statuses API",
+    "version": "2.0.0"
+  },
+  "request": {
+    "auth": {
+      "type": "bearer",
+      "token": "{{bearerToken}}"
+    }
+  },
+  "items": [
+    {
+      "info": {
+        "name": "Incident Statuses",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "listIncidentStatuses",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.incident.io/v2/incident-statuses"
+          }
+        },
+        {
+          "info": {
+            "name": "createIncidentStatus",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "https://api.incident.io/v2/incident-statuses",
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          }
+        },
+        {
+          "info": {
+            "name": "getIncidentStatus",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.incident.io/v2/incident-statuses/:id",
+            "params": [
+              {
+                "name": "id",
+                "value": "",
+                "type": "path"
+              }
+            ]
+          }
+        },
+        {
+          "info": {
+            "name": "updateIncidentStatus",
+            "type": "http"
+          },
+          "http": {
+            "method": "PUT",
+            "url": "https://api.incident.io/v2/incident-statuses/:id",
+            "params": [
+              {
+                "name": "id",
+                "value": "",
+                "type": "path"
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          }
+        },
+        {
+          "info": {
+            "name": "deleteIncidentStatus",
+            "type": "http"
+          },
+          "http": {
+            "method": "DELETE",
+            "url": "https://api.incident.io/v2/incident-statuses/:id",
+            "params": [
+              {
+                "name": "id",
+                "value": "",
+                "type": "path"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "bundled": true
+}

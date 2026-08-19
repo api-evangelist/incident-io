@@ -1,0 +1,103 @@
+{
+  "opencollection": "1.0.0",
+  "info": {
+    "name": "Incident.io Actions Escalation Paths API",
+    "version": "2.0.0"
+  },
+  "request": {
+    "auth": {
+      "type": "bearer",
+      "token": "{{bearerToken}}"
+    }
+  },
+  "items": [
+    {
+      "info": {
+        "name": "Escalation Paths",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "listEscalationPaths",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.incident.io/v2/escalation-paths"
+          }
+        },
+        {
+          "info": {
+            "name": "createEscalationPath",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "https://api.incident.io/v2/escalation-paths",
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          }
+        },
+        {
+          "info": {
+            "name": "getEscalationPath",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.incident.io/v2/escalation-paths/:id",
+            "params": [
+              {
+                "name": "id",
+                "value": "",
+                "type": "path"
+              }
+            ]
+          }
+        },
+        {
+          "info": {
+            "name": "updateEscalationPath",
+            "type": "http"
+          },
+          "http": {
+            "method": "PUT",
+            "url": "https://api.incident.io/v2/escalation-paths/:id",
+            "params": [
+              {
+                "name": "id",
+                "value": "",
+                "type": "path"
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          }
+        },
+        {
+          "info": {
+            "name": "deleteEscalationPath",
+            "type": "http"
+          },
+          "http": {
+            "method": "DELETE",
+            "url": "https://api.incident.io/v2/escalation-paths/:id",
+            "params": [
+              {
+                "name": "id",
+                "value": "",
+                "type": "path"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "bundled": true
+}

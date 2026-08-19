@@ -1,0 +1,53 @@
+{
+  "opencollection": "1.0.0",
+  "info": {
+    "name": "Incident.io Actions API",
+    "version": "2.0.0"
+  },
+  "request": {
+    "auth": {
+      "type": "bearer",
+      "token": "{{bearerToken}}"
+    }
+  },
+  "items": [
+    {
+      "info": {
+        "name": "Actions",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "List actions",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.incident.io/v2/actions"
+          },
+          "docs": "List actions"
+        },
+        {
+          "info": {
+            "name": "Get a single action",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.incident.io/v2/actions/:id",
+            "params": [
+              {
+                "name": "id",
+                "value": "",
+                "type": "path"
+              }
+            ]
+          },
+          "docs": "Get a single action"
+        }
+      ]
+    }
+  ],
+  "bundled": true
+}

@@ -1,0 +1,108 @@
+{
+  "opencollection": "1.0.0",
+  "info": {
+    "name": "Incident.io Actions Alert Sources API",
+    "version": "2.0.0"
+  },
+  "request": {
+    "auth": {
+      "type": "bearer",
+      "token": "{{bearerToken}}"
+    }
+  },
+  "items": [
+    {
+      "info": {
+        "name": "Alert Sources",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "List alert sources",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.incident.io/v2/alert-sources"
+          },
+          "docs": "List alert sources"
+        },
+        {
+          "info": {
+            "name": "Create alert source",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "https://api.incident.io/v2/alert-sources",
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "Create alert source"
+        },
+        {
+          "info": {
+            "name": "Show alert source",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.incident.io/v2/alert-sources/:id",
+            "params": [
+              {
+                "name": "id",
+                "value": "",
+                "type": "path"
+              }
+            ]
+          },
+          "docs": "Show alert source"
+        },
+        {
+          "info": {
+            "name": "Update alert source",
+            "type": "http"
+          },
+          "http": {
+            "method": "PUT",
+            "url": "https://api.incident.io/v2/alert-sources/:id",
+            "params": [
+              {
+                "name": "id",
+                "value": "",
+                "type": "path"
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "Update alert source"
+        },
+        {
+          "info": {
+            "name": "Delete alert source",
+            "type": "http"
+          },
+          "http": {
+            "method": "DELETE",
+            "url": "https://api.incident.io/v2/alert-sources/:id",
+            "params": [
+              {
+                "name": "id",
+                "value": "",
+                "type": "path"
+              }
+            ]
+          },
+          "docs": "Delete alert source"
+        }
+      ]
+    }
+  ],
+  "bundled": true
+}
