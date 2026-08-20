@@ -95,6 +95,8 @@ apis:
   description: The API Keys API from Incident.io — 3 operation(s) for api keys.
   humanURL: https://incident.io
   tags:
+  - APIKeys
+  tags_raw:
   - API Keys
   properties:
   - type: OpenAPI
@@ -303,6 +305,8 @@ apis:
   description: The Teams API from Incident.io — 2 operation(s) for teams.
   humanURL: https://incident.io
   tags:
+  - Team
+  tags_raw:
   - Teams
   properties:
   - type: OpenAPI
@@ -316,6 +320,8 @@ apis:
   description: The Users API from Incident.io — 2 operation(s) for users.
   humanURL: https://incident.io
   tags:
+  - User
+  tags_raw:
   - Users
   properties:
   - type: OpenAPI
