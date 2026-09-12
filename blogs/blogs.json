@@ -2,23 +2,21 @@
   "repo": "incident-io",
   "feeds": [
     {
-      "source": "https://incident.io/blog.xml",
-      "feed_url": "https://incident.io/blog.xml",
-      "title": "",
-      "saved": 0,
-      "method": "feed",
-      "nature": "vendor-blog",
-      "nature_basis": "path_blog"
-    },
-    {
       "source": "https://incident.io/llms.txt",
       "feed_url": "https://incident.io/llms.txt",
       "title": "",
       "saved": 0,
       "method": "none"
+    },
+    {
+      "source": "https://incident.io/blog.xml",
+      "feed_url": "https://incident.io/blog.xml",
+      "title": "",
+      "saved": 0,
+      "method": "feed"
     }
   ],
-  "fetched": "2026-08-30T22:33:40Z",
+  "fetched": "2026-09-06T19:17:18Z",
   "post_count": 85,
   "feed_nature": "vendor-blog",
   "feed_nature_basis": "path_blog",
