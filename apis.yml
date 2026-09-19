@@ -278,6 +278,8 @@ apis:
   description: The Schedules API from Incident.io — 2 operation(s) for schedules.
   humanURL: https://incident.io
   tags:
+  - Schedule
+  tags_raw:
   - Schedules
   properties:
   - type: OpenAPI
