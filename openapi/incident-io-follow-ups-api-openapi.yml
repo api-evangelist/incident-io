@@ -1,6 +1,6 @@
-openapi: 3.1.0
+openapi: 3.2.0
 info:
-  title: Incident.io Actions Follow-ups API
+  title: Incident.io Follow Ups API
   description: The incident.io REST API provides programmatic access to incidents, alerts, catalog, custom fields, escalations, on-call schedules, status pages, and workflows. Authentication is performed via Bearer tokens issued in the incident.io dashboard.
   version: 2.0.0
   contact:
@@ -17,12 +17,12 @@ servers:
 security:
 - bearerAuth: []
 tags:
-- name: Follow-ups
+- name: Follow Ups
 paths:
   /follow-ups:
     get:
       tags:
-      - Follow-ups
+      - Follow Ups
       operationId: listFollowUps
       responses:
         '200':
@@ -31,10 +31,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ListResponse'
+      summary: List follow ups
+      x-summary-source: derived
   /follow-ups/{id}:
     get:
       tags:
-      - Follow-ups
+      - Follow Ups
       operationId: getFollowUp
       parameters:
       - $ref: '#/components/parameters/IdParam'
@@ -45,6 +47,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Resource'
+      summary: Get follow up
+      x-summary-source: derived
 components:
   schemas:
     Resource:
