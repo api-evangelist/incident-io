@@ -32,6 +32,7 @@ image: https://kinlane-images.s3.amazonaws.com/shared/apis-json/icons/incident-i
 tags:
 - AIOps
 - Incident Management
+- Monitoring
 url: https://raw.githubusercontent.com/api-evangelist/incident-io/refs/heads/main/apis.yml
 created: '2026-03-27'
 modified: '2026-05-19'
@@ -48,8 +49,6 @@ apis:
     url: openapi/incident-io-actions-api-openapi.yml
   - type: Documentation
     url: https://api-docs.incident.io
-  - type: GraphQL
-    url: graphql/incident-io-graphql.md
 - aid: incident-io:incident-io-alert-attributes-api
   name: Incident.io Alert Attributes API
   description: The Alert Attributes API from Incident.io — 2 operation(s) for alert attributes.
@@ -61,8 +60,6 @@ apis:
     url: openapi/incident-io-alert-attributes-api-openapi.yml
   - type: Documentation
     url: https://api-docs.incident.io
-  - type: GraphQL
-    url: graphql/incident-io-graphql.md
 - aid: incident-io:incident-io-alert-routes-api
   name: Incident.io Alert Routes API
   description: The Alert Routes API from Incident.io — 2 operation(s) for alert routes.
@@ -74,8 +71,6 @@ apis:
     url: openapi/incident-io-alert-routes-api-openapi.yml
   - type: Documentation
     url: https://api-docs.incident.io
-  - type: GraphQL
-    url: graphql/incident-io-graphql.md
 - aid: incident-io:incident-io-alert-sources-api
   name: Incident.io Alert Sources API
   description: The Alert Sources API from Incident.io — 2 operation(s) for alert sources.
@@ -87,8 +82,6 @@ apis:
     url: openapi/incident-io-alert-sources-api-openapi.yml
   - type: Documentation
     url: https://api-docs.incident.io
-  - type: GraphQL
-    url: graphql/incident-io-graphql.md
 - aid: incident-io:incident-io-alerts-api
   name: Incident.io Alerts API
   description: The Alerts API from Incident.io — 3 operation(s) for alerts.
@@ -100,8 +93,6 @@ apis:
     url: openapi/incident-io-alerts-api-openapi.yml
   - type: Documentation
     url: https://api-docs.incident.io
-  - type: GraphQL
-    url: graphql/incident-io-graphql.md
 - aid: incident-io:incident-io-api-keys-api
   name: Incident.io API Keys API
   description: The API Keys API from Incident.io — 3 operation(s) for api keys.
@@ -115,8 +106,6 @@ apis:
     url: openapi/incident-io-api-keys-api-openapi.yml
   - type: Documentation
     url: https://api-docs.incident.io
-  - type: GraphQL
-    url: graphql/incident-io-graphql.md
 - aid: incident-io:incident-io-catalog-entries-api
   name: Incident.io Catalog Entries API
   description: The Catalog Entries API from Incident.io — 2 operation(s) for catalog entries.
@@ -128,8 +117,6 @@ apis:
     url: openapi/incident-io-catalog-entries-api-openapi.yml
   - type: Documentation
     url: https://api-docs.incident.io
-  - type: GraphQL
-    url: graphql/incident-io-graphql.md
 - aid: incident-io:incident-io-catalog-types-api
   name: Incident.io Catalog Types API
   description: The Catalog Types API from Incident.io — 2 operation(s) for catalog types.
@@ -141,8 +128,6 @@ apis:
     url: openapi/incident-io-catalog-types-api-openapi.yml
   - type: Documentation
     url: https://api-docs.incident.io
-  - type: GraphQL
-    url: graphql/incident-io-graphql.md
 - aid: incident-io:incident-io-custom-fields-api
   name: Incident.io Custom Fields API
   description: The Custom Fields API from Incident.io — 2 operation(s) for custom fields.
@@ -154,8 +139,6 @@ apis:
     url: openapi/incident-io-custom-fields-api-openapi.yml
   - type: Documentation
     url: https://api-docs.incident.io
-  - type: GraphQL
-    url: graphql/incident-io-graphql.md
 - aid: incident-io:incident-io-escalation-paths-api
   name: Incident.io Escalation Paths API
   description: The Escalation Paths API from Incident.io — 2 operation(s) for escalation paths.
@@ -167,8 +150,6 @@ apis:
     url: openapi/incident-io-escalation-paths-api-openapi.yml
   - type: Documentation
     url: https://api-docs.incident.io
-  - type: GraphQL
-    url: graphql/incident-io-graphql.md
 - aid: incident-io:incident-io-escalations-api
   name: Incident.io Escalations API
   description: The Escalations API from Incident.io — 2 operation(s) for escalations.
@@ -180,8 +161,6 @@ apis:
     url: openapi/incident-io-escalations-api-openapi.yml
   - type: Documentation
     url: https://api-docs.incident.io
-  - type: GraphQL
-    url: graphql/incident-io-graphql.md
 - aid: incident-io:incident-io-follow-ups-api
   name: Incident.io Follow-ups API
   description: The Follow-ups API from Incident.io — 2 operation(s) for follow-ups.
@@ -193,8 +172,6 @@ apis:
     url: openapi/incident-io-follow-ups-api-openapi.yml
   - type: Documentation
     url: https://api-docs.incident.io
-  - type: GraphQL
-    url: graphql/incident-io-graphql.md
 - aid: incident-io:incident-io-incident-roles-api
   name: Incident.io Incident Roles API
   description: The Incident Roles API from Incident.io — 2 operation(s) for incident roles.
@@ -206,8 +183,6 @@ apis:
     url: openapi/incident-io-incident-roles-api-openapi.yml
   - type: Documentation
     url: https://api-docs.incident.io
-  - type: GraphQL
-    url: graphql/incident-io-graphql.md
 - aid: incident-io:incident-io-incident-statuses-api
   name: Incident.io Incident Statuses API
   description: The Incident Statuses API from Incident.io — 2 operation(s) for incident statuses.
@@ -219,8 +194,6 @@ apis:
     url: openapi/incident-io-incident-statuses-api-openapi.yml
   - type: Documentation
     url: https://api-docs.incident.io
-  - type: GraphQL
-    url: graphql/incident-io-graphql.md
 - aid: incident-io:incident-io-incident-types-api
   name: Incident.io Incident Types API
   description: The Incident Types API from Incident.io — 2 operation(s) for incident types.
@@ -232,8 +205,6 @@ apis:
     url: openapi/incident-io-incident-types-api-openapi.yml
   - type: Documentation
     url: https://api-docs.incident.io
-  - type: GraphQL
-    url: graphql/incident-io-graphql.md
 - aid: incident-io:incident-io-incidents-api
   name: Incident.io Incidents API
   description: The Incidents API from Incident.io — 2 operation(s) for incidents.
@@ -245,8 +216,6 @@ apis:
     url: openapi/incident-io-incidents-api-openapi.yml
   - type: Documentation
     url: https://api-docs.incident.io
-  - type: GraphQL
-    url: graphql/incident-io-graphql.md
 - aid: incident-io:incident-io-maintenance-windows-api
   name: Incident.io Maintenance Windows API
   description: The Maintenance Windows API from Incident.io — 2 operation(s) for maintenance windows.
@@ -258,8 +227,6 @@ apis:
     url: openapi/incident-io-maintenance-windows-api-openapi.yml
   - type: Documentation
     url: https://api-docs.incident.io
-  - type: GraphQL
-    url: graphql/incident-io-graphql.md
 - aid: incident-io:incident-io-postmortem-documents-api
   name: Incident.io Postmortem Documents API
   description: The Postmortem Documents API from Incident.io — 2 operation(s) for postmortem documents.
@@ -271,8 +238,6 @@ apis:
     url: openapi/incident-io-postmortem-documents-api-openapi.yml
   - type: Documentation
     url: https://api-docs.incident.io
-  - type: GraphQL
-    url: graphql/incident-io-graphql.md
 - aid: incident-io:incident-io-schedules-api
   name: Incident.io Schedules API
   description: The Schedules API from Incident.io — 2 operation(s) for schedules.
@@ -286,8 +251,6 @@ apis:
     url: openapi/incident-io-schedules-api-openapi.yml
   - type: Documentation
     url: https://api-docs.incident.io
-  - type: GraphQL
-    url: graphql/incident-io-graphql.md
 - aid: incident-io:incident-io-severities-api
   name: Incident.io Severities API
   description: The Severities API from Incident.io — 2 operation(s) for severities.
@@ -299,8 +262,6 @@ apis:
     url: openapi/incident-io-severities-api-openapi.yml
   - type: Documentation
     url: https://api-docs.incident.io
-  - type: GraphQL
-    url: graphql/incident-io-graphql.md
 - aid: incident-io:incident-io-status-pages-api
   name: Incident.io Status Pages API
   description: The Status Pages API from Incident.io — 2 operation(s) for status pages.
@@ -312,8 +273,6 @@ apis:
     url: openapi/incident-io-status-pages-api-openapi.yml
   - type: Documentation
     url: https://api-docs.incident.io
-  - type: GraphQL
-    url: graphql/incident-io-graphql.md
 - aid: incident-io:incident-io-teams-api
   name: Incident.io Teams API
   description: The Teams API from Incident.io — 2 operation(s) for teams.
@@ -327,8 +286,6 @@ apis:
     url: openapi/incident-io-teams-api-openapi.yml
   - type: Documentation
     url: https://api-docs.incident.io
-  - type: GraphQL
-    url: graphql/incident-io-graphql.md
 - aid: incident-io:incident-io-users-api
   name: Incident.io Users API
   description: The Users API from Incident.io — 2 operation(s) for users.
@@ -342,8 +299,6 @@ apis:
     url: openapi/incident-io-users-api-openapi.yml
   - type: Documentation
     url: https://api-docs.incident.io
-  - type: GraphQL
-    url: graphql/incident-io-graphql.md
 - aid: incident-io:incident-io-utilities-api
   name: Incident.io Utilities API
   description: The Utilities API from Incident.io — 3 operation(s) for utilities.
@@ -355,8 +310,6 @@ apis:
     url: openapi/incident-io-utilities-api-openapi.yml
   - type: Documentation
     url: https://api-docs.incident.io
-  - type: GraphQL
-    url: graphql/incident-io-graphql.md
 - aid: incident-io:incident-io-workflows-api
   name: Incident.io Workflows API
   description: The Workflows API from Incident.io — 2 operation(s) for workflows.
@@ -368,8 +321,6 @@ apis:
     url: openapi/incident-io-workflows-api-openapi.yml
   - type: Documentation
     url: https://api-docs.incident.io
-  - type: GraphQL
-    url: graphql/incident-io-graphql.md
 common:
 - type: AgenticAccess
   url: agentic-access/incident-io-agentic-access.yml
