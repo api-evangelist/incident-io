@@ -322,6 +322,8 @@ apis:
   - type: Documentation
     url: https://api-docs.incident.io
 common:
+- type: VendorFacets
+  url: vendor-facets/incident-io-vendor-facets.yml
 - type: AgenticAccess
   url: agentic-access/incident-io-agentic-access.yml
 - type: TrustCenter
