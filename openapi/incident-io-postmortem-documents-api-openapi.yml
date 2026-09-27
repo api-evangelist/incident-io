@@ -72,9 +72,6 @@ paths:
       x-summary-source: derived
 components:
   schemas:
-    Resource:
-      type: object
-      additionalProperties: true
     ListResponse:
       type: object
       properties:
@@ -85,6 +82,9 @@ components:
         pagination_meta:
           type: object
           additionalProperties: true
+    Resource:
+      type: object
+      additionalProperties: true
   parameters:
     IdParam:
       name: id
