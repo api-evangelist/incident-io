@@ -101,6 +101,13 @@ paths:
       summary: Delete escalation path
       x-summary-source: derived
 components:
+  parameters:
+    IdParam:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
   schemas:
     ListResponse:
       type: object
@@ -115,13 +122,6 @@ components:
     Resource:
       type: object
       additionalProperties: true
-  parameters:
-    IdParam:
-      name: id
-      in: path
-      required: true
-      schema:
-        type: string
   securitySchemes:
     bearerAuth:
       type: http
