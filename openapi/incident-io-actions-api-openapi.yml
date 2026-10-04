@@ -48,13 +48,6 @@ paths:
               schema:
                 $ref: '#/components/schemas/Resource'
 components:
-  parameters:
-    IdParam:
-      name: id
-      in: path
-      required: true
-      schema:
-        type: string
   schemas:
     ListResponse:
       type: object
@@ -69,6 +62,13 @@ components:
     Resource:
       type: object
       additionalProperties: true
+  parameters:
+    IdParam:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
   securitySchemes:
     bearerAuth:
       type: http
