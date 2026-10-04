@@ -29,10 +29,15 @@ accessModel:
   generated: '2026-09-03'
   method: derived
 image: https://kinlane-images.s3.amazonaws.com/shared/apis-json/icons/incident-io.png
+x-docs-platform: mintlify
+x-docs-platform-confidence: medium
+x-docs-platform-checked: 2026-10-03
+x-docs-hosting: vercel
 tags:
 - AIOps
 - Incident Management
 - Monitoring
+- Incident Response
 url: https://raw.githubusercontent.com/api-evangelist/incident-io/refs/heads/main/apis.yml
 created: '2026-03-27'
 modified: '2026-05-19'
@@ -322,6 +327,9 @@ apis:
   - type: Documentation
     url: https://api-docs.incident.io
 common:
+- type: CapabilityMap
+  url: capabilities/incident-io-capability-edges.yml
+  name: Incident.io Business Capability Map
 - type: VendorFacets
   url: vendor-facets/incident-io-vendor-facets.yml
 - type: AgenticAccess
