@@ -15,3 +15,15 @@
   relationship: platform-app
   status: not-a-workflow
   arazzo: null
+- slug: incident-io-crowdstrike-own
+  label: CrowdStrike (own)
+  partner: crowdstrike
+  partner_name: CrowdStrike (own)
+  type: marketplace
+  marketplace: own
+  channel: partner-built
+  evidence: https://marketplace.crowdstrike.com/listings/incident-io-on-call/
+  source: edge
+  relationship: platform-app
+  status: not-a-workflow
+  arazzo: null
