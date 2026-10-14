@@ -1,0 +1,24 @@
+generated: '2026-10-14'
+method: searched
+checked:
+- https://marketplace.atlassian.com/
+marketplace_apps: []
+edges:
+- partner_name: Atlassian Marketplace
+  partner: atlassian
+  partner_match: aggregator
+  type: marketplace
+  marketplace: atlassian
+  channel: partner-built
+  relationship: platform-app
+  direction: third-party
+  evidence: https://marketplace.atlassian.com/vendors/1221508/incident-io
+  listing_count: 2
+  apps:
+  - incident.io
+  - incident.io (OAuth)
+  publisher_name: incident.io
+  detected_by: sweep-devtools.py
+  detected: '2026-10-14'
+source:
+- https://marketplace.atlassian.com/
