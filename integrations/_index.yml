@@ -86,7 +86,7 @@
       type: source
       lapsed: false
       cloud: true
-  status: pending-generation
+  status: not-a-workflow
   arazzo: null
 - slug: incident-io-fivetran
   label: Fivetran
@@ -112,7 +112,7 @@
     - connectors/applications/incidentio
     vendor_link: https://incident.io/
     builder: Fivetran
-  status: pending-generation
+  status: not-a-workflow
   arazzo: null
 - slug: incident-io-microsoft-teams-own
   label: Microsoft Teams (own)
