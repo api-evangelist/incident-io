@@ -1,0 +1,4664 @@
+openapi: 3.2.0
+info:
+  description: 'This is the API reference for incident.io. It documents available API endpoints, provides examples of how to use it, and
+
+    instructions around things like authentication and error handling. The API is hosted at:
+
+
+    - https://api.incident.io/
+
+
+    And you will need to create an API key via your incident.io
+
+    dashboard to make requests. # Making requests
+
+
+    Here are the key concepts required to make requests to the incident.io API. ## Authentication
+
+
+    For all requests made to the incident.io API, you''ll need an API key. To create an API key, head to the incident dashboard and visit API
+
+    keys. When you create the key, you''ll be able to choose what actions it
+
+    can take for your account: choose carefully, as those roles can only be set
+
+    when you first create the key. We''ll only show you the token once, so make sure
+
+    you store it somewhere safe. API keys are global to your incident.io account, and can be managed by anyone
+
+    who has the right permissions. We display the user that created the API key,
+
+    and the API key will remain valid if that user becomes deactivated. Once you have the key, you should make requests to the API that set the
+
+    `Authorization` request header using a "Bearer" authentication scheme:
+
+
+    ```
+
+    Authorization: Bearer
+
+    ```
+
+
+    ## Rate Limits
+
+
+    The incident.io API enforces rate limits to ensure consistent performance for all users. The default rate limit is 1200 requests/minute per API key. This limit applies to most endpoints across the API. Limits are token buckets that refill continuously rather than resetting on a fixed window boundary. The default
+
+    bucket holds 1200 requests and refills at 20 per second, so you can burst up to the full bucket and then sustain
+
+    20 requests/second indefinitely. There is no boundary at which your quota resets to full in one step. Some endpoints have lower rate limits, particularly those that interact with external third-party systems that impose
+
+    their own limitations. These specific limits vary by endpoint. ### Rate limit headers
+
+
+    Responses to requests authenticated with an API key carry your current allowance, so you can pace yourself rather
+
+    than waiting to be throttled:
+
+
+    ```
+
+    X-RateLimit-Limit: 60, 1200;window=60, 60;window=60
+
+    X-RateLimit-Remaining: 59
+
+    X-RateLimit-Used: 1
+
+    X-RateLimit-Reset: 1785173199
+
+    ```
+
+
+    | Header | Meaning |
+
+    | --- | --- |
+
+    | `X-RateLimit-Limit` | The quota that binds this request, followed by every limit that applied and the window it applies over |
+
+    | `X-RateLimit-Remaining` | Requests you can make right now against the binding limit |
+
+    | `X-RateLimit-Used` | Requests you have spent against it |
+
+    | `X-RateLimit-Reset` | Unix timestamp (seconds) at which that limit will be back to full |
+
+
+    More than one limit can apply to a request: your API key''s overall limit, and for some endpoints a lower limit of
+
+    their own. `X-RateLimit-Limit` lists all of them, each with its window, so `1200;window=60` means 1200 requests per
+
+    minute. Because our limits refill continuously rather than resetting on a boundary, that window is what tells you
+
+    the rate you can sustain: 1200 per 60 seconds is 20 requests/second indefinitely. `Remaining`, `Used` and `Reset` describe whichever limit has the least allowance left, since that is the one you
+
+    will hit first. `X-RateLimit-Remaining` may lag by a small number of requests under high concurrency, and can move by more than the
+
+    requests you made, because limits scoped to your whole organisation are shared with your other API keys. Headers are omitted rather than guessed if we cannot determine your allowance for a request. ### Exceeding a rate limit
+
+
+    When you exceed a rate limit the API responds with `429 Too Many Requests` and a `Retry-After` header giving the
+
+    number of seconds to wait:
+
+
+    ```
+
+    X-RateLimit-Limit: 1200, 1200;window=60
+
+    X-RateLimit-Remaining: 0
+
+    X-RateLimit-Used: 1200
+
+    X-RateLimit-Reset: 1785173199
+
+    Retry-After: 1
+
+    ```
+
+
+    Prefer `Retry-After` over `X-RateLimit-Reset` when deciding how long to back off.'
+  title: incident.io Incident Forms V3 API
+  version: 1.0.0
+servers:
+- url: https://api.incident.io
+security:
+- BearerAuth: []
+tags:
+- description: 'Configure the forms used to declare, accept, update, and resolve incidents.
+
+
+    Each form carries its elements and the expressions those elements can reference.
+
+    Escalate forms are not part of this API.'
+  name: Incident Forms V3
+paths:
+  /v3/incident_forms:
+    get:
+      description: List incident forms for your account, including their elements and expressions.
+      operationId: IncidentFormsV3#List
+      parameters:
+      - allowEmptyValue: true
+        description: Integer number of records to return
+        example: 25
+        in: query
+        name: page_size
+        schema:
+          default: 25
+          description: Integer number of records to return
+          example: 25
+          format: int64
+          maximum: 250
+          minimum: 1
+          type: integer
+      - allowEmptyValue: true
+        description: An incident form's ID. This endpoint will return a list of forms after this ID in relation to the API response order.
+        examples:
+          default:
+            summary: default
+            value: 01FCNDV6P870EA6S7TK1DSYDG0
+        in: query
+        name: after
+        schema:
+          description: An incident form's ID. This endpoint will return a list of forms after this ID in relation to the API response order.
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              example:
+                incident_forms:
+                - created_at: '2021-08-17T13:28:57.801578Z'
+                  expressions:
+                  - else_branch:
+                      result:
+                        array_value:
+                        - literal: SEV123
+                          reference: incident.severity
+                        value:
+                          literal: SEV123
+                          reference: incident.severity
+                    label: Team Slack channel
+                    operations:
+                    - branches:
+                        branches:
+                        - condition_groups:
+                          - conditions:
+                            - operation:
+                                label: Lawrence Jones
+                                value: 01FCQSP07Z74QMMYPDDGQB9FTG
+                              param_bindings:
+                              - array_value:
+                                - literal: SEV123
+                                  reference: incident.severity
+                                value:
+                                  literal: SEV123
+                                  reference: incident.severity
+                              subject:
+                                label: Priority
+                                reference: alert.priority
+                          result:
+                            array_value:
+                            - literal: SEV123
+                              reference: incident.severity
+                            value:
+                              literal: SEV123
+                              reference: incident.severity
+                        returns:
+                          array: true
+                          type: IncidentStatus
+                      cast:
+                        returns:
+                          array: true
+                          type: IncidentStatus
+                      concatenate:
+                        reference: '1235'
+                        reference_label: Teams
+                      filter:
+                        condition_groups:
+                        - conditions:
+                          - operation:
+                              label: Lawrence Jones
+                              value: 01FCQSP07Z74QMMYPDDGQB9FTG
+                            param_bindings:
+                            - array_value:
+                              - literal: SEV123
+                                reference: incident.severity
+                              value:
+                                literal: SEV123
+                                reference: incident.severity
+                            subject:
+                              label: Priority
+                              reference: alert.priority
+                      navigate:
+                        reference: '1235'
+                        reference_label: Teams
+                      operation_type: navigate
+                      parse:
+                        returns:
+                          array: true
+                          type: IncidentStatus
+                        source: metadata.annotations["github.com/repo"]
+                      returns:
+                        array: true
+                        type: IncidentStatus
+                    reference: abc123
+                    returns:
+                      array: true
+                      type: IncidentStatus
+                    root_reference: incident.status
+                  form_type: declare
+                  id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  incident_type_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  lifecycle_elements:
+                  - can_select_no_value: false
+                    config:
+                      require_comment: false
+                    custom_field_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                    default_value:
+                      array_value:
+                      - literal: SEV123
+                        reference: incident.severity
+                      value:
+                        literal: SEV123
+                        reference: incident.severity
+                    description: Shown when the incident is major or above.
+                    element_type: name
+                    id: 01FCNDV6P870EA6S7TK1DSYDG0
+                    incident_role_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                    incident_timestamp_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                    placeholder: What's happening?
+                    required_if: check_engine_config
+                    required_if_condition_groups:
+                    - conditions:
+                      - operation:
+                          label: Lawrence Jones
+                          value: 01FCQSP07Z74QMMYPDDGQB9FTG
+                        param_bindings:
+                        - array_value:
+                          - literal: SEV123
+                            reference: incident.severity
+                          value:
+                            literal: SEV123
+                            reference: incident.severity
+                        subject:
+                          label: Priority
+                          reference: alert.priority
+                    show_if_condition_groups:
+                    - conditions:
+                      - operation:
+                          label: Lawrence Jones
+                          value: 01FCQSP07Z74QMMYPDDGQB9FTG
+                        param_bindings:
+                        - array_value:
+                          - literal: SEV123
+                            reference: incident.severity
+                          value:
+                            literal: SEV123
+                            reference: incident.severity
+                        subject:
+                          label: Priority
+                          reference: alert.priority
+                  updated_at: '2021-08-17T13:28:57.801578Z'
+                pagination_meta:
+                  after: 01FCNDV6P870EA6S7TK1DSYDG0
+                  page_size: 25
+              schema:
+                $ref: '#/components/schemas/IncidentFormsListResultV3'
+          description: OK response.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'invalid_request_error: There was a problem with the request, like a missing header or querying a resource that doesn''t exist.'
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'authentication_error: Authentication failed.'
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'resource_forbidden: Access to this resource is forbidden for the authenticated user.'
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_found: The referenced resource could not be found.'
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'method_not_allowed: The endpoint does not support this operation for the specified resource.'
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_acceptable: Requested a media type this endpoint does not support.'
+        '408':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'request_timeout: The request took too long to process.
+
+
+            client_timeout: The request was cancelled by the client.'
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'conflict: Request conflicted with current state of the resource, likely a concurrent update.'
+        '412':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'precondition_failed: A required condition hasn''t been met.'
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'payload_too_large: The request payload is too large.'
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'validation_error: A required field was not provided, or the provided data was invalid.'
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'too_many_requests: Too many requests hit the API too quickly. We recommend an exponential backoff of your requests.
+
+
+            rate_limit_reached: The rate limit associated with this resource or API key has been exceeded. Try again later.'
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'api_error: Something went wrong and has been reported internally.'
+      summary: List Incident Forms V3
+      tags:
+      - Incident Forms V3
+      x-docs-display-name: List
+      x-docs-group-name: Incident Forms V3
+      x-docs-resource-type: IncidentFormV3
+      x-operation-id-source: normalized
+      x-operation-id-original: Incident Forms V3#List
+    post:
+      description: Create an incident form for an incident type. A form that already exists for that form type and incident type is rejected.
+      operationId: IncidentFormsV3#Create
+      requestBody:
+        content:
+          application/json:
+            example:
+              expressions:
+              - else_branch:
+                  result:
+                    array_value:
+                    - literal: SEV123
+                      reference: incident.severity
+                    value:
+                      literal: SEV123
+                      reference: incident.severity
+                label: Team Slack channel
+                operations:
+                - branches:
+                    branches:
+                    - condition_groups:
+                      - conditions:
+                        - operation: one_of
+                          param_bindings:
+                          - array_value:
+                            - literal: SEV123
+                              reference: incident.severity
+                            value:
+                              literal: SEV123
+                              reference: incident.severity
+                          subject: alert.priority
+                      result:
+                        array_value:
+                        - literal: SEV123
+                          reference: incident.severity
+                        value:
+                          literal: SEV123
+                          reference: incident.severity
+                    returns:
+                      array: true
+                      type: IncidentStatus
+                  cast:
+                    returns:
+                      array: true
+                      type: IncidentStatus
+                  concatenate:
+                    reference: catalog_attribute["01FCNDV6P870EA6S7TK1DSYD5H"]
+                  filter:
+                    condition_groups:
+                    - conditions:
+                      - operation: one_of
+                        param_bindings:
+                        - array_value:
+                          - literal: SEV123
+                            reference: incident.severity
+                          value:
+                            literal: SEV123
+                            reference: incident.severity
+                        subject: alert.priority
+                  navigate:
+                    reference: catalog_attribute["01FCNDV6P870EA6S7TK1DSYD5H"]
+                  operation_type: navigate
+                  parse:
+                    returns:
+                      array: true
+                      type: IncidentStatus
+                    source: metadata.annotations["github.com/repo"]
+                reference: abc123
+                root_reference: incident.status
+              form_type: declare
+              incident_type_id: 01FCNDV6P870EA6S7TK1DSYDG0
+              lifecycle_elements:
+              - can_select_no_value: false
+                config:
+                  require_comment: false
+                custom_field_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                default_value:
+                  array_value:
+                  - literal: SEV123
+                    reference: incident.severity
+                  value:
+                    literal: SEV123
+                    reference: incident.severity
+                description: Shown when the incident is major or above.
+                element_type: name
+                id: 01FCNDV6P870EA6S7TK1DSYDG0
+                incident_role_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                incident_timestamp_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                placeholder: What's happening?
+                required_if: check_engine_config
+                required_if_condition_groups:
+                - conditions:
+                  - operation: one_of
+                    param_bindings:
+                    - array_value:
+                      - literal: SEV123
+                        reference: incident.severity
+                      value:
+                        literal: SEV123
+                        reference: incident.severity
+                    subject: alert.priority
+                show_if_condition_groups:
+                - conditions:
+                  - operation: one_of
+                    param_bindings:
+                    - array_value:
+                      - literal: SEV123
+                        reference: incident.severity
+                      value:
+                        literal: SEV123
+                        reference: incident.severity
+                    subject: alert.priority
+            schema:
+              $ref: '#/components/schemas/IncidentFormsCreatePayloadV3'
+        required: true
+      responses:
+        '201':
+          content:
+            application/json:
+              example:
+                incident_form:
+                  created_at: '2021-08-17T13:28:57.801578Z'
+                  expressions:
+                  - else_branch:
+                      result:
+                        array_value:
+                        - literal: SEV123
+                          reference: incident.severity
+                        value:
+                          literal: SEV123
+                          reference: incident.severity
+                    label: Team Slack channel
+                    operations:
+                    - branches:
+                        branches:
+                        - condition_groups:
+                          - conditions:
+                            - operation:
+                                label: Lawrence Jones
+                                value: 01FCQSP07Z74QMMYPDDGQB9FTG
+                              param_bindings:
+                              - array_value:
+                                - literal: SEV123
+                                  reference: incident.severity
+                                value:
+                                  literal: SEV123
+                                  reference: incident.severity
+                              subject:
+                                label: Priority
+                                reference: alert.priority
+                          result:
+                            array_value:
+                            - literal: SEV123
+                              reference: incident.severity
+                            value:
+                              literal: SEV123
+                              reference: incident.severity
+                        returns:
+                          array: true
+                          type: IncidentStatus
+                      cast:
+                        returns:
+                          array: true
+                          type: IncidentStatus
+                      concatenate:
+                        reference: '1235'
+                        reference_label: Teams
+                      filter:
+                        condition_groups:
+                        - conditions:
+                          - operation:
+                              label: Lawrence Jones
+                              value: 01FCQSP07Z74QMMYPDDGQB9FTG
+                            param_bindings:
+                            - array_value:
+                              - literal: SEV123
+                                reference: incident.severity
+                              value:
+                                literal: SEV123
+                                reference: incident.severity
+                            subject:
+                              label: Priority
+                              reference: alert.priority
+                      navigate:
+                        reference: '1235'
+                        reference_label: Teams
+                      operation_type: navigate
+                      parse:
+                        returns:
+                          array: true
+                          type: IncidentStatus
+                        source: metadata.annotations["github.com/repo"]
+                      returns:
+                        array: true
+                        type: IncidentStatus
+                    reference: abc123
+                    returns:
+                      array: true
+                      type: IncidentStatus
+                    root_reference: incident.status
+                  form_type: declare
+                  id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  incident_type_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  lifecycle_elements:
+                  - can_select_no_value: false
+                    config:
+                      require_comment: false
+                    custom_field_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                    default_value:
+                      array_value:
+                      - literal: SEV123
+                        reference: incident.severity
+                      value:
+                        literal: SEV123
+                        reference: incident.severity
+                    description: Shown when the incident is major or above.
+                    element_type: name
+                    id: 01FCNDV6P870EA6S7TK1DSYDG0
+                    incident_role_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                    incident_timestamp_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                    placeholder: What's happening?
+                    required_if: check_engine_config
+                    required_if_condition_groups:
+                    - conditions:
+                      - operation:
+                          label: Lawrence Jones
+                          value: 01FCQSP07Z74QMMYPDDGQB9FTG
+                        param_bindings:
+                        - array_value:
+                          - literal: SEV123
+                            reference: incident.severity
+                          value:
+                            literal: SEV123
+                            reference: incident.severity
+                        subject:
+                          label: Priority
+                          reference: alert.priority
+                    show_if_condition_groups:
+                    - conditions:
+                      - operation:
+                          label: Lawrence Jones
+                          value: 01FCQSP07Z74QMMYPDDGQB9FTG
+                        param_bindings:
+                        - array_value:
+                          - literal: SEV123
+                            reference: incident.severity
+                          value:
+                            literal: SEV123
+                            reference: incident.severity
+                        subject:
+                          label: Priority
+                          reference: alert.priority
+                  updated_at: '2021-08-17T13:28:57.801578Z'
+              schema:
+                $ref: '#/components/schemas/IncidentFormsCreateResultV3'
+          description: Created response.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'invalid_request_error: There was a problem with the request, like a missing header or querying a resource that doesn''t exist.'
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'authentication_error: Authentication failed.'
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'resource_forbidden: Access to this resource is forbidden for the authenticated user.'
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_found: The referenced resource could not be found.'
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'method_not_allowed: The endpoint does not support this operation for the specified resource.'
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_acceptable: Requested a media type this endpoint does not support.'
+        '408':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'request_timeout: The request took too long to process.
+
+
+            client_timeout: The request was cancelled by the client.'
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'conflict: Request conflicted with current state of the resource, likely a concurrent update.'
+        '412':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'precondition_failed: A required condition hasn''t been met.'
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'payload_too_large: The request payload is too large.'
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'validation_error: A required field was not provided, or the provided data was invalid.'
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'too_many_requests: Too many requests hit the API too quickly. We recommend an exponential backoff of your requests.
+
+
+            rate_limit_reached: The rate limit associated with this resource or API key has been exceeded. Try again later.'
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'api_error: Something went wrong and has been reported internally.'
+      summary: Create Incident Forms V3
+      tags:
+      - Incident Forms V3
+      x-docs-display-name: Create
+      x-docs-group-name: Incident Forms V3
+      x-docs-resource-type: IncidentFormV3
+      x-mint:
+        content: 🔑 Requires the `incident_forms.update` scope.
+      x-rbac-scopes:
+      - incident_forms.update
+      x-operation-id-source: normalized
+      x-operation-id-original: Incident Forms V3#Create
+  /v3/incident_forms/{id}:
+    delete:
+      description: Archive an incident form. The organisation's default form of a type cannot be archived.
+      operationId: IncidentFormsV3#Delete
+      parameters:
+      - description: Unique identifier for this incident form
+        example: 01FCNDV6P870EA6S7TK1DSYDG0
+        in: path
+        name: id
+        required: true
+        schema:
+          description: Unique identifier for this incident form
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+      responses:
+        '204':
+          description: No Content response.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'invalid_request_error: There was a problem with the request, like a missing header or querying a resource that doesn''t exist.'
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'authentication_error: Authentication failed.'
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'resource_forbidden: Access to this resource is forbidden for the authenticated user.'
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_found: The referenced resource could not be found.'
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'method_not_allowed: The endpoint does not support this operation for the specified resource.'
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_acceptable: Requested a media type this endpoint does not support.'
+        '408':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'request_timeout: The request took too long to process.
+
+
+            client_timeout: The request was cancelled by the client.'
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'conflict: Request conflicted with current state of the resource, likely a concurrent update.'
+        '412':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'precondition_failed: A required condition hasn''t been met.'
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'payload_too_large: The request payload is too large.'
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'validation_error: A required field was not provided, or the provided data was invalid.'
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'too_many_requests: Too many requests hit the API too quickly. We recommend an exponential backoff of your requests.
+
+
+            rate_limit_reached: The rate limit associated with this resource or API key has been exceeded. Try again later.'
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'api_error: Something went wrong and has been reported internally.'
+      summary: Delete Incident Forms V3
+      tags:
+      - Incident Forms V3
+      x-docs-display-name: Delete
+      x-docs-group-name: Incident Forms V3
+      x-docs-resource-type: IncidentFormV3
+      x-mint:
+        content: 🔑 Requires the `incident_forms.update` scope.
+      x-rbac-scopes:
+      - incident_forms.update
+      x-operation-id-source: normalized
+      x-operation-id-original: Incident Forms V3#Delete
+    get:
+      description: Get a single incident form, including its elements and expressions.
+      operationId: IncidentFormsV3#Show
+      parameters:
+      - description: Unique identifier for this incident form
+        example: 01FCNDV6P870EA6S7TK1DSYDG0
+        in: path
+        name: id
+        required: true
+        schema:
+          description: Unique identifier for this incident form
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              example:
+                incident_form:
+                  created_at: '2021-08-17T13:28:57.801578Z'
+                  expressions:
+                  - else_branch:
+                      result:
+                        array_value:
+                        - literal: SEV123
+                          reference: incident.severity
+                        value:
+                          literal: SEV123
+                          reference: incident.severity
+                    label: Team Slack channel
+                    operations:
+                    - branches:
+                        branches:
+                        - condition_groups:
+                          - conditions:
+                            - operation:
+                                label: Lawrence Jones
+                                value: 01FCQSP07Z74QMMYPDDGQB9FTG
+                              param_bindings:
+                              - array_value:
+                                - literal: SEV123
+                                  reference: incident.severity
+                                value:
+                                  literal: SEV123
+                                  reference: incident.severity
+                              subject:
+                                label: Priority
+                                reference: alert.priority
+                          result:
+                            array_value:
+                            - literal: SEV123
+                              reference: incident.severity
+                            value:
+                              literal: SEV123
+                              reference: incident.severity
+                        returns:
+                          array: true
+                          type: IncidentStatus
+                      cast:
+                        returns:
+                          array: true
+                          type: IncidentStatus
+                      concatenate:
+                        reference: '1235'
+                        reference_label: Teams
+                      filter:
+                        condition_groups:
+                        - conditions:
+                          - operation:
+                              label: Lawrence Jones
+                              value: 01FCQSP07Z74QMMYPDDGQB9FTG
+                            param_bindings:
+                            - array_value:
+                              - literal: SEV123
+                                reference: incident.severity
+                              value:
+                                literal: SEV123
+                                reference: incident.severity
+                            subject:
+                              label: Priority
+                              reference: alert.priority
+                      navigate:
+                        reference: '1235'
+                        reference_label: Teams
+                      operation_type: navigate
+                      parse:
+                        returns:
+                          array: true
+                          type: IncidentStatus
+                        source: metadata.annotations["github.com/repo"]
+                      returns:
+                        array: true
+                        type: IncidentStatus
+                    reference: abc123
+                    returns:
+                      array: true
+                      type: IncidentStatus
+                    root_reference: incident.status
+                  form_type: declare
+                  id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  incident_type_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  lifecycle_elements:
+                  - can_select_no_value: false
+                    config:
+                      require_comment: false
+                    custom_field_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                    default_value:
+                      array_value:
+                      - literal: SEV123
+                        reference: incident.severity
+                      value:
+                        literal: SEV123
+                        reference: incident.severity
+                    description: Shown when the incident is major or above.
+                    element_type: name
+                    id: 01FCNDV6P870EA6S7TK1DSYDG0
+                    incident_role_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                    incident_timestamp_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                    placeholder: What's happening?
+                    required_if: check_engine_config
+                    required_if_condition_groups:
+                    - conditions:
+                      - operation:
+                          label: Lawrence Jones
+                          value: 01FCQSP07Z74QMMYPDDGQB9FTG
+                        param_bindings:
+                        - array_value:
+                          - literal: SEV123
+                            reference: incident.severity
+                          value:
+                            literal: SEV123
+                            reference: incident.severity
+                        subject:
+                          label: Priority
+                          reference: alert.priority
+                    show_if_condition_groups:
+                    - conditions:
+                      - operation:
+                          label: Lawrence Jones
+                          value: 01FCQSP07Z74QMMYPDDGQB9FTG
+                        param_bindings:
+                        - array_value:
+                          - literal: SEV123
+                            reference: incident.severity
+                          value:
+                            literal: SEV123
+                            reference: incident.severity
+                        subject:
+                          label: Priority
+                          reference: alert.priority
+                  updated_at: '2021-08-17T13:28:57.801578Z'
+              schema:
+                $ref: '#/components/schemas/IncidentFormsShowResultV3'
+          description: OK response.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'invalid_request_error: There was a problem with the request, like a missing header or querying a resource that doesn''t exist.'
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'authentication_error: Authentication failed.'
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'resource_forbidden: Access to this resource is forbidden for the authenticated user.'
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_found: The referenced resource could not be found.'
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'method_not_allowed: The endpoint does not support this operation for the specified resource.'
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_acceptable: Requested a media type this endpoint does not support.'
+        '408':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'request_timeout: The request took too long to process.
+
+
+            client_timeout: The request was cancelled by the client.'
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'conflict: Request conflicted with current state of the resource, likely a concurrent update.'
+        '412':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'precondition_failed: A required condition hasn''t been met.'
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'payload_too_large: The request payload is too large.'
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'validation_error: A required field was not provided, or the provided data was invalid.'
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'too_many_requests: Too many requests hit the API too quickly. We recommend an exponential backoff of your requests.
+
+
+            rate_limit_reached: The rate limit associated with this resource or API key has been exceeded. Try again later.'
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'api_error: Something went wrong and has been reported internally.'
+      summary: Show Incident Forms V3
+      tags:
+      - Incident Forms V3
+      x-docs-display-name: Show
+      x-docs-group-name: Incident Forms V3
+      x-docs-resource-type: IncidentFormV3
+      x-operation-id-source: normalized
+      x-operation-id-original: Incident Forms V3#Show
+    put:
+      description: Replace an incident form, including its elements and expressions.
+      operationId: IncidentFormsV3#Update
+      parameters:
+      - description: Unique identifier of the incident form
+        example: 01FCNDV6P870EA6S7TK1DSYDG0
+        in: path
+        name: id
+        required: true
+        schema:
+          description: Unique identifier of the incident form
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+      requestBody:
+        content:
+          application/json:
+            example:
+              expressions:
+              - else_branch:
+                  result:
+                    array_value:
+                    - literal: SEV123
+                      reference: incident.severity
+                    value:
+                      literal: SEV123
+                      reference: incident.severity
+                label: Team Slack channel
+                operations:
+                - branches:
+                    branches:
+                    - condition_groups:
+                      - conditions:
+                        - operation: one_of
+                          param_bindings:
+                          - array_value:
+                            - literal: SEV123
+                              reference: incident.severity
+                            value:
+                              literal: SEV123
+                              reference: incident.severity
+                          subject: alert.priority
+                      result:
+                        array_value:
+                        - literal: SEV123
+                          reference: incident.severity
+                        value:
+                          literal: SEV123
+                          reference: incident.severity
+                    returns:
+                      array: true
+                      type: IncidentStatus
+                  cast:
+                    returns:
+                      array: true
+                      type: IncidentStatus
+                  concatenate:
+                    reference: catalog_attribute["01FCNDV6P870EA6S7TK1DSYD5H"]
+                  filter:
+                    condition_groups:
+                    - conditions:
+                      - operation: one_of
+                        param_bindings:
+                        - array_value:
+                          - literal: SEV123
+                            reference: incident.severity
+                          value:
+                            literal: SEV123
+                            reference: incident.severity
+                        subject: alert.priority
+                  navigate:
+                    reference: catalog_attribute["01FCNDV6P870EA6S7TK1DSYD5H"]
+                  operation_type: navigate
+                  parse:
+                    returns:
+                      array: true
+                      type: IncidentStatus
+                    source: metadata.annotations["github.com/repo"]
+                reference: abc123
+                root_reference: incident.status
+              form_type: declare
+              incident_type_id: 01FCNDV6P870EA6S7TK1DSYDG0
+              lifecycle_elements:
+              - can_select_no_value: false
+                config:
+                  require_comment: false
+                custom_field_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                default_value:
+                  array_value:
+                  - literal: SEV123
+                    reference: incident.severity
+                  value:
+                    literal: SEV123
+                    reference: incident.severity
+                description: Shown when the incident is major or above.
+                element_type: name
+                id: 01FCNDV6P870EA6S7TK1DSYDG0
+                incident_role_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                incident_timestamp_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                placeholder: What's happening?
+                required_if: check_engine_config
+                required_if_condition_groups:
+                - conditions:
+                  - operation: one_of
+                    param_bindings:
+                    - array_value:
+                      - literal: SEV123
+                        reference: incident.severity
+                      value:
+                        literal: SEV123
+                        reference: incident.severity
+                    subject: alert.priority
+                show_if_condition_groups:
+                - conditions:
+                  - operation: one_of
+                    param_bindings:
+                    - array_value:
+                      - literal: SEV123
+                        reference: incident.severity
+                      value:
+                        literal: SEV123
+                        reference: incident.severity
+                    subject: alert.priority
+            schema:
+              $ref: '#/components/schemas/IncidentFormsUpdatePayloadV3'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              example:
+                incident_form:
+                  created_at: '2021-08-17T13:28:57.801578Z'
+                  expressions:
+                  - else_branch:
+                      result:
+                        array_value:
+                        - literal: SEV123
+                          reference: incident.severity
+                        value:
+                          literal: SEV123
+                          reference: incident.severity
+                    label: Team Slack channel
+                    operations:
+                    - branches:
+                        branches:
+                        - condition_groups:
+                          - conditions:
+                            - operation:
+                                label: Lawrence Jones
+                                value: 01FCQSP07Z74QMMYPDDGQB9FTG
+                              param_bindings:
+                              - array_value:
+                                - literal: SEV123
+                                  reference: incident.severity
+                                value:
+                                  literal: SEV123
+                                  reference: incident.severity
+                              subject:
+                                label: Priority
+                                reference: alert.priority
+                          result:
+                            array_value:
+                            - literal: SEV123
+                              reference: incident.severity
+                            value:
+                              literal: SEV123
+                              reference: incident.severity
+                        returns:
+                          array: true
+                          type: IncidentStatus
+                      cast:
+                        returns:
+                          array: true
+                          type: IncidentStatus
+                      concatenate:
+                        reference: '1235'
+                        reference_label: Teams
+                      filter:
+                        condition_groups:
+                        - conditions:
+                          - operation:
+                              label: Lawrence Jones
+                              value: 01FCQSP07Z74QMMYPDDGQB9FTG
+                            param_bindings:
+                            - array_value:
+                              - literal: SEV123
+                                reference: incident.severity
+                              value:
+                                literal: SEV123
+                                reference: incident.severity
+                            subject:
+                              label: Priority
+                              reference: alert.priority
+                      navigate:
+                        reference: '1235'
+                        reference_label: Teams
+                      operation_type: navigate
+                      parse:
+                        returns:
+                          array: true
+                          type: IncidentStatus
+                        source: metadata.annotations["github.com/repo"]
+                      returns:
+                        array: true
+                        type: IncidentStatus
+                    reference: abc123
+                    returns:
+                      array: true
+                      type: IncidentStatus
+                    root_reference: incident.status
+                  form_type: declare
+                  id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  incident_type_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  lifecycle_elements:
+                  - can_select_no_value: false
+                    config:
+                      require_comment: false
+                    custom_field_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                    default_value:
+                      array_value:
+                      - literal: SEV123
+                        reference: incident.severity
+                      value:
+                        literal: SEV123
+                        reference: incident.severity
+                    description: Shown when the incident is major or above.
+                    element_type: name
+                    id: 01FCNDV6P870EA6S7TK1DSYDG0
+                    incident_role_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                    incident_timestamp_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                    placeholder: What's happening?
+                    required_if: check_engine_config
+                    required_if_condition_groups:
+                    - conditions:
+                      - operation:
+                          label: Lawrence Jones
+                          value: 01FCQSP07Z74QMMYPDDGQB9FTG
+                        param_bindings:
+                        - array_value:
+                          - literal: SEV123
+                            reference: incident.severity
+                          value:
+                            literal: SEV123
+                            reference: incident.severity
+                        subject:
+                          label: Priority
+                          reference: alert.priority
+                    show_if_condition_groups:
+                    - conditions:
+                      - operation:
+                          label: Lawrence Jones
+                          value: 01FCQSP07Z74QMMYPDDGQB9FTG
+                        param_bindings:
+                        - array_value:
+                          - literal: SEV123
+                            reference: incident.severity
+                          value:
+                            literal: SEV123
+                            reference: incident.severity
+                        subject:
+                          label: Priority
+                          reference: alert.priority
+                  updated_at: '2021-08-17T13:28:57.801578Z'
+              schema:
+                $ref: '#/components/schemas/IncidentFormsUpdateResultV3'
+          description: OK response.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'invalid_request_error: There was a problem with the request, like a missing header or querying a resource that doesn''t exist.'
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'authentication_error: Authentication failed.'
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'resource_forbidden: Access to this resource is forbidden for the authenticated user.'
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_found: The referenced resource could not be found.'
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'method_not_allowed: The endpoint does not support this operation for the specified resource.'
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_acceptable: Requested a media type this endpoint does not support.'
+        '408':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'request_timeout: The request took too long to process.
+
+
+            client_timeout: The request was cancelled by the client.'
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'conflict: Request conflicted with current state of the resource, likely a concurrent update.'
+        '412':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'precondition_failed: A required condition hasn''t been met.'
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'payload_too_large: The request payload is too large.'
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'validation_error: A required field was not provided, or the provided data was invalid.'
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'too_many_requests: Too many requests hit the API too quickly. We recommend an exponential backoff of your requests.
+
+
+            rate_limit_reached: The rate limit associated with this resource or API key has been exceeded. Try again later.'
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'api_error: Something went wrong and has been reported internally.'
+      summary: Update Incident Forms V3
+      tags:
+      - Incident Forms V3
+      x-docs-display-name: Update
+      x-docs-group-name: Incident Forms V3
+      x-docs-resource-type: IncidentFormV3
+      x-mint:
+        content: 🔑 Requires the `incident_forms.update` scope.
+      x-rbac-scopes:
+      - incident_forms.update
+      x-operation-id-source: normalized
+      x-operation-id-original: Incident Forms V3#Update
+components:
+  schemas:
+    IncidentFormLifecycleElementConfigV3:
+      example:
+        require_comment: false
+      properties:
+        require_comment:
+          description: Whether the free-text comment must be filled in, for anyone giving investigation feedback
+          example: false
+          type: boolean
+      type: object
+    IncidentFormsListResultV3:
+      example:
+        incident_forms:
+        - created_at: '2021-08-17T13:28:57.801578Z'
+          expressions:
+          - else_branch:
+              result:
+                array_value:
+                - literal: SEV123
+                  reference: incident.severity
+                value:
+                  literal: SEV123
+                  reference: incident.severity
+            label: Team Slack channel
+            operations:
+            - branches:
+                branches:
+                - condition_groups:
+                  - conditions:
+                    - operation:
+                        label: Lawrence Jones
+                        value: 01FCQSP07Z74QMMYPDDGQB9FTG
+                      param_bindings:
+                      - array_value:
+                        - literal: SEV123
+                          reference: incident.severity
+                        value:
+                          literal: SEV123
+                          reference: incident.severity
+                      subject:
+                        label: Priority
+                        reference: alert.priority
+                  result:
+                    array_value:
+                    - literal: SEV123
+                      reference: incident.severity
+                    value:
+                      literal: SEV123
+                      reference: incident.severity
+                returns:
+                  array: true
+                  type: IncidentStatus
+              cast:
+                returns:
+                  array: true
+                  type: IncidentStatus
+              concatenate:
+                reference: '1235'
+                reference_label: Teams
+              filter:
+                condition_groups:
+                - conditions:
+                  - operation:
+                      label: Lawrence Jones
+                      value: 01FCQSP07Z74QMMYPDDGQB9FTG
+                    param_bindings:
+                    - array_value:
+                      - literal: SEV123
+                        reference: incident.severity
+                      value:
+                        literal: SEV123
+                        reference: incident.severity
+                    subject:
+                      label: Priority
+                      reference: alert.priority
+              navigate:
+                reference: '1235'
+                reference_label: Teams
+              operation_type: navigate
+              parse:
+                returns:
+                  array: true
+                  type: IncidentStatus
+                source: metadata.annotations["github.com/repo"]
+              returns:
+                array: true
+                type: IncidentStatus
+            reference: abc123
+            returns:
+              array: true
+              type: IncidentStatus
+            root_reference: incident.status
+          form_type: declare
+          id: 01FCNDV6P870EA6S7TK1DSYDG0
+          incident_type_id: 01FCNDV6P870EA6S7TK1DSYDG0
+          lifecycle_elements:
+          - can_select_no_value: false
+            config:
+              require_comment: false
+            custom_field_id: 01FCNDV6P870EA6S7TK1DSYDG0
+            default_value:
+              array_value:
+              - literal: SEV123
+                reference: incident.severity
+              value:
+                literal: SEV123
+                reference: incident.severity
+            description: Shown when the incident is major or above.
+            element_type: name
+            id: 01FCNDV6P870EA6S7TK1DSYDG0
+            incident_role_id: 01FCNDV6P870EA6S7TK1DSYDG0
+            incident_timestamp_id: 01FCNDV6P870EA6S7TK1DSYDG0
+            placeholder: What's happening?
+            required_if: check_engine_config
+            required_if_condition_groups:
+            - conditions:
+              - operation:
+                  label: Lawrence Jones
+                  value: 01FCQSP07Z74QMMYPDDGQB9FTG
+                param_bindings:
+                - array_value:
+                  - literal: SEV123
+                    reference: incident.severity
+                  value:
+                    literal: SEV123
+                    reference: incident.severity
+                subject:
+                  label: Priority
+                  reference: alert.priority
+            show_if_condition_groups:
+            - conditions:
+              - operation:
+                  label: Lawrence Jones
+                  value: 01FCQSP07Z74QMMYPDDGQB9FTG
+                param_bindings:
+                - array_value:
+                  - literal: SEV123
+                    reference: incident.severity
+                  value:
+                    literal: SEV123
+                    reference: incident.severity
+                subject:
+                  label: Priority
+                  reference: alert.priority
+          updated_at: '2021-08-17T13:28:57.801578Z'
+        pagination_meta:
+          after: 01FCNDV6P870EA6S7TK1DSYDG0
+          page_size: 25
+      properties:
+        incident_forms:
+          example:
+          - created_at: '2021-08-17T13:28:57.801578Z'
+            expressions:
+            - else_branch:
+                result:
+                  array_value:
+                  - literal: SEV123
+                    reference: incident.severity
+                  value:
+                    literal: SEV123
+                    reference: incident.severity
+              label: Team Slack channel
+              operations:
+              - branches:
+                  branches:
+                  - condition_groups:
+                    - conditions:
+                      - operation:
+                          label: Lawrence Jones
+                          value: 01FCQSP07Z74QMMYPDDGQB9FTG
+                        param_bindings:
+                        - array_value:
+                          - literal: SEV123
+                            reference: incident.severity
+                          value:
+                            literal: SEV123
+                            reference: incident.severity
+                        subject:
+                          label: Priority
+                          reference: alert.priority
+                    result:
+                      array_value:
+                      - literal: SEV123
+                        reference: incident.severity
+                      value:
+                        literal: SEV123
+                        reference: incident.severity
+                  returns:
+                    array: true
+                    type: IncidentStatus
+                cast:
+                  returns:
+                    array: true
+                    type: IncidentStatus
+                concatenate:
+                  reference: '1235'
+                  reference_label: Teams
+                filter:
+                  condition_groups:
+                  - conditions:
+                    - operation:
+                        label: Lawrence Jones
+                        value: 01FCQSP07Z74QMMYPDDGQB9FTG
+                      param_bindings:
+                      - array_value:
+                        - literal: SEV123
+                          reference: incident.severity
+                        value:
+                          literal: SEV123
+                          reference: incident.severity
+                      subject:
+                        label: Priority
+                        reference: alert.priority
+                navigate:
+                  reference: '1235'
+                  reference_label: Teams
+                operation_type: navigate
+                parse:
+                  returns:
+                    array: true
+                    type: IncidentStatus
+                  source: metadata.annotations["github.com/repo"]
+                returns:
+                  array: true
+                  type: IncidentStatus
+              reference: abc123
+              returns:
+                array: true
+                type: IncidentStatus
+              root_reference: incident.status
+            form_type: declare
+            id: 01FCNDV6P870EA6S7TK1DSYDG0
+            incident_type_id: 01FCNDV6P870EA6S7TK1DSYDG0
+            lifecycle_elements:
+            - can_select_no_value: false
+              config:
+                require_comment: false
+              custom_field_id: 01FCNDV6P870EA6S7TK1DSYDG0
+              default_value:
+                array_value:
+                - literal: SEV123
+                  reference: incident.severity
+                value:
+                  literal: SEV123
+                  reference: incident.severity
+              description: Shown when the incident is major or above.
+              element_type: name
+              id: 01FCNDV6P870EA6S7TK1DSYDG0
+              incident_role_id: 01FCNDV6P870EA6S7TK1DSYDG0
+              incident_timestamp_id: 01FCNDV6P870EA6S7TK1DSYDG0
+              placeholder: What's happening?
+              required_if: check_engine_config
+              required_if_condition_groups:
+              - conditions:
+                - operation:
+                    label: Lawrence Jones
+                    value: 01FCQSP07Z74QMMYPDDGQB9FTG
+                  param_bindings:
+                  - array_value:
+                    - literal: SEV123
+                      reference: incident.severity
+                    value:
+                      literal: SEV123
+                      reference: incident.severity
+                  subject:
+                    label: Priority
+                    reference: alert.priority
+              show_if_condition_groups:
+              - conditions:
+                - operation:
+                    label: Lawrence Jones
+                    value: 01FCQSP07Z74QMMYPDDGQB9FTG
+                  param_bindings:
+                  - array_value:
+                    - literal: SEV123
+                      reference: incident.severity
+                    value:
+                      literal: SEV123
+                      reference: incident.severity
+                  subject:
+                    label: Priority
+                    reference: alert.priority
+            updated_at: '2021-08-17T13:28:57.801578Z'
+          items:
+            $ref: '#/components/schemas/IncidentFormV3'
+          type: array
+        pagination_meta:
+          $ref: '#/components/schemas/PaginationMetaResultV3'
+      required:
+      - incident_forms
+      - pagination_meta
+      type: object
+    IncidentFormLifecycleElementV3:
+      example:
+        can_select_no_value: false
+        config:
+          require_comment: false
+        custom_field_id: 01FCNDV6P870EA6S7TK1DSYDG0
+        default_value:
+          array_value:
+          - literal: SEV123
+            reference: incident.severity
+          value:
+            literal: SEV123
+            reference: incident.severity
+        description: Shown when the incident is major or above.
+        element_type: name
+        id: 01FCNDV6P870EA6S7TK1DSYDG0
+        incident_role_id: 01FCNDV6P870EA6S7TK1DSYDG0
+        incident_timestamp_id: 01FCNDV6P870EA6S7TK1DSYDG0
+        placeholder: What's happening?
+        required_if: check_engine_config
+        required_if_condition_groups:
+        - conditions:
+          - operation:
+              label: Lawrence Jones
+              value: 01FCQSP07Z74QMMYPDDGQB9FTG
+            param_bindings:
+            - array_value:
+              - literal: SEV123
+                reference: incident.severity
+              value:
+                literal: SEV123
+                reference: incident.severity
+            subject:
+              label: Priority
+              reference: alert.priority
+        show_if_condition_groups:
+        - conditions:
+          - operation:
+              label: Lawrence Jones
+              value: 01FCQSP07Z74QMMYPDDGQB9FTG
+            param_bindings:
+            - array_value:
+              - literal: SEV123
+                reference: incident.severity
+              value:
+                literal: SEV123
+                reference: incident.severity
+            subject:
+              label: Priority
+              reference: alert.priority
+      properties:
+        can_select_no_value:
+          description: Whether the user can explicitly choose no value. Only meaningful for custom field elements.
+          example: false
+          type: boolean
+        config:
+          $ref: '#/components/schemas/IncidentFormLifecycleElementConfigV3'
+        custom_field_id:
+          description: The custom field this element edits. Set only when element_type is custom_field.
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+        default_value:
+          $ref: '#/components/schemas/EngineParamBindingV3'
+        description:
+          description: Description shown beside this element, as markdown
+          example: Shown when the incident is major or above.
+          type: string
+        element_type:
+          description: What this element captures
+          enum:
+          - name
+          - status
+          - severity
+          - incident_role
+          - incident_type
+          - summary
+          - custom_field
+          - timestamp
+          - update_message
+          - next_update_in
+          - triage
+          - visibility
+          - divider
+          - text
+          - incident_attachments
+          - slack_channel
+          - announce_retro_incident
+          - enter_post_incident_flow
+          - investigation_feedback
+          example: name
+          type: string
+        id:
+          description: Unique identifier for this element. divider and text elements are matched on this, because they have no natural key.
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+        incident_role_id:
+          description: The incident role this element assigns. Set only when element_type is incident_role.
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+        incident_timestamp_id:
+          description: The incident timestamp this element sets. Set only when element_type is timestamp.
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+        placeholder:
+          description: Placeholder text shown in the empty field
+          example: What's happening?
+          type: string
+        required_if:
+          description: When this element must be filled in
+          enum:
+          - check_engine_config
+          - always_require
+          - never_require
+          example: check_engine_config
+          type: string
+        required_if_condition_groups:
+          description: Condition groups that make this element required. Used when required_if is check_engine_config.
+          example:
+          - conditions:
+            - operation:
+                label: Lawrence Jones
+                value: 01FCQSP07Z74QMMYPDDGQB9FTG
+              param_bindings:
+              - array_value:
+                - literal: SEV123
+                  reference: incident.severity
+                value:
+                  literal: SEV123
+                  reference: incident.severity
+              subject:
+                label: Priority
+                reference: alert.priority
+          items:
+            $ref: '#/components/schemas/ConditionGroupV3'
+          type: array
+        show_if_condition_groups:
+          description: The element is shown when any of these condition groups match. Unset means it is always shown.
+          example:
+          - conditions:
+            - operation:
+                label: Lawrence Jones
+                value: 01FCQSP07Z74QMMYPDDGQB9FTG
+              param_bindings:
+              - array_value:
+                - literal: SEV123
+                  reference: incident.severity
+                value:
+                  literal: SEV123
+                  reference: incident.severity
+              subject:
+                label: Priority
+                reference: alert.priority
+          items:
+            $ref: '#/components/schemas/ConditionGroupV3'
+          type: array
+      required:
+      - element_type
+      type: object
+    IncidentFormsShowResultV3:
+      example:
+        incident_form:
+          created_at: '2021-08-17T13:28:57.801578Z'
+          expressions:
+          - else_branch:
+              result:
+                array_value:
+                - literal: SEV123
+                  reference: incident.severity
+                value:
+                  literal: SEV123
+                  reference: incident.severity
+            label: Team Slack channel
+            operations:
+            - branches:
+                branches:
+                - condition_groups:
+                  - conditions:
+                    - operation:
+                        label: Lawrence Jones
+                        value: 01FCQSP07Z74QMMYPDDGQB9FTG
+                      param_bindings:
+                      - array_value:
+                        - literal: SEV123
+                          reference: incident.severity
+                        value:
+                          literal: SEV123
+                          reference: incident.severity
+                      subject:
+                        label: Priority
+                        reference: alert.priority
+                  result:
+                    array_value:
+                    - literal: SEV123
+                      reference: incident.severity
+                    value:
+                      literal: SEV123
+                      reference: incident.severity
+                returns:
+                  array: true
+                  type: IncidentStatus
+              cast:
+                returns:
+                  array: true
+                  type: IncidentStatus
+              concatenate:
+                reference: '1235'
+                reference_label: Teams
+              filter:
+                condition_groups:
+                - conditions:
+                  - operation:
+                      label: Lawrence Jones
+                      value: 01FCQSP07Z74QMMYPDDGQB9FTG
+                    param_bindings:
+                    - array_value:
+                      - literal: SEV123
+                        reference: incident.severity
+                      value:
+                        literal: SEV123
+                        reference: incident.severity
+                    subject:
+                      label: Priority
+                      reference: alert.priority
+              navigate:
+                reference: '1235'
+                reference_label: Teams
+              operation_type: navigate
+              parse:
+                returns:
+                  array: true
+                  type: IncidentStatus
+                source: metadata.annotations["github.com/repo"]
+              returns:
+                array: true
+                type: IncidentStatus
+            reference: abc123
+            returns:
+              array: true
+              type: IncidentStatus
+            root_reference: incident.status
+          form_type: declare
+          id: 01FCNDV6P870EA6S7TK1DSYDG0
+          incident_type_id: 01FCNDV6P870EA6S7TK1DSYDG0
+          lifecycle_elements:
+          - can_select_no_value: false
+            config:
+              require_comment: false
+            custom_field_id: 01FCNDV6P870EA6S7TK1DSYDG0
+            default_value:
+              array_value:
+              - literal: SEV123
+                reference: incident.severity
+              value:
+                literal: SEV123
+                reference: incident.severity
+            description: Shown when the incident is major or above.
+            element_type: name
+            id: 01FCNDV6P870EA6S7TK1DSYDG0
+            incident_role_id: 01FCNDV6P870EA6S7TK1DSYDG0
+            incident_timestamp_id: 01FCNDV6P870EA6S7TK1DSYDG0
+            placeholder: What's happening?
+            required_if: check_engine_config
+            required_if_condition_groups:
+            - conditions:
+              - operation:
+                  label: Lawrence Jones
+                  value: 01FCQSP07Z74QMMYPDDGQB9FTG
+                param_bindings:
+                - array_value:
+                  - literal: SEV123
+                    reference: incident.severity
+                  value:
+                    literal: SEV123
+                    reference: incident.severity
+                subject:
+                  label: Priority
+                  reference: alert.priority
+            show_if_condition_groups:
+            - conditions:
+              - operation:
+                  label: Lawrence Jones
+                  value: 01FCQSP07Z74QMMYPDDGQB9FTG
+                param_bindings:
+                - array_value:
+                  - literal: SEV123
+                    reference: incident.severity
+                  value:
+                    literal: SEV123
+                    reference: incident.severity
+                subject:
+                  label: Priority
+                  reference: alert.priority
+          updated_at: '2021-08-17T13:28:57.801578Z'
+      properties:
+        incident_form:
+          $ref: '#/components/schemas/IncidentFormV3'
+      required:
+      - incident_form
+      type: object
+    ConditionSubjectV3:
+      example:
+        label: Priority
+        reference: alert.priority
+      properties:
+        label:
+          description: Human readable identifier for the subject
+          example: Priority
+          type: string
+        reference:
+          description: Reference into the scope for the value of the subject
+          example: alert.priority
+          type: string
+      required:
+      - label
+      - reference
+      type: object
+    ExpressionPayloadV3:
+      example:
+        else_branch:
+          result:
+            array_value:
+            - literal: SEV123
+              reference: incident.severity
+            value:
+              literal: SEV123
+              reference: incident.severity
+        label: Team Slack channel
+        operations:
+        - branches:
+            branches:
+            - condition_groups:
+              - conditions:
+                - operation: one_of
+                  param_bindings:
+                  - array_value:
+                    - literal: SEV123
+                      reference: incident.severity
+                    value:
+                      literal: SEV123
+                      reference: incident.severity
+                  subject: alert.priority
+              result:
+                array_value:
+                - literal: SEV123
+                  reference: incident.severity
+                value:
+                  literal: SEV123
+                  reference: incident.severity
+            returns:
+              array: true
+              type: IncidentStatus
+          cast:
+            returns:
+              array: true
+              type: IncidentStatus
+          concatenate:
+            reference: catalog_attribute["01FCNDV6P870EA6S7TK1DSYD5H"]
+          filter:
+            condition_groups:
+            - conditions:
+              - operation: one_of
+                param_bindings:
+                - array_value:
+                  - literal: SEV123
+                    reference: incident.severity
+                  value:
+                    literal: SEV123
+                    reference: incident.severity
+                subject: alert.priority
+          navigate:
+            reference: catalog_attribute["01FCNDV6P870EA6S7TK1DSYD5H"]
+          operation_type: navigate
+          parse:
+            returns:
+              array: true
+              type: IncidentStatus
+            source: metadata.annotations["github.com/repo"]
+        reference: abc123
+        root_reference: incident.status
+      properties:
+        else_branch:
+          $ref: '#/components/schemas/ExpressionElseBranchPayloadV3'
+        label:
+          description: The human readable label of the expression
+          example: Team Slack channel
+          type: string
+        operations:
+          example:
+          - branches:
+              branches:
+              - condition_groups:
+                - conditions:
+                  - operation: one_of
+                    param_bindings:
+                    - array_value:
+                      - literal: SEV123
+                        reference: incident.severity
+                      value:
+                        literal: SEV123
+                        reference: incident.severity
+                    subject: alert.priority
+                result:
+                  array_value:
+                  - literal: SEV123
+                    reference: incident.severity
+                  value:
+                    literal: SEV123
+                    reference: incident.severity
+              returns:
+                array: true
+                type: IncidentStatus
+            cast:
+              returns:
+                array: true
+                type: IncidentStatus
+            concatenate:
+              reference: catalog_attribute["01FCNDV6P870EA6S7TK1DSYD5H"]
+            filter:
+              condition_groups:
+              - conditions:
+                - operation: one_of
+                  param_bindings:
+                  - array_value:
+                    - literal: SEV123
+                      reference: incident.severity
+                    value:
+                      literal: SEV123
+                      reference: incident.severity
+                  subject: alert.priority
+            navigate:
+              reference: catalog_attribute["01FCNDV6P870EA6S7TK1DSYD5H"]
+            operation_type: navigate
+            parse:
+              returns:
+                array: true
+                type: IncidentStatus
+              source: metadata.annotations["github.com/repo"]
+          items:
+            $ref: '#/components/schemas/ExpressionOperationPayloadV3'
+          type: array
+        reference:
+          description: A short ID that can be used to reference the expression
+          example: abc123
+          type: string
+        root_reference:
+          description: The root reference for this expression (i.e. where the expression starts)
+          example: incident.status
+          type: string
+      required:
+      - label
+      - reference
+      - root_reference
+      - operations
+      type: object
+    IncidentFormV3:
+      example:
+        created_at: '2021-08-17T13:28:57.801578Z'
+        expressions:
+        - else_branch:
+            result:
+              array_value:
+              - literal: SEV123
+                reference: incident.severity
+              value:
+                literal: SEV123
+                reference: incident.severity
+          label: Team Slack channel
+          operations:
+          - branches:
+              branches:
+              - condition_groups:
+                - conditions:
+                  - operation:
+                      label: Lawrence Jones
+                      value: 01FCQSP07Z74QMMYPDDGQB9FTG
+                    param_bindings:
+                    - array_value:
+                      - literal: SEV123
+                        reference: incident.severity
+                      value:
+                        literal: SEV123
+                        reference: incident.severity
+                    subject:
+                      label: Priority
+                      reference: alert.priority
+                result:
+                  array_value:
+                  - literal: SEV123
+                    reference: incident.severity
+                  value:
+                    literal: SEV123
+                    reference: incident.severity
+              returns:
+                array: true
+                type: IncidentStatus
+            cast:
+              returns:
+                array: true
+                type: IncidentStatus
+            concatenate:
+              reference: '1235'
+              reference_label: Teams
+            filter:
+              condition_groups:
+              - conditions:
+                - operation:
+                    label: Lawrence Jones
+                    value: 01FCQSP07Z74QMMYPDDGQB9FTG
+                  param_bindings:
+                  - array_value:
+                    - literal: SEV123
+                      reference: incident.severity
+                    value:
+                      literal: SEV123
+                      reference: incident.severity
+                  subject:
+                    label: Priority
+                    reference: alert.priority
+            navigate:
+              reference: '1235'
+              reference_label: Teams
+            operation_type: navigate
+            parse:
+              returns:
+                array: true
+                type: IncidentStatus
+              source: metadata.annotations["github.com/repo"]
+            returns:
+              array: true
+              type: IncidentStatus
+          reference: abc123
+          returns:
+            array: true
+            type: IncidentStatus
+          root_reference: incident.status
+        form_type: declare
+        id: 01FCNDV6P870EA6S7TK1DSYDG0
+        incident_type_id: 01FCNDV6P870EA6S7TK1DSYDG0
+        lifecycle_elements:
+        - can_select_no_value: false
+          config:
+            require_comment: false
+          custom_field_id: 01FCNDV6P870EA6S7TK1DSYDG0
+          default_value:
+            array_value:
+            - literal: SEV123
+              reference: incident.severity
+            value:
+              literal: SEV123
+              reference: incident.severity
+          description: Shown when the incident is major or above.
+          element_type: name
+          id: 01FCNDV6P870EA6S7TK1DSYDG0
+          incident_role_id: 01FCNDV6P870EA6S7TK1DSYDG0
+          incident_timestamp_id: 01FCNDV6P870EA6S7TK1DSYDG0
+          placeholder: What's happening?
+          required_if: check_engine_config
+          required_if_condition_groups:
+          - conditions:
+            - operation:
+                label: Lawrence Jones
+                value: 01FCQSP07Z74QMMYPDDGQB9FTG
+              param_bindings:
+              - array_value:
+                - literal: SEV123
+                  reference: incident.severity
+                value:
+                  literal: SEV123
+                  reference: incident.severity
+              subject:
+                label: Priority
+                reference: alert.priority
+          show_if_condition_groups:
+          - conditions:
+            - operation:
+                label: Lawrence Jones
+                value: 01FCQSP07Z74QMMYPDDGQB9FTG
+              param_bindings:
+              - array_value:
+                - literal: SEV123
+                  reference: incident.severity
+                value:
+                  literal: SEV123
+                  reference: incident.severity
+              subject:
+                label: Priority
+                reference: alert.priority
+        updated_at: '2021-08-17T13:28:57.801578Z'
+      properties:
+        created_at:
+          description: When this incident form was created
+          example: '2021-08-17T13:28:57.801578Z'
+          format: date-time
+          type: string
+        expressions:
+          description: Expressions available to every element's conditions and defaults. Referenced by reference, not by ID.
+          example:
+          - else_branch:
+              result:
+                array_value:
+                - literal: SEV123
+                  reference: incident.severity
+                value:
+                  literal: SEV123
+                  reference: incident.severity
+            label: Team Slack channel
+            operations:
+            - branches:
+                branches:
+                - condition_groups:
+                  - conditions:
+                    - operation:
+                        label: Lawrence Jones
+                        value: 01FCQSP07Z74QMMYPDDGQB9FTG
+                      param_bindings:
+                      - array_value:
+                        - literal: SEV123
+                          reference: incident.severity
+                        value:
+                          literal: SEV123
+                          reference: incident.severity
+                      subject:
+                        label: Priority
+                        reference: alert.priority
+                  result:
+                    array_value:
+                    - literal: SEV123
+                      reference: incident.severity
+                    value:
+                      literal: SEV123
+                      reference: incident.severity
+                returns:
+                  array: true
+                  type: IncidentStatus
+              cast:
+                returns:
+                  array: true
+                  type: IncidentStatus
+              concatenate:
+                reference: '1235'
+                reference_label: Teams
+              filter:
+                condition_groups:
+                - conditions:
+                  - operation:
+                      label: Lawrence Jones
+                      value: 01FCQSP07Z74QMMYPDDGQB9FTG
+                    param_bindings:
+                    - array_value:
+                      - literal: SEV123
+                        reference: incident.severity
+                      value:
+                        literal: SEV123
+                        reference: incident.severity
+                    subject:
+                      label: Priority
+                      reference: alert.priority
+              navigate:
+                reference: '1235'
+                reference_label: Teams
+              operation_type: navigate
+              parse:
+                returns:
+                  array: true
+                  type: IncidentStatus
+                source: metadata.annotations["github.com/repo"]
+              returns:
+                array: true
+                type: IncidentStatus
+            reference: abc123
+            returns:
+              array: true
+              type: IncidentStatus
+            root_reference: incident.status
+          items:
+            $ref: '#/components/schemas/ExpressionV3'
+          type: array
+        form_type:
+          description: Which form this is. Escalate forms are not part of this API.
+          enum:
+          - declare
+          - accept
+          - update
+          - resolve
+          - retrospective
+          - custom-fields
+          example: declare
+          type: string
+        id:
+          description: Unique identifier for this incident form
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+        incident_type_id:
+          description: The incident type this form belongs to. Unset for the organisation's default form of this type.
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+        lifecycle_elements:
+          description: 'Elements on this form, in display order. List position is the order: there is no separate rank.'
+          example:
+          - can_select_no_value: false
+            config:
+              require_comment: false
+            custom_field_id: 01FCNDV6P870EA6S7TK1DSYDG0
+            default_value:
+              array_value:
+              - literal: SEV123
+                reference: incident.severity
+              value:
+                literal: SEV123
+                reference: incident.severity
+            description: Shown when the incident is major or above.
+            element_type: name
+            id: 01FCNDV6P870EA6S7TK1DSYDG0
+            incident_role_id: 01FCNDV6P870EA6S7TK1DSYDG0
+            incident_timestamp_id: 01FCNDV6P870EA6S7TK1DSYDG0
+            placeholder: What's happening?
+            required_if: check_engine_config
+            required_if_condition_groups:
+            - conditions:
+              - operation:
+                  label: Lawrence Jones
+                  value: 01FCQSP07Z74QMMYPDDGQB9FTG
+                param_bindings:
+                - array_value:
+                  - literal: SEV123
+                    reference: incident.severity
+                  value:
+                    literal: SEV123
+                    reference: incident.severity
+                subject:
+                  label: Priority
+                  reference: alert.priority
+            show_if_condition_groups:
+            - conditions:
+              - operation:
+                  label: Lawrence Jones
+                  value: 01FCQSP07Z74QMMYPDDGQB9FTG
+                param_bindings:
+                - array_value:
+                  - literal: SEV123
+                    reference: incident.severity
+                  value:
+                    literal: SEV123
+                    reference: incident.severity
+                subject:
+                  label: Priority
+                  reference: alert.priority
+          items:
+            $ref: '#/components/schemas/IncidentFormLifecycleElementV3'
+          type: array
+        updated_at:
+          description: When this incident form was last updated
+          example: '2021-08-17T13:28:57.801578Z'
+          format: date-time
+          type: string
+      required:
+      - id
+      - form_type
+      - expressions
+      - created_at
+      - updated_at
+      type: object
+    IncidentFormLifecycleElementPayloadV3:
+      example:
+        can_select_no_value: false
+        config:
+          require_comment: false
+        custom_field_id: 01FCNDV6P870EA6S7TK1DSYDG0
+        default_value:
+          array_value:
+          - literal: SEV123
+            reference: incident.severity
+          value:
+            literal: SEV123
+            reference: incident.severity
+        description: Shown when the incident is major or above.
+        element_type: name
+        id: 01FCNDV6P870EA6S7TK1DSYDG0
+        incident_role_id: 01FCNDV6P870EA6S7TK1DSYDG0
+        incident_timestamp_id: 01FCNDV6P870EA6S7TK1DSYDG0
+        placeholder: What's happening?
+        required_if: check_engine_config
+        required_if_condition_groups:
+        - conditions:
+          - operation: one_of
+            param_bindings:
+            - array_value:
+              - literal: SEV123
+                reference: incident.severity
+              value:
+                literal: SEV123
+                reference: incident.severity
+            subject: alert.priority
+        show_if_condition_groups:
+        - conditions:
+          - operation: one_of
+            param_bindings:
+            - array_value:
+              - literal: SEV123
+                reference: incident.severity
+              value:
+                literal: SEV123
+                reference: incident.severity
+            subject: alert.priority
+      properties:
+        can_select_no_value:
+          description: Whether the user can explicitly choose no value. Only meaningful for custom field elements.
+          example: false
+          type: boolean
+        config:
+          $ref: '#/components/schemas/IncidentFormLifecycleElementConfigV3'
+        custom_field_id:
+          description: The custom field this element edits. Set only when element_type is custom_field.
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+        default_value:
+          $ref: '#/components/schemas/EngineParamBindingPayloadV3'
+        description:
+          description: Description shown beside this element, as markdown
+          example: Shown when the incident is major or above.
+          type: string
+        element_type:
+          description: What this element captures
+          enum:
+          - name
+          - status
+          - severity
+          - incident_role
+          - incident_type
+          - summary
+          - custom_field
+          - timestamp
+          - update_message
+          - next_update_in
+          - triage
+          - visibility
+          - divider
+          - text
+          - incident_attachments
+          - slack_channel
+          - announce_retro_incident
+          - enter_post_incident_flow
+          - investigation_feedback
+          example: name
+          type: string
+        id:
+          description: Identifier of an existing divider or text element. Omit when adding an element.
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+        incident_role_id:
+          description: The incident role this element assigns. Set only when element_type is incident_role.
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+        incident_timestamp_id:
+          description: The incident timestamp this element sets. Set only when element_type is timestamp.
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+        placeholder:
+          description: Placeholder text shown in the empty field
+          example: What's happening?
+          type: string
+        required_if:
+          description: When this element must be filled in
+          enum:
+          - check_engine_config
+          - always_require
+          - never_require
+          example: check_engine_config
+          type: string
+        required_if_condition_groups:
+          description: Condition groups that make this element required. Used when required_if is check_engine_config.
+          example:
+          - conditions:
+            - operation: one_of
+              param_bindings:
+              - array_value:
+                - literal: SEV123
+                  reference: incident.severity
+                value:
+                  literal: SEV123
+                  reference: incident.severity
+              subject: alert.priority
+          items:
+            $ref: '#/components/schemas/ConditionGroupPayloadV3'
+          type: array
+        show_if_condition_groups:
+          description: The element is shown when any of these condition groups match. Unset means it is always shown.
+          example:
+          - conditions:
+            - operation: one_of
+              param_bindings:
+              - array_value:
+                - literal: SEV123
+                  reference: incident.severity
+                value:
+                  literal: SEV123
+                  reference: incident.severity
+              subject: alert.priority
+          items:
+            $ref: '#/components/schemas/ConditionGroupPayloadV3'
+          type: array
+      required:
+      - element_type
+      type: object
+    EngineParamBindingValueV3:
+      example:
+        literal: SEV123
+        reference: incident.severity
+      properties:
+        literal:
+          description: If set, this is the literal value of the step parameter
+          example: SEV123
+          type: string
+        reference:
+          description: If set, this is the reference into the trigger scope that is the value of this parameter
+          example: incident.severity
+          type: string
+      type: object
+    EngineParamBindingV3:
+      example:
+        array_value:
+        - literal: SEV123
+          reference: incident.severity
+        value:
+          literal: SEV123
+          reference: incident.severity
+      properties:
+        array_value:
+          description: If array_value is set, this helps render the values
+          example:
+          - literal: SEV123
+            reference: incident.severity
+          items:
+            $ref: '#/components/schemas/EngineParamBindingValueV3'
+          type: array
+        value:
+          $ref: '#/components/schemas/EngineParamBindingValueV3'
+      type: object
+    ConditionGroupPayloadV3:
+      example:
+        conditions:
+        - operation: one_of
+          param_bindings:
+          - array_value:
+            - literal: SEV123
+              reference: incident.severity
+            value:
+              literal: SEV123
+              reference: incident.severity
+          subject: alert.priority
+      properties:
+        conditions:
+          description: All conditions in this list must be satisfied for the group to be satisfied
+          example:
+          - operation: one_of
+            param_bindings:
+            - array_value:
+              - literal: SEV123
+                reference: incident.severity
+              value:
+                literal: SEV123
+                reference: incident.severity
+            subject: alert.priority
+          items:
+            $ref: '#/components/schemas/ConditionPayloadV3'
+          type: array
+      required:
+      - conditions
+      type: object
+    ExpressionElseBranchV3:
+      example:
+        result:
+          array_value:
+          - literal: SEV123
+            reference: incident.severity
+          value:
+            literal: SEV123
+            reference: incident.severity
+      properties:
+        result:
+          $ref: '#/components/schemas/EngineParamBindingV3'
+      required:
+      - result
+      type: object
+    ErrorResponse:
+      example:
+        debug:
+          message: 'Something broke: and something else: and something else'
+          stacktrace:
+          - thing.go:123
+        errors:
+        - code: trial_expired
+          message: Default incident call link must be a valid URL
+          metadata:
+            abc123: abc123
+          source:
+            field: default_call_url
+            pointer: /settings/default_call_url
+        rate_limit:
+          limit: 100
+          name: client_ip
+          remaining: 98
+          retry_after: '2020-01-01T00:00:00Z'
+        request_id: 2T1p0e3j
+        status: 408
+        type: invalid_request_error
+      properties:
+        debug:
+          $ref: '#/components/schemas/ErrorDebug'
+        errors:
+          description: List of errors that caused this request to fail
+          example:
+          - code: trial_expired
+            message: Default incident call link must be a valid URL
+            metadata:
+              abc123: abc123
+            source:
+              field: default_call_url
+              pointer: /settings/default_call_url
+          items:
+            $ref: '#/components/schemas/ErrorSingle'
+          type: array
+        rate_limit:
+          $ref: '#/components/schemas/ErrorRateLimit'
+        request_id:
+          description: Unique identifier of the request
+          example: 2T1p0e3j
+          type: string
+        status:
+          description: HTTP status of the response
+          example: 408
+          format: int64
+          type: integer
+        type:
+          description: Machine-readable identifier for the general category of error
+          enum:
+          - invalid_request_error
+          - authentication_error
+          - resource_forbidden
+          - not_found
+          - not_acceptable
+          - method_not_allowed
+          - request_timeout
+          - conflict
+          - precondition_failed
+          - payload_too_large
+          - validation_error
+          - too_many_requests
+          - api_error
+          - rate_limit_reached
+          - client_timeout
+          example: invalid_request_error
+          type: string
+      required:
+      - type
+      - status
+      - request_id
+      - errors
+      type: object
+    ExpressionV3:
+      example:
+        else_branch:
+          result:
+            array_value:
+            - literal: SEV123
+              reference: incident.severity
+            value:
+              literal: SEV123
+              reference: incident.severity
+        label: Team Slack channel
+        operations:
+        - branches:
+            branches:
+            - condition_groups:
+              - conditions:
+                - operation:
+                    label: Lawrence Jones
+                    value: 01FCQSP07Z74QMMYPDDGQB9FTG
+                  param_bindings:
+                  - array_value:
+                    - literal: SEV123
+                      reference: incident.severity
+                    value:
+                      literal: SEV123
+                      reference: incident.severity
+                  subject:
+                    label: Priority
+                    reference: alert.priority
+              result:
+                array_value:
+                - literal: SEV123
+                  reference: incident.severity
+                value:
+                  literal: SEV123
+                  reference: incident.severity
+            returns:
+              array: true
+              type: IncidentStatus
+          cast:
+            returns:
+              array: true
+              type: IncidentStatus
+          concatenate:
+            reference: '1235'
+            reference_label: Teams
+          filter:
+            condition_groups:
+            - conditions:
+              - operation:
+                  label: Lawrence Jones
+                  value: 01FCQSP07Z74QMMYPDDGQB9FTG
+                param_bindings:
+                - array_value:
+                  - literal: SEV123
+                    reference: incident.severity
+                  value:
+                    literal: SEV123
+                    reference: incident.severity
+                subject:
+                  label: Priority
+                  reference: alert.priority
+          navigate:
+            reference: '1235'
+            reference_label: Teams
+          operation_type: navigate
+          parse:
+            returns:
+              array: true
+              type: IncidentStatus
+            source: metadata.annotations["github.com/repo"]
+          returns:
+            array: true
+            type: IncidentStatus
+        reference: abc123
+        returns:
+          array: true
+          type: IncidentStatus
+        root_reference: incident.status
+      properties:
+        else_branch:
+          $ref: '#/components/schemas/ExpressionElseBranchV3'
+        label:
+          description: The human readable label of the expression
+          example: Team Slack channel
+          type: string
+        operations:
+          example:
+          - branches:
+              branches:
+              - condition_groups:
+                - conditions:
+                  - operation:
+                      label: Lawrence Jones
+                      value: 01FCQSP07Z74QMMYPDDGQB9FTG
+                    param_bindings:
+                    - array_value:
+                      - literal: SEV123
+                        reference: incident.severity
+                      value:
+                        literal: SEV123
+                        reference: incident.severity
+                    subject:
+                      label: Priority
+                      reference: alert.priority
+                result:
+                  array_value:
+                  - literal: SEV123
+                    reference: incident.severity
+                  value:
+                    literal: SEV123
+                    reference: incident.severity
+              returns:
+                array: true
+                type: IncidentStatus
+            cast:
+              returns:
+                array: true
+                type: IncidentStatus
+            concatenate:
+              reference: '1235'
+              reference_label: Teams
+            filter:
+              condition_groups:
+              - conditions:
+                - operation:
+                    label: Lawrence Jones
+                    value: 01FCQSP07Z74QMMYPDDGQB9FTG
+                  param_bindings:
+                  - array_value:
+                    - literal: SEV123
+                      reference: incident.severity
+                    value:
+                      literal: SEV123
+                      reference: incident.severity
+                  subject:
+                    label: Priority
+                    reference: alert.priority
+            navigate:
+              reference: '1235'
+              reference_label: Teams
+            operation_type: navigate
+            parse:
+              returns:
+                array: true
+                type: IncidentStatus
+              source: metadata.annotations["github.com/repo"]
+            returns:
+              array: true
+              type: IncidentStatus
+          items:
+            $ref: '#/components/schemas/ExpressionOperationV3'
+          type: array
+        reference:
+          description: A short ID that can be used to reference the expression
+          example: abc123
+          type: string
+        returns:
+          $ref: '#/components/schemas/ReturnsMetaV3'
+        root_reference:
+          description: The root reference for this expression (i.e. where the expression starts)
+          example: incident.status
+          type: string
+      required:
+      - label
+      - reference
+      - returns
+      - root_reference
+      - operations
+      type: object
+    ExpressionBranchesOptsPayloadV3:
+      example:
+        branches:
+        - condition_groups:
+          - conditions:
+            - operation: one_of
+              param_bindings:
+              - array_value:
+                - literal: SEV123
+                  reference: incident.severity
+                value:
+                  literal: SEV123
+                  reference: incident.severity
+              subject: alert.priority
+          result:
+            array_value:
+            - literal: SEV123
+              reference: incident.severity
+            value:
+              literal: SEV123
+              reference: incident.severity
+        returns:
+          array: true
+          type: IncidentStatus
+      properties:
+        branches:
+          description: The branches to apply for this operation
+          example:
+          - condition_groups:
+            - conditions:
+              - operation: one_of
+                param_bindings:
+                - array_value:
+                  - literal: SEV123
+                    reference: incident.severity
+                  value:
+                    literal: SEV123
+                    reference: incident.severity
+                subject: alert.priority
+            result:
+              array_value:
+              - literal: SEV123
+                reference: incident.severity
+              value:
+                literal: SEV123
+                reference: incident.severity
+          items:
+            $ref: '#/components/schemas/ExpressionBranchPayloadV3'
+          type: array
+        returns:
+          $ref: '#/components/schemas/ReturnsMetaV3'
+      required:
+      - branches
+      - returns
+      type: object
+    ConditionOperationV3:
+      example:
+        label: Lawrence Jones
+        value: 01FCQSP07Z74QMMYPDDGQB9FTG
+      properties:
+        label:
+          description: Human readable label to be displayed for user to select
+          example: Lawrence Jones
+          type: string
+        value:
+          description: Unique identifier for this option
+          example: 01FCQSP07Z74QMMYPDDGQB9FTG
+          type: string
+      required:
+      - label
+      - value
+      type: object
+    ExpressionBranchesOptsV3:
+      example:
+        branches:
+        - condition_groups:
+          - conditions:
+            - operation:
+                label: Lawrence Jones
+                value: 01FCQSP07Z74QMMYPDDGQB9FTG
+              param_bindings:
+              - array_value:
+                - literal: SEV123
+                  reference: incident.severity
+                value:
+                  literal: SEV123
+                  reference: incident.severity
+              subject:
+                label: Priority
+                reference: alert.priority
+          result:
+            array_value:
+            - literal: SEV123
+              reference: incident.severity
+            value:
+              literal: SEV123
+              reference: incident.severity
+        returns:
+          array: true
+          type: IncidentStatus
+      properties:
+        branches:
+          description: The branches to apply for this operation
+          example:
+          - condition_groups:
+            - conditions:
+              - operation:
+                  label: Lawrence Jones
+                  value: 01FCQSP07Z74QMMYPDDGQB9FTG
+                param_bindings:
+                - array_value:
+                  - literal: SEV123
+                    reference: incident.severity
+                  value:
+                    literal: SEV123
+                    reference: incident.severity
+                subject:
+                  label: Priority
+                  reference: alert.priority
+            result:
+              array_value:
+              - literal: SEV123
+                reference: incident.severity
+              value:
+                literal: SEV123
+                reference: incident.severity
+          items:
+            $ref: '#/components/schemas/ExpressionBranchV3'
+          type: array
+        returns:
+          $ref: '#/components/schemas/ReturnsMetaV3'
+      required:
+      - branches
+      - returns
+      type: object
+    ExpressionParseOptsPayloadV3:
+      example:
+        returns:
+          array: true
+          type: IncidentStatus
+        source: metadata.annotations["github.com/repo"]
+      properties:
+        returns:
+          $ref: '#/components/schemas/ReturnsMetaV3'
+        source:
+          description: Source expression that is evaluated to a result
+          example: metadata.annotations["github.com/repo"]
+          type: string
+      required:
+      - source
+      - returns
+      type: object
+    ExpressionOperationPayloadV3:
+      example:
+        branches:
+          branches:
+          - condition_groups:
+            - conditions:
+              - operation: one_of
+                param_bindings:
+                - array_value:
+                  - literal: SEV123
+                    reference: incident.severity
+                  value:
+                    literal: SEV123
+                    reference: incident.severity
+                subject: alert.priority
+            result:
+              array_value:
+              - literal: SEV123
+                reference: incident.severity
+              value:
+                literal: SEV123
+                reference: incident.severity
+          returns:
+            array: true
+            type: IncidentStatus
+        cast:
+          returns:
+            array: true
+            type: IncidentStatus
+        concatenate:
+          reference: catalog_attribute["01FCNDV6P870EA6S7TK1DSYD5H"]
+        filter:
+          condition_groups:
+          - conditions:
+            - operation: one_of
+              param_bindings:
+              - array_value:
+                - literal: SEV123
+                  reference: incident.severity
+                value:
+                  literal: SEV123
+                  reference: incident.severity
+              subject: alert.priority
+        navigate:
+          reference: catalog_attribute["01FCNDV6P870EA6S7TK1DSYD5H"]
+        operation_type: navigate
+        parse:
+          returns:
+            array: true
+            type: IncidentStatus
+          source: metadata.annotations["github.com/repo"]
+      properties:
+        branches:
+          $ref: '#/components/schemas/ExpressionBranchesOptsPayloadV3'
+        cast:
+          $ref: '#/components/schemas/ExpressionCastOptsPayloadV3'
+        concatenate:
+          $ref: '#/components/schemas/ExpressionConcatenateOptsPayloadV3'
+        filter:
+          $ref: '#/components/schemas/ExpressionFilterOptsPayloadV3'
+        navigate:
+          $ref: '#/components/schemas/ExpressionNavigateOptsPayloadV3'
+        operation_type:
+          description: The type of the operation
+          enum:
+          - navigate
+          - filter
+          - concatenate
+          - count
+          - min
+          - max
+          - sum
+          - random
+          - first
+          - parse
+          - branches
+          - cast
+          example: navigate
+          type: string
+        parse:
+          $ref: '#/components/schemas/ExpressionParseOptsPayloadV3'
+      required:
+      - operation_type
+      type: object
+    ConditionV3:
+      example:
+        operation:
+          label: Lawrence Jones
+          value: 01FCQSP07Z74QMMYPDDGQB9FTG
+        param_bindings:
+        - array_value:
+          - literal: SEV123
+            reference: incident.severity
+          value:
+            literal: SEV123
+            reference: incident.severity
+        subject:
+          label: Priority
+          reference: alert.priority
+      properties:
+        operation:
+          $ref: '#/components/schemas/ConditionOperationV3'
+        param_bindings:
+          description: Bindings for the operation parameters
+          example:
+          - array_value:
+            - literal: SEV123
+              reference: incident.severity
+            value:
+              literal: SEV123
+              reference: incident.severity
+          items:
+            $ref: '#/components/schemas/EngineParamBindingV3'
+          type: array
+        subject:
+          $ref: '#/components/schemas/ConditionSubjectV3'
+      required:
+      - subject
+      - operation
+      - param_bindings
+      type: object
+    ExpressionNavigateOptsV3:
+      example:
+        reference: '1235'
+        reference_label: Teams
+      properties:
+        reference:
+          description: The reference within the scope to navigate to
+          example: '1235'
+          type: string
+        reference_label:
+          description: The name of the reference to navigate to
+          example: Teams
+          type: string
+      required:
+      - reference
+      - reference_label
+      type: object
+    ErrorSource:
+      example:
+        field: default_call_url
+        pointer: /settings/default_call_url
+      properties:
+        field:
+          description: Field name that is the source of the error
+          example: default_call_url
+          type: string
+        pointer:
+          description: JSON pointer to the request field that is the source of the error
+          example: /settings/default_call_url
+          type: string
+      required:
+      - field
+      - pointer
+      type: object
+    ExpressionConcatenateOptsPayloadV3:
+      example:
+        reference: catalog_attribute["01FCNDV6P870EA6S7TK1DSYD5H"]
+      properties:
+        reference:
+          description: The reference that you want to concatenate with
+          example: catalog_attribute["01FCNDV6P870EA6S7TK1DSYD5H"]
+          type: string
+      required:
+      - reference
+      type: object
+    IncidentFormsUpdateResultV3:
+      example:
+        incident_form:
+          created_at: '2021-08-17T13:28:57.801578Z'
+          expressions:
+          - else_branch:
+              result:
+                array_value:
+                - literal: SEV123
+                  reference: incident.severity
+                value:
+                  literal: SEV123
+                  reference: incident.severity
+            label: Team Slack channel
+            operations:
+            - branches:
+                branches:
+                - condition_groups:
+                  - conditions:
+                    - operation:
+                        label: Lawrence Jones
+                        value: 01FCQSP07Z74QMMYPDDGQB9FTG
+                      param_bindings:
+                      - array_value:
+                        - literal: SEV123
+                          reference: incident.severity
+                        value:
+                          literal: SEV123
+                          reference: incident.severity
+                      subject:
+                        label: Priority
+                        reference: alert.priority
+                  result:
+                    array_value:
+                    - literal: SEV123
+                      reference: incident.severity
+                    value:
+                      literal: SEV123
+                      reference: incident.severity
+                returns:
+                  array: true
+                  type: IncidentStatus
+              cast:
+                returns:
+                  array: true
+                  type: IncidentStatus
+              concatenate:
+                reference: '1235'
+                reference_label: Teams
+              filter:
+                condition_groups:
+                - conditions:
+                  - operation:
+                      label: Lawrence Jones
+                      value: 01FCQSP07Z74QMMYPDDGQB9FTG
+                    param_bindings:
+                    - array_value:
+                      - literal: SEV123
+                        reference: incident.severity
+                      value:
+                        literal: SEV123
+                        reference: incident.severity
+                    subject:
+                      label: Priority
+                      reference: alert.priority
+              navigate:
+                reference: '1235'
+                reference_label: Teams
+              operation_type: navigate
+              parse:
+                returns:
+                  array: true
+                  type: IncidentStatus
+                source: metadata.annotations["github.com/repo"]
+              returns:
+                array: true
+                type: IncidentStatus
+            reference: abc123
+            returns:
+              array: true
+              type: IncidentStatus
+            root_reference: incident.status
+          form_type: declare
+          id: 01FCNDV6P870EA6S7TK1DSYDG0
+          incident_type_id: 01FCNDV6P870EA6S7TK1DSYDG0
+          lifecycle_elements:
+          - can_select_no_value: false
+            config:
+              require_comment: false
+            custom_field_id: 01FCNDV6P870EA6S7TK1DSYDG0
+            default_value:
+              array_value:
+              - literal: SEV123
+                reference: incident.severity
+              value:
+                literal: SEV123
+                reference: incident.severity
+            description: Shown when the incident is major or above.
+            element_type: name
+            id: 01FCNDV6P870EA6S7TK1DSYDG0
+            incident_role_id: 01FCNDV6P870EA6S7TK1DSYDG0
+            incident_timestamp_id: 01FCNDV6P870EA6S7TK1DSYDG0
+            placeholder: What's happening?
+            required_if: check_engine_config
+            required_if_condition_groups:
+            - conditions:
+              - operation:
+                  label: Lawrence Jones
+                  value: 01FCQSP07Z74QMMYPDDGQB9FTG
+                param_bindings:
+                - array_value:
+                  - literal: SEV123
+                    reference: incident.severity
+                  value:
+                    literal: SEV123
+                    reference: incident.severity
+                subject:
+                  label: Priority
+                  reference: alert.priority
+            show_if_condition_groups:
+            - conditions:
+              - operation:
+                  label: Lawrence Jones
+                  value: 01FCQSP07Z74QMMYPDDGQB9FTG
+                param_bindings:
+                - array_value:
+                  - literal: SEV123
+                    reference: incident.severity
+                  value:
+                    literal: SEV123
+                    reference: incident.severity
+                subject:
+                  label: Priority
+                  reference: alert.priority
+          updated_at: '2021-08-17T13:28:57.801578Z'
+      properties:
+        incident_form:
+          $ref: '#/components/schemas/IncidentFormV3'
+      required:
+      - incident_form
+      type: object
+    ErrorRateLimit:
+      example:
+        limit: 100
+        name: client_ip
+        remaining: 98
+        retry_after: '2020-01-01T00:00:00Z'
+      properties:
+        limit:
+          description: The maximum number of requests that the consumer is permitted to make per minute
+          example: 100
+          format: int64
+          type: integer
+        name:
+          description: Which rate limit was exceeded
+          example: client_ip
+          type: string
+        remaining:
+          description: The number of requests remaining in the current rate limit window
+          example: 98
+          format: int64
+          type: integer
+        retry_after:
+          description: When the client can retry, as an RFC3339 timestamp in UTC. Prefer the Retry-After response header, which carries the same instant as a number of seconds
+          example: '2020-01-01T00:00:00Z'
+          type: string
+      required:
+      - name
+      - limit
+      - remaining
+      - retry_after
+      type: object
+    ExpressionConcatenateOptsV3:
+      example:
+        reference: '1235'
+        reference_label: Teams
+      properties:
+        reference:
+          description: The reference within the scope to concatenate with
+          example: '1235'
+          type: string
+        reference_label:
+          description: The name of the reference to concatenate with
+          example: Teams
+          type: string
+      required:
+      - reference
+      - reference_label
+      type: object
+    ConditionPayloadV3:
+      example:
+        operation: one_of
+        param_bindings:
+        - array_value:
+          - literal: SEV123
+            reference: incident.severity
+          value:
+            literal: SEV123
+            reference: incident.severity
+        subject: alert.priority
+      properties:
+        operation:
+          description: The name of the operation on the subject
+          example: one_of
+          type: string
+        param_bindings:
+          description: List of parameter bindings
+          example:
+          - array_value:
+            - literal: SEV123
+              reference: incident.severity
+            value:
+              literal: SEV123
+              reference: incident.severity
+          items:
+            $ref: '#/components/schemas/EngineParamBindingPayloadV3'
+          type: array
+        subject:
+          description: The reference of the subject in the trigger scope
+          example: alert.priority
+          type: string
+      required:
+      - subject
+      - operation
+      - param_bindings
+      type: object
+    ExpressionParseOptsV3:
+      example:
+        returns:
+          array: true
+          type: IncidentStatus
+        source: metadata.annotations["github.com/repo"]
+      properties:
+        returns:
+          $ref: '#/components/schemas/ReturnsMetaV3'
+        source:
+          description: Source expression that is evaluated to a result
+          example: metadata.annotations["github.com/repo"]
+          type: string
+      required:
+      - source
+      - returns
+      type: object
+    ErrorDebug:
+      example:
+        message: 'Something broke: and something else: and something else'
+        stacktrace:
+        - thing.go:123
+      properties:
+        message:
+          description: Original internal error message
+          example: 'Something broke: and something else: and something else'
+          type: string
+        stacktrace:
+          description: Stacktrace of the error, if applicable
+          example:
+          - thing.go:123
+          items:
+            example: thing.go:123
+            type: string
+          type: array
+      required:
+      - message
+      - stacktrace
+      type: object
+    IncidentFormsCreatePayloadV3:
+      example:
+        expressions:
+        - else_branch:
+            result:
+              array_value:
+              - literal: SEV123
+                reference: incident.severity
+              value:
+                literal: SEV123
+                reference: incident.severity
+          label: Team Slack channel
+          operations:
+          - branches:
+              branches:
+              - condition_groups:
+                - conditions:
+                  - operation: one_of
+                    param_bindings:
+                    - array_value:
+                      - literal: SEV123
+                        reference: incident.severity
+                      value:
+                        literal: SEV123
+                        reference: incident.severity
+                    subject: alert.priority
+                result:
+                  array_value:
+                  - literal: SEV123
+                    reference: incident.severity
+                  value:
+                    literal: SEV123
+                    reference: incident.severity
+              returns:
+                array: true
+                type: IncidentStatus
+            cast:
+              returns:
+                array: true
+                type: IncidentStatus
+            concatenate:
+              reference: catalog_attribute["01FCNDV6P870EA6S7TK1DSYD5H"]
+            filter:
+              condition_groups:
+              - conditions:
+                - operation: one_of
+                  param_bindings:
+                  - array_value:
+                    - literal: SEV123
+                      reference: incident.severity
+                    value:
+                      literal: SEV123
+                      reference: incident.severity
+                  subject: alert.priority
+            navigate:
+              reference: catalog_attribute["01FCNDV6P870EA6S7TK1DSYD5H"]
+            operation_type: navigate
+            parse:
+              returns:
+                array: true
+                type: IncidentStatus
+              source: metadata.annotations["github.com/repo"]
+          reference: abc123
+          root_reference: incident.status
+        form_type: declare
+        incident_type_id: 01FCNDV6P870EA6S7TK1DSYDG0
+        lifecycle_elements:
+        - can_select_no_value: false
+          config:
+            require_comment: false
+          custom_field_id: 01FCNDV6P870EA6S7TK1DSYDG0
+          default_value:
+            array_value:
+            - literal: SEV123
+              reference: incident.severity
+            value:
+              literal: SEV123
+              reference: incident.severity
+          description: Shown when the incident is major or above.
+          element_type: name
+          id: 01FCNDV6P870EA6S7TK1DSYDG0
+          incident_role_id: 01FCNDV6P870EA6S7TK1DSYDG0
+          incident_timestamp_id: 01FCNDV6P870EA6S7TK1DSYDG0
+          placeholder: What's happening?
+          required_if: check_engine_config
+          required_if_condition_groups:
+          - conditions:
+            - operation: one_of
+              param_bindings:
+              - array_value:
+                - literal: SEV123
+                  reference: incident.severity
+                value:
+                  literal: SEV123
+                  reference: incident.severity
+              subject: alert.priority
+          show_if_condition_groups:
+          - conditions:
+            - operation: one_of
+              param_bindings:
+              - array_value:
+                - literal: SEV123
+                  reference: incident.severity
+                value:
+                  literal: SEV123
+                  reference: incident.severity
+              subject: alert.priority
+      properties:
+        expressions:
+          description: Expressions available to every element's conditions and defaults. Referenced by reference, not by ID.
+          example:
+          - else_branch:
+              result:
+                array_value:
+                - literal: SEV123
+                  reference: incident.severity
+                value:
+                  literal: SEV123
+                  reference: incident.severity
+            label: Team Slack channel
+            operations:
+            - branches:
+                branches:
+                - condition_groups:
+                  - conditions:
+                    - operation: one_of
+                      param_bindings:
+                      - array_value:
+                        - literal: SEV123
+                          reference: incident.severity
+                        value:
+                          literal: SEV123
+                          reference: incident.severity
+                      subject: alert.priority
+                  result:
+                    array_value:
+                    - literal: SEV123
+                      reference: incident.severity
+                    value:
+                      literal: SEV123
+                      reference: incident.severity
+                returns:
+                  array: true
+                  type: IncidentStatus
+              cast:
+                returns:
+                  array: true
+                  type: IncidentStatus
+              concatenate:
+                reference: catalog_attribute["01FCNDV6P870EA6S7TK1DSYD5H"]
+              filter:
+                condition_groups:
+                - conditions:
+                  - operation: one_of
+                    param_bindings:
+                    - array_value:
+                      - literal: SEV123
+                        reference: incident.severity
+                      value:
+                        literal: SEV123
+                        reference: incident.severity
+                    subject: alert.priority
+              navigate:
+                reference: catalog_attribute["01FCNDV6P870EA6S7TK1DSYD5H"]
+              operation_type: navigate
+              parse:
+                returns:
+                  array: true
+                  type: IncidentStatus
+                source: metadata.annotations["github.com/repo"]
+            reference: abc123
+            root_reference: incident.status
+          items:
+            $ref: '#/components/schemas/ExpressionPayloadV3'
+          type: array
+        form_type:
+          description: Which form this is. Escalate forms are not part of this API.
+          enum:
+          - declare
+          - accept
+          - update
+          - resolve
+          - retrospective
+          - custom-fields
+          example: declare
+          type: string
+        incident_type_id:
+          description: The incident type this form belongs to. Leave unset for the organisation's default form of this type.
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+        lifecycle_elements:
+          description: 'Elements on this form, in display order. List position is the order: there is no separate rank.'
+          example:
+          - can_select_no_value: false
+            config:
+              require_comment: false
+            custom_field_id: 01FCNDV6P870EA6S7TK1DSYDG0
+            default_value:
+              array_value:
+              - literal: SEV123
+                reference: incident.severity
+              value:
+                literal: SEV123
+                reference: incident.severity
+            description: Shown when the incident is major or above.
+            element_type: name
+            id: 01FCNDV6P870EA6S7TK1DSYDG0
+            incident_role_id: 01FCNDV6P870EA6S7TK1DSYDG0
+            incident_timestamp_id: 01FCNDV6P870EA6S7TK1DSYDG0
+            placeholder: What's happening?
+            required_if: check_engine_config
+            required_if_condition_groups:
+            - conditions:
+              - operation: one_of
+                param_bindings:
+                - array_value:
+                  - literal: SEV123
+                    reference: incident.severity
+                  value:
+                    literal: SEV123
+                    reference: incident.severity
+                subject: alert.priority
+            show_if_condition_groups:
+            - conditions:
+              - operation: one_of
+                param_bindings:
+                - array_value:
+                  - literal: SEV123
+                    reference: incident.severity
+                  value:
+                    literal: SEV123
+                    reference: incident.severity
+                subject: alert.priority
+          items:
+            $ref: '#/components/schemas/IncidentFormLifecycleElementPayloadV3'
+          type: array
+      required:
+      - form_type
+      - expressions
+      type: object
+    ExpressionNavigateOptsPayloadV3:
+      example:
+        reference: catalog_attribute["01FCNDV6P870EA6S7TK1DSYD5H"]
+      properties:
+        reference:
+          description: The reference that you want to navigate to
+          example: catalog_attribute["01FCNDV6P870EA6S7TK1DSYD5H"]
+          type: string
+      required:
+      - reference
+      type: object
+    ExpressionOperationV3:
+      example:
+        branches:
+          branches:
+          - condition_groups:
+            - conditions:
+              - operation:
+                  label: Lawrence Jones
+                  value: 01FCQSP07Z74QMMYPDDGQB9FTG
+                param_bindings:
+                - array_value:
+                  - literal: SEV123
+                    reference: incident.severity
+                  value:
+                    literal: SEV123
+                    reference: incident.severity
+                subject:
+                  label: Priority
+                  reference: alert.priority
+            result:
+              array_value:
+              - literal: SEV123
+                reference: incident.severity
+              value:
+                literal: SEV123
+                reference: incident.severity
+          returns:
+            array: true
+            type: IncidentStatus
+        cast:
+          returns:
+            array: true
+            type: IncidentStatus
+        concatenate:
+          reference: '1235'
+          reference_label: Teams
+        filter:
+          condition_groups:
+          - conditions:
+            - operation:
+                label: Lawrence Jones
+                value: 01FCQSP07Z74QMMYPDDGQB9FTG
+              param_bindings:
+              - array_value:
+                - literal: SEV123
+                  reference: incident.severity
+                value:
+                  literal: SEV123
+                  reference: incident.severity
+              subject:
+                label: Priority
+                reference: alert.priority
+        navigate:
+          reference: '1235'
+          reference_label: Teams
+        operation_type: navigate
+        parse:
+          returns:
+            array: true
+            type: IncidentStatus
+          source: metadata.annotations["github.com/repo"]
+        returns:
+          array: true
+          type: IncidentStatus
+      properties:
+        branches:
+          $ref: '#/components/schemas/ExpressionBranchesOptsV3'
+        cast:
+          $ref: '#/components/schemas/ExpressionCastOptsV3'
+        concatenate:
+          $ref: '#/components/schemas/ExpressionConcatenateOptsV3'
+        filter:
+          $ref: '#/components/schemas/ExpressionFilterOptsV3'
+        navigate:
+          $ref: '#/components/schemas/ExpressionNavigateOptsV3'
+        operation_type:
+          description: The type of the operation
+          enum:
+          - navigate
+          - filter
+          - concatenate
+          - count
+          - min
+          - max
+          - sum
+          - random
+          - first
+          - parse
+          - branches
+          - cast
+          example: navigate
+          type: string
+        parse:
+          $ref: '#/components/schemas/ExpressionParseOptsV3'
+        returns:
+          $ref: '#/components/schemas/ReturnsMetaV3'
+      required:
+      - operation_type
+      - returns
+      type: object
+    ExpressionBranchV3:
+      example:
+        condition_groups:
+        - conditions:
+          - operation:
+              label: Lawrence Jones
+              value: 01FCQSP07Z74QMMYPDDGQB9FTG
+            param_bindings:
+            - array_value:
+              - literal: SEV123
+                reference: incident.severity
+              value:
+                literal: SEV123
+                reference: incident.severity
+            subject:
+              label: Priority
+              reference: alert.priority
+        result:
+          array_value:
+          - literal: SEV123
+            reference: incident.severity
+          value:
+            literal: SEV123
+            reference: incident.severity
+      properties:
+        condition_groups:
+          description: When one of these condition groups are satisfied, this branch will be evaluated
+          example:
+          - conditions:
+            - operation:
+                label: Lawrence Jones
+                value: 01FCQSP07Z74QMMYPDDGQB9FTG
+              param_bindings:
+              - array_value:
+                - literal: SEV123
+                  reference: incident.severity
+                value:
+                  literal: SEV123
+                  reference: incident.severity
+              subject:
+                label: Priority
+                reference: alert.priority
+          items:
+            $ref: '#/components/schemas/ConditionGroupV3'
+          type: array
+        result:
+          $ref: '#/components/schemas/EngineParamBindingV3'
+      required:
+      - condition_groups
+      - result
+      type: object
+    ExpressionCastOptsV3:
+      example:
+        returns:
+          array: true
+          type: IncidentStatus
+      properties:
+        returns:
+          $ref: '#/components/schemas/ReturnsMetaV3'
+      required:
+      - returns
+      type: object
+    ExpressionBranchPayloadV3:
+      example:
+        condition_groups:
+        - conditions:
+          - operation: one_of
+            param_bindings:
+            - array_value:
+              - literal: SEV123
+                reference: incident.severity
+              value:
+                literal: SEV123
+                reference: incident.severity
+            subject: alert.priority
+        result:
+          array_value:
+          - literal: SEV123
+            reference: incident.severity
+          value:
+            literal: SEV123
+            reference: incident.severity
+      properties:
+        condition_groups:
+          description: When one of these condition groups are satisfied, this branch will be evaluated
+          example:
+          - conditions:
+            - operation: one_of
+              param_bindings:
+              - array_value:
+                - literal: SEV123
+                  reference: incident.severity
+                value:
+                  literal: SEV123
+                  reference: incident.severity
+              subject: alert.priority
+          items:
+            $ref: '#/components/schemas/ConditionGroupPayloadV3'
+          type: array
+        result:
+          $ref: '#/components/schemas/EngineParamBindingPayloadV3'
+      required:
+      - condition_groups
+      - result
+      type: object
+    IncidentFormsUpdatePayloadV3:
+      example:
+        expressions:
+        - else_branch:
+            result:
+              array_value:
+              - literal: SEV123
+                reference: incident.severity
+              value:
+                literal: SEV123
+                reference: incident.severity
+          label: Team Slack channel
+          operations:
+          - branches:
+              branches:
+              - condition_groups:
+                - conditions:
+                  - operation: one_of
+                    param_bindings:
+                    - array_value:
+                      - literal: SEV123
+                        reference: incident.severity
+                      value:
+                        literal: SEV123
+                        reference: incident.severity
+                    subject: alert.priority
+                result:
+                  array_value:
+                  - literal: SEV123
+                    reference: incident.severity
+                  value:
+                    literal: SEV123
+                    reference: incident.severity
+              returns:
+                array: true
+                type: IncidentStatus
+            cast:
+              returns:
+                array: true
+                type: IncidentStatus
+            concatenate:
+              reference: catalog_attribute["01FCNDV6P870EA6S7TK1DSYD5H"]
+            filter:
+              condition_groups:
+              - conditions:
+                - operation: one_of
+                  param_bindings:
+                  - array_value:
+                    - literal: SEV123
+                      reference: incident.severity
+                    value:
+                      literal: SEV123
+                      reference: incident.severity
+                  subject: alert.priority
+            navigate:
+              reference: catalog_attribute["01FCNDV6P870EA6S7TK1DSYD5H"]
+            operation_type: navigate
+            parse:
+              returns:
+                array: true
+                type: IncidentStatus
+              source: metadata.annotations["github.com/repo"]
+          reference: abc123
+          root_reference: incident.status
+        form_type: declare
+        incident_type_id: 01FCNDV6P870EA6S7TK1DSYDG0
+        lifecycle_elements:
+        - can_select_no_value: false
+          config:
+            require_comment: false
+          custom_field_id: 01FCNDV6P870EA6S7TK1DSYDG0
+          default_value:
+            array_value:
+            - literal: SEV123
+              reference: incident.severity
+            value:
+              literal: SEV123
+              reference: incident.severity
+          description: Shown when the incident is major or above.
+          element_type: name
+          id: 01FCNDV6P870EA6S7TK1DSYDG0
+          incident_role_id: 01FCNDV6P870EA6S7TK1DSYDG0
+          incident_timestamp_id: 01FCNDV6P870EA6S7TK1DSYDG0
+          placeholder: What's happening?
+          required_if: check_engine_config
+          required_if_condition_groups:
+          - conditions:
+            - operation: one_of
+              param_bindings:
+              - array_value:
+                - literal: SEV123
+                  reference: incident.severity
+                value:
+                  literal: SEV123
+                  reference: incident.severity
+              subject: alert.priority
+          show_if_condition_groups:
+          - conditions:
+            - operation: one_of
+              param_bindings:
+              - array_value:
+                - literal: SEV123
+                  reference: incident.severity
+                value:
+                  literal: SEV123
+                  reference: incident.severity
+              subject: alert.priority
+      properties:
+        expressions:
+          description: Expressions available to every element's conditions and defaults. Referenced by reference, not by ID.
+          example:
+          - else_branch:
+              result:
+                array_value:
+                - literal: SEV123
+                  reference: incident.severity
+                value:
+                  literal: SEV123
+                  reference: incident.severity
+            label: Team Slack channel
+            operations:
+            - branches:
+                branches:
+                - condition_groups:
+                  - conditions:
+                    - operation: one_of
+                      param_bindings:
+                      - array_value:
+                        - literal: SEV123
+                          reference: incident.severity
+                        value:
+                          literal: SEV123
+                          reference: incident.severity
+                      subject: alert.priority
+                  result:
+                    array_value:
+                    - literal: SEV123
+                      reference: incident.severity
+                    value:
+                      literal: SEV123
+                      reference: incident.severity
+                returns:
+                  array: true
+                  type: IncidentStatus
+              cast:
+                returns:
+                  array: true
+                  type: IncidentStatus
+              concatenate:
+                reference: catalog_attribute["01FCNDV6P870EA6S7TK1DSYD5H"]
+              filter:
+                condition_groups:
+                - conditions:
+                  - operation: one_of
+                    param_bindings:
+                    - array_value:
+                      - literal: SEV123
+                        reference: incident.severity
+                      value:
+                        literal: SEV123
+                        reference: incident.severity
+                    subject: alert.priority
+              navigate:
+                reference: catalog_attribute["01FCNDV6P870EA6S7TK1DSYD5H"]
+              operation_type: navigate
+              parse:
+                returns:
+                  array: true
+                  type: IncidentStatus
+                source: metadata.annotations["github.com/repo"]
+            reference: abc123
+            root_reference: incident.status
+          items:
+            $ref: '#/components/schemas/ExpressionPayloadV3'
+          type: array
+        form_type:
+          description: Which form this is. Escalate forms are not part of this API.
+          enum:
+          - declare
+          - accept
+          - update
+          - resolve
+          - retrospective
+          - custom-fields
+          example: declare
+          type: string
+        incident_type_id:
+          description: The incident type this form belongs to. Leave unset for the organisation's default form of this type.
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+        lifecycle_elements:
+          description: 'Elements on this form, in display order. List position is the order: there is no separate rank.'
+          example:
+          - can_select_no_value: false
+            config:
+              require_comment: false
+            custom_field_id: 01FCNDV6P870EA6S7TK1DSYDG0
+            default_value:
+              array_value:
+              - literal: SEV123
+                reference: incident.severity
+              value:
+                literal: SEV123
+                reference: incident.severity
+            description: Shown when the incident is major or above.
+            element_type: name
+            id: 01FCNDV6P870EA6S7TK1DSYDG0
+            incident_role_id: 01FCNDV6P870EA6S7TK1DSYDG0
+            incident_timestamp_id: 01FCNDV6P870EA6S7TK1DSYDG0
+            placeholder: What's happening?
+            required_if: check_engine_config
+            required_if_condition_groups:
+            - conditions:
+              - operation: one_of
+                param_bindings:
+                - array_value:
+                  - literal: SEV123
+                    reference: incident.severity
+                  value:
+                    literal: SEV123
+                    reference: incident.severity
+                subject: alert.priority
+            show_if_condition_groups:
+            - conditions:
+              - operation: one_of
+                param_bindings:
+                - array_value:
+                  - literal: SEV123
+                    reference: incident.severity
+                  value:
+                    literal: SEV123
+                    reference: incident.severity
+                subject: alert.priority
+          items:
+            $ref: '#/components/schemas/IncidentFormLifecycleElementPayloadV3'
+          type: array
+      required:
+      - form_type
+      - expressions
+      type: object
+    ConditionGroupV3:
+      example:
+        conditions:
+        - operation:
+            label: Lawrence Jones
+            value: 01FCQSP07Z74QMMYPDDGQB9FTG
+          param_bindings:
+          - array_value:
+            - literal: SEV123
+              reference: incident.severity
+            value:
+              literal: SEV123
+              reference: incident.severity
+          subject:
+            label: Priority
+            reference: alert.priority
+      properties:
+        conditions:
+          description: All conditions in this list must be satisfied for the group to be satisfied
+          example:
+          - operation:
+              label: Lawrence Jones
+              value: 01FCQSP07Z74QMMYPDDGQB9FTG
+            param_bindings:
+            - array_value:
+              - literal: SEV123
+                reference: incident.severity
+              value:
+                literal: SEV123
+                reference: incident.severity
+            subject:
+              label: Priority
+              reference: alert.priority
+          items:
+            $ref: '#/components/schemas/ConditionV3'
+          type: array
+      required:
+      - conditions
+      type: object
+    EngineParamBindingValuePayloadV3:
+      example:
+        literal: SEV123
+        reference: incident.severity
+      properties:
+        literal:
+          description: If set, this is the literal value of the step parameter
+          example: SEV123
+          type: string
+        reference:
+          description: If set, this is the reference into the trigger scope that is the value of this parameter
+          example: incident.severity
+          type: string
+      type: object
+    ExpressionFilterOptsPayloadV3:
+      example:
+        condition_groups:
+        - conditions:
+          - operation: one_of
+            param_bindings:
+            - array_value:
+              - literal: SEV123
+                reference: incident.severity
+              value:
+                literal: SEV123
+                reference: incident.severity
+            subject: alert.priority
+      properties:
+        condition_groups:
+          description: The condition groups to apply in this filter. Only one group needs to be satisfied for the filter to pass.
+          example:
+          - conditions:
+            - operation: one_of
+              param_bindings:
+              - array_value:
+                - literal: SEV123
+                  reference: incident.severity
+                value:
+                  literal: SEV123
+                  reference: incident.severity
+              subject: alert.priority
+          items:
+            $ref: '#/components/schemas/ConditionGroupPayloadV3'
+          type: array
+      required:
+      - condition_groups
+      type: object
+    ExpressionElseBranchPayloadV3:
+      example:
+        result:
+          array_value:
+          - literal: SEV123
+            reference: incident.severity
+          value:
+            literal: SEV123
+            reference: incident.severity
+      properties:
+        result:
+          $ref: '#/components/schemas/EngineParamBindingPayloadV3'
+      required:
+      - result
+      type: object
+    ReturnsMetaV3:
+      example:
+        array: true
+        type: IncidentStatus
+      properties:
+        array:
+          description: Whether the return value should be single or multi-value
+          example: true
+          type: boolean
+        type:
+          description: Expected return type of this expression (what to try casting the result to)
+          example: IncidentStatus
+          type: string
+      required:
+      - type
+      - array
+      type: object
+    ExpressionFilterOptsV3:
+      example:
+        condition_groups:
+        - conditions:
+          - operation:
+              label: Lawrence Jones
+              value: 01FCQSP07Z74QMMYPDDGQB9FTG
+            param_bindings:
+            - array_value:
+              - literal: SEV123
+                reference: incident.severity
+              value:
+                literal: SEV123
+                reference: incident.severity
+            subject:
+              label: Priority
+              reference: alert.priority
+      properties:
+        condition_groups:
+          description: The condition groups to apply in this filter. Only one group needs to be satisfied for the filter to pass.
+          example:
+          - conditions:
+            - operation:
+                label: Lawrence Jones
+                value: 01FCQSP07Z74QMMYPDDGQB9FTG
+              param_bindings:
+              - array_value:
+                - literal: SEV123
+                  reference: incident.severity
+                value:
+                  literal: SEV123
+                  reference: incident.severity
+              subject:
+                label: Priority
+                reference: alert.priority
+          items:
+            $ref: '#/components/schemas/ConditionGroupV3'
+          type: array
+      required:
+      - condition_groups
+      type: object
+    EngineParamBindingPayloadV3:
+      example:
+        array_value:
+        - literal: SEV123
+          reference: incident.severity
+        value:
+          literal: SEV123
+          reference: incident.severity
+      properties:
+        array_value:
+          description: If set, this is the array value of the step parameter
+          example:
+          - literal: SEV123
+            reference: incident.severity
+          items:
+            $ref: '#/components/schemas/EngineParamBindingValuePayloadV3'
+          type: array
+        value:
+          $ref: '#/components/schemas/EngineParamBindingValuePayloadV3'
+      type: object
+    ExpressionCastOptsPayloadV3:
+      example:
+        returns:
+          array: true
+          type: IncidentStatus
+      properties:
+        returns:
+          $ref: '#/components/schemas/ReturnsMetaV3'
+      required:
+      - returns
+      type: object
+    PaginationMetaResultV3:
+      example:
+        after: 01FCNDV6P870EA6S7TK1DSYDG0
+        page_size: 25
+      properties:
+        after:
+          description: If provided, pass this as the 'after' param to load the next page
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+        page_size:
+          default: 25
+          description: What was the maximum number of results requested
+          example: 25
+          format: int64
+          maximum: 250
+          type: integer
+      required:
+      - page_size
+      type: object
+    IncidentFormsCreateResultV3:
+      example:
+        incident_form:
+          created_at: '2021-08-17T13:28:57.801578Z'
+          expressions:
+          - else_branch:
+              result:
+                array_value:
+                - literal: SEV123
+                  reference: incident.severity
+                value:
+                  literal: SEV123
+                  reference: incident.severity
+            label: Team Slack channel
+            operations:
+            - branches:
+                branches:
+                - condition_groups:
+                  - conditions:
+                    - operation:
+                        label: Lawrence Jones
+                        value: 01FCQSP07Z74QMMYPDDGQB9FTG
+                      param_bindings:
+                      - array_value:
+                        - literal: SEV123
+                          reference: incident.severity
+                        value:
+                          literal: SEV123
+                          reference: incident.severity
+                      subject:
+                        label: Priority
+                        reference: alert.priority
+                  result:
+                    array_value:
+                    - literal: SEV123
+                      reference: incident.severity
+                    value:
+                      literal: SEV123
+                      reference: incident.severity
+                returns:
+                  array: true
+                  type: IncidentStatus
+              cast:
+                returns:
+                  array: true
+                  type: IncidentStatus
+              concatenate:
+                reference: '1235'
+                reference_label: Teams
+              filter:
+                condition_groups:
+                - conditions:
+                  - operation:
+                      label: Lawrence Jones
+                      value: 01FCQSP07Z74QMMYPDDGQB9FTG
+                    param_bindings:
+                    - array_value:
+                      - literal: SEV123
+                        reference: incident.severity
+                      value:
+                        literal: SEV123
+                        reference: incident.severity
+                    subject:
+                      label: Priority
+                      reference: alert.priority
+              navigate:
+                reference: '1235'
+                reference_label: Teams
+              operation_type: navigate
+              parse:
+                returns:
+                  array: true
+                  type: IncidentStatus
+                source: metadata.annotations["github.com/repo"]
+              returns:
+                array: true
+                type: IncidentStatus
+            reference: abc123
+            returns:
+              array: true
+              type: IncidentStatus
+            root_reference: incident.status
+          form_type: declare
+          id: 01FCNDV6P870EA6S7TK1DSYDG0
+          incident_type_id: 01FCNDV6P870EA6S7TK1DSYDG0
+          lifecycle_elements:
+          - can_select_no_value: false
+            config:
+              require_comment: false
+            custom_field_id: 01FCNDV6P870EA6S7TK1DSYDG0
+            default_value:
+              array_value:
+              - literal: SEV123
+                reference: incident.severity
+              value:
+                literal: SEV123
+                reference: incident.severity
+            description: Shown when the incident is major or above.
+            element_type: name
+            id: 01FCNDV6P870EA6S7TK1DSYDG0
+            incident_role_id: 01FCNDV6P870EA6S7TK1DSYDG0
+            incident_timestamp_id: 01FCNDV6P870EA6S7TK1DSYDG0
+            placeholder: What's happening?
+            required_if: check_engine_config
+            required_if_condition_groups:
+            - conditions:
+              - operation:
+                  label: Lawrence Jones
+                  value: 01FCQSP07Z74QMMYPDDGQB9FTG
+                param_bindings:
+                - array_value:
+                  - literal: SEV123
+                    reference: incident.severity
+                  value:
+                    literal: SEV123
+                    reference: incident.severity
+                subject:
+                  label: Priority
+                  reference: alert.priority
+            show_if_condition_groups:
+            - conditions:
+              - operation:
+                  label: Lawrence Jones
+                  value: 01FCQSP07Z74QMMYPDDGQB9FTG
+                param_bindings:
+                - array_value:
+                  - literal: SEV123
+                    reference: incident.severity
+                  value:
+                    literal: SEV123
+                    reference: incident.severity
+                subject:
+                  label: Priority
+                  reference: alert.priority
+          updated_at: '2021-08-17T13:28:57.801578Z'
+      properties:
+        incident_form:
+          $ref: '#/components/schemas/IncidentFormV3'
+      required:
+      - incident_form
+      type: object
+    ErrorSingle:
+      example:
+        code: trial_expired
+        message: Default incident call link must be a valid URL
+        metadata:
+          abc123: abc123
+        source:
+          field: default_call_url
+          pointer: /settings/default_call_url
+      properties:
+        code:
+          description: Machine-readable identifier for this specific error
+          example: trial_expired
+          type: string
+        message:
+          description: Human readable description of the error
+          example: Default incident call link must be a valid URL
+          type: string
+        metadata:
+          additionalProperties:
+            example: abc123
+            type: string
+          description: Additional metadata about the error, keyed by a string identifier
+          example:
+            abc123: abc123
+          type: object
+        source:
+          $ref: '#/components/schemas/ErrorSource'
+      required:
+      - code
+      - message
+      type: object
+  securitySchemes:
+    BearerAuth:
+      description: API key from your incident.io dashboard (Settings > API keys)
+      scheme: bearer
+      type: http
+externalDocs:
+  description: View our API docs at api-docs.incident.io
+  url: https://api-docs.incident.io/

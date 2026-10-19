@@ -1,0 +1,1569 @@
+openapi: 3.2.0
+info:
+  description: 'This is the API reference for incident.io. It documents available API endpoints, provides examples of how to use it, and
+
+    instructions around things like authentication and error handling. The API is hosted at:
+
+
+    - https://api.incident.io/
+
+
+    And you will need to create an API key via your incident.io
+
+    dashboard to make requests. # Making requests
+
+
+    Here are the key concepts required to make requests to the incident.io API. ## Authentication
+
+
+    For all requests made to the incident.io API, you''ll need an API key. To create an API key, head to the incident dashboard and visit API
+
+    keys. When you create the key, you''ll be able to choose what actions it
+
+    can take for your account: choose carefully, as those roles can only be set
+
+    when you first create the key. We''ll only show you the token once, so make sure
+
+    you store it somewhere safe. API keys are global to your incident.io account, and can be managed by anyone
+
+    who has the right permissions. We display the user that created the API key,
+
+    and the API key will remain valid if that user becomes deactivated. Once you have the key, you should make requests to the API that set the
+
+    `Authorization` request header using a "Bearer" authentication scheme:
+
+
+    ```
+
+    Authorization: Bearer
+
+    ```
+
+
+    ## Rate Limits
+
+
+    The incident.io API enforces rate limits to ensure consistent performance for all users. The default rate limit is 1200 requests/minute per API key. This limit applies to most endpoints across the API. Limits are token buckets that refill continuously rather than resetting on a fixed window boundary. The default
+
+    bucket holds 1200 requests and refills at 20 per second, so you can burst up to the full bucket and then sustain
+
+    20 requests/second indefinitely. There is no boundary at which your quota resets to full in one step. Some endpoints have lower rate limits, particularly those that interact with external third-party systems that impose
+
+    their own limitations. These specific limits vary by endpoint. ### Rate limit headers
+
+
+    Responses to requests authenticated with an API key carry your current allowance, so you can pace yourself rather
+
+    than waiting to be throttled:
+
+
+    ```
+
+    X-RateLimit-Limit: 60, 1200;window=60, 60;window=60
+
+    X-RateLimit-Remaining: 59
+
+    X-RateLimit-Used: 1
+
+    X-RateLimit-Reset: 1785173199
+
+    ```
+
+
+    | Header | Meaning |
+
+    | --- | --- |
+
+    | `X-RateLimit-Limit` | The quota that binds this request, followed by every limit that applied and the window it applies over |
+
+    | `X-RateLimit-Remaining` | Requests you can make right now against the binding limit |
+
+    | `X-RateLimit-Used` | Requests you have spent against it |
+
+    | `X-RateLimit-Reset` | Unix timestamp (seconds) at which that limit will be back to full |
+
+
+    More than one limit can apply to a request: your API key''s overall limit, and for some endpoints a lower limit of
+
+    their own. `X-RateLimit-Limit` lists all of them, each with its window, so `1200;window=60` means 1200 requests per
+
+    minute. Because our limits refill continuously rather than resetting on a boundary, that window is what tells you
+
+    the rate you can sustain: 1200 per 60 seconds is 20 requests/second indefinitely. `Remaining`, `Used` and `Reset` describe whichever limit has the least allowance left, since that is the one you
+
+    will hit first. `X-RateLimit-Remaining` may lag by a small number of requests under high concurrency, and can move by more than the
+
+    requests you made, because limits scoped to your whole organisation are shared with your other API keys. Headers are omitted rather than guessed if we cannot determine your allowance for a request. ### Exceeding a rate limit
+
+
+    When you exceed a rate limit the API responds with `429 Too Many Requests` and a `Retry-After` header giving the
+
+    number of seconds to wait:
+
+
+    ```
+
+    X-RateLimit-Limit: 1200, 1200;window=60
+
+    X-RateLimit-Remaining: 0
+
+    X-RateLimit-Used: 1200
+
+    X-RateLimit-Reset: 1785173199
+
+    Retry-After: 1
+
+    ```
+
+
+    Prefer `Retry-After` over `X-RateLimit-Reset` when deciding how long to back off.'
+  title: incident.io Alert Notes V1 API
+  version: 1.0.0
+servers:
+- url: https://api.incident.io
+security:
+- BearerAuth: []
+tags:
+- description: 'Manage notes attached to alerts.
+
+
+    Notes let your team capture context, decisions, and investigation findings against
+
+    an individual alert without needing to declare an incident.
+
+
+    Note content is stored and returned as Markdown. The following formatting is
+
+    supported:
+
+
+    - **Headings** (`#`, `##`, `###`)
+
+    - **Bold** and *italic* text formatting
+
+    - ~~Strikethrough~~ text
+
+    - Inline `code` and fenced code blocks
+
+    - Bullet lists and numbered lists
+
+    - Blockquotes
+
+    - Links using Markdown link syntax — bare URLs are not auto-linked
+
+    - Tables (GitHub-flavoured Markdown)
+
+    - Horizontal rules (`---`)
+
+
+    Raw HTML, image syntax (`!alt`), task lists, and footnotes are not
+
+    supported, and will be stripped or rendered as plain text.'
+  name: Alert Notes V1
+paths:
+  /v1/alert_notes:
+    get:
+      description: List alert notes attached to an alert.
+      operationId: AlertNotesV1#List
+      parameters:
+      - allowEmptyValue: true
+        description: ID of the alert to list notes for. Provide exactly one of alert_id or alert_group_id.
+        example: 01FCNDV6P870EA6S7TK1DSYDG0
+        in: query
+        name: alert_id
+        schema:
+          description: ID of the alert to list notes for. Provide exactly one of alert_id or alert_group_id.
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+      - allowEmptyValue: true
+        description: ID of the alert group to list notes for. Provide exactly one of alert_id or alert_group_id.
+        example: 01HB9Z8WANK6P870EA6S7TK1DS
+        in: query
+        name: alert_group_id
+        schema:
+          description: ID of the alert group to list notes for. Provide exactly one of alert_id or alert_group_id.
+          example: 01HB9Z8WANK6P870EA6S7TK1DS
+          type: string
+      - allowEmptyValue: true
+        description: Integer number of records to return
+        example: 25
+        in: query
+        name: page_size
+        schema:
+          default: 25
+          description: Integer number of records to return
+          example: 25
+          format: int64
+          maximum: 250
+          minimum: 1
+          type: integer
+      - allowEmptyValue: true
+        description: An record's ID. This endpoint will return a list of records after this ID in relation to the API response order.
+        example: 01FDAG4SAP5TYPT98WGR2N7W91
+        in: query
+        name: after
+        schema:
+          description: An record's ID. This endpoint will return a list of records after this ID in relation to the API response order.
+          example: 01FDAG4SAP5TYPT98WGR2N7W91
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              example:
+                alert_notes:
+                - alert_group_id: 01HB9Z8WANK6P870EA6S7TK1DS
+                  alert_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  content: 'Customer reports **checkout 500s** starting ~14:32 UTC. Investigating `payments-api`.
+
+
+                    - Error rate: ~12% on `/checkout`
+
+                    - Region: `eu-west-1`
+
+                    - See [dashboard](https://grafana.example.com/d/abc)
+
+                    '
+                  created_at: '2026-05-28T15:30:00Z'
+                  creator:
+                    api_key:
+                      id: 01FCNDV6P870EA6S7TK1DSYDG0
+                      name: My test API key
+                    user:
+                      email: lisa@incident.io
+                      id: 01FCNDV6P870EA6S7TK1DSYDG0
+                      name: Lisa Karlin Curtis
+                      role: viewer
+                      slack_user_id: U02AYNF2XJM
+                  id: 01J1X9J85C7Y12G8P8W8K55Q5Y
+                  images:
+                  - id: 01G0J1EXE7AXZ2C93K61WBPYEH
+                    url: https://storage.googleapis.com/incident-io/images/...
+                  last_edited_at: '2026-05-28T15:35:00Z'
+                  updated_at: '2026-05-28T15:35:00Z'
+                pagination_meta:
+                  after: 01FCNDV6P870EA6S7TK1DSYDG0
+                  page_size: 25
+              schema:
+                $ref: '#/components/schemas/AlertNotesListResultV1'
+          description: OK response.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'invalid_request_error: There was a problem with the request, like a missing header or querying a resource that doesn''t exist.'
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'authentication_error: Authentication failed.'
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'resource_forbidden: Access to this resource is forbidden for the authenticated user.'
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_found: The referenced resource could not be found.'
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'method_not_allowed: The endpoint does not support this operation for the specified resource.'
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_acceptable: Requested a media type this endpoint does not support.'
+        '408':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'request_timeout: The request took too long to process.
+
+
+            client_timeout: The request was cancelled by the client.'
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'conflict: Request conflicted with current state of the resource, likely a concurrent update.'
+        '412':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'precondition_failed: A required condition hasn''t been met.'
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'payload_too_large: The request payload is too large.'
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'validation_error: A required field was not provided, or the provided data was invalid.'
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'too_many_requests: Too many requests hit the API too quickly. We recommend an exponential backoff of your requests.
+
+
+            rate_limit_reached: The rate limit associated with this resource or API key has been exceeded. Try again later.'
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'api_error: Something went wrong and has been reported internally.'
+      summary: List Alert Notes V1
+      tags:
+      - Alert Notes V1
+      x-docs-display-name: List
+      x-docs-group-name: Alert Notes V1
+      x-docs-resource-type: AlertNoteV1
+      x-mint:
+        content: 🔑 Requires the `alerts.view` scope.
+      x-rbac-scopes:
+      - alerts.view
+      x-operation-id-source: normalized
+      x-operation-id-original: Alert Notes V1#List
+    post:
+      description: Add a note to an alert.
+      operationId: AlertNotesV1#Create
+      requestBody:
+        content:
+          application/json:
+            example:
+              alert_group_id: 01HB9Z8WANK6P870EA6S7TK1DS
+              alert_id: 01FCNDV6P870EA6S7TK1DSYDG0
+              content: 'Customer reports **checkout 500s** starting ~14:32 UTC. Investigating `payments-api`.
+
+
+                - Error rate: ~12% on `/checkout`
+
+                - Region: `eu-west-1`
+
+                - See [dashboard](https://grafana.example.com/d/abc)
+
+                '
+            schema:
+              $ref: '#/components/schemas/AlertNotesCreatePayloadV1'
+        required: true
+      responses:
+        '201':
+          content:
+            application/json:
+              example:
+                alert_note:
+                  alert_group_id: 01HB9Z8WANK6P870EA6S7TK1DS
+                  alert_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  content: 'Customer reports **checkout 500s** starting ~14:32 UTC. Investigating `payments-api`.
+
+
+                    - Error rate: ~12% on `/checkout`
+
+                    - Region: `eu-west-1`
+
+                    - See [dashboard](https://grafana.example.com/d/abc)
+
+                    '
+                  created_at: '2026-05-28T15:30:00Z'
+                  creator:
+                    api_key:
+                      id: 01FCNDV6P870EA6S7TK1DSYDG0
+                      name: My test API key
+                    user:
+                      email: lisa@incident.io
+                      id: 01FCNDV6P870EA6S7TK1DSYDG0
+                      name: Lisa Karlin Curtis
+                      role: viewer
+                      slack_user_id: U02AYNF2XJM
+                  id: 01J1X9J85C7Y12G8P8W8K55Q5Y
+                  images:
+                  - id: 01G0J1EXE7AXZ2C93K61WBPYEH
+                    url: https://storage.googleapis.com/incident-io/images/...
+                  last_edited_at: '2026-05-28T15:35:00Z'
+                  updated_at: '2026-05-28T15:35:00Z'
+              schema:
+                $ref: '#/components/schemas/AlertNotesCreateResultV1'
+          description: Created response.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'invalid_request_error: There was a problem with the request, like a missing header or querying a resource that doesn''t exist.'
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'authentication_error: Authentication failed.'
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'resource_forbidden: Access to this resource is forbidden for the authenticated user.'
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_found: The referenced resource could not be found.'
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'method_not_allowed: The endpoint does not support this operation for the specified resource.'
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_acceptable: Requested a media type this endpoint does not support.'
+        '408':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'request_timeout: The request took too long to process.
+
+
+            client_timeout: The request was cancelled by the client.'
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'conflict: Request conflicted with current state of the resource, likely a concurrent update.'
+        '412':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'precondition_failed: A required condition hasn''t been met.'
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'payload_too_large: The request payload is too large.'
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'validation_error: A required field was not provided, or the provided data was invalid.'
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'too_many_requests: Too many requests hit the API too quickly. We recommend an exponential backoff of your requests.
+
+
+            rate_limit_reached: The rate limit associated with this resource or API key has been exceeded. Try again later.'
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'api_error: Something went wrong and has been reported internally.'
+      summary: Create Alert Notes V1
+      tags:
+      - Alert Notes V1
+      x-docs-display-name: Create
+      x-docs-group-name: Alert Notes V1
+      x-docs-resource-type: AlertNoteV1
+      x-mint:
+        content: 🔑 Requires the `alerts.edit` scope.
+      x-rbac-scopes:
+      - alerts.edit
+      x-operation-id-source: normalized
+      x-operation-id-original: Alert Notes V1#Create
+  /v1/alert_notes/{id}:
+    delete:
+      description: Delete an alert note.
+      operationId: AlertNotesV1#Delete
+      parameters:
+      - description: Unique identifier for the alert note
+        example: 01J1X9J85C7Y12G8P8W8K55Q5Y
+        in: path
+        name: id
+        required: true
+        schema:
+          description: Unique identifier for the alert note
+          example: 01J1X9J85C7Y12G8P8W8K55Q5Y
+          type: string
+      responses:
+        '204':
+          description: No Content response.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'invalid_request_error: There was a problem with the request, like a missing header or querying a resource that doesn''t exist.'
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'authentication_error: Authentication failed.'
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'resource_forbidden: Access to this resource is forbidden for the authenticated user.'
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_found: The referenced resource could not be found.'
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'method_not_allowed: The endpoint does not support this operation for the specified resource.'
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_acceptable: Requested a media type this endpoint does not support.'
+        '408':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'request_timeout: The request took too long to process.
+
+
+            client_timeout: The request was cancelled by the client.'
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'conflict: Request conflicted with current state of the resource, likely a concurrent update.'
+        '412':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'precondition_failed: A required condition hasn''t been met.'
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'payload_too_large: The request payload is too large.'
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'validation_error: A required field was not provided, or the provided data was invalid.'
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'too_many_requests: Too many requests hit the API too quickly. We recommend an exponential backoff of your requests.
+
+
+            rate_limit_reached: The rate limit associated with this resource or API key has been exceeded. Try again later.'
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'api_error: Something went wrong and has been reported internally.'
+      summary: Delete Alert Notes V1
+      tags:
+      - Alert Notes V1
+      x-docs-display-name: Delete
+      x-docs-group-name: Alert Notes V1
+      x-docs-resource-type: AlertNoteV1
+      x-mint:
+        content: 🔑 Requires the `alerts.edit` scope.
+      x-rbac-scopes:
+      - alerts.edit
+      x-operation-id-source: normalized
+      x-operation-id-original: Alert Notes V1#Delete
+    get:
+      description: Get a single alert note.
+      operationId: AlertNotesV1#Show
+      parameters:
+      - description: Unique identifier for the alert note
+        example: 01J1X9J85C7Y12G8P8W8K55Q5Y
+        in: path
+        name: id
+        required: true
+        schema:
+          description: Unique identifier for the alert note
+          example: 01J1X9J85C7Y12G8P8W8K55Q5Y
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              example:
+                alert_note:
+                  alert_group_id: 01HB9Z8WANK6P870EA6S7TK1DS
+                  alert_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  content: 'Customer reports **checkout 500s** starting ~14:32 UTC. Investigating `payments-api`.
+
+
+                    - Error rate: ~12% on `/checkout`
+
+                    - Region: `eu-west-1`
+
+                    - See [dashboard](https://grafana.example.com/d/abc)
+
+                    '
+                  created_at: '2026-05-28T15:30:00Z'
+                  creator:
+                    api_key:
+                      id: 01FCNDV6P870EA6S7TK1DSYDG0
+                      name: My test API key
+                    user:
+                      email: lisa@incident.io
+                      id: 01FCNDV6P870EA6S7TK1DSYDG0
+                      name: Lisa Karlin Curtis
+                      role: viewer
+                      slack_user_id: U02AYNF2XJM
+                  id: 01J1X9J85C7Y12G8P8W8K55Q5Y
+                  images:
+                  - id: 01G0J1EXE7AXZ2C93K61WBPYEH
+                    url: https://storage.googleapis.com/incident-io/images/...
+                  last_edited_at: '2026-05-28T15:35:00Z'
+                  updated_at: '2026-05-28T15:35:00Z'
+              schema:
+                $ref: '#/components/schemas/AlertNotesShowResultV1'
+          description: OK response.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'invalid_request_error: There was a problem with the request, like a missing header or querying a resource that doesn''t exist.'
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'authentication_error: Authentication failed.'
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'resource_forbidden: Access to this resource is forbidden for the authenticated user.'
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_found: The referenced resource could not be found.'
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'method_not_allowed: The endpoint does not support this operation for the specified resource.'
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_acceptable: Requested a media type this endpoint does not support.'
+        '408':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'request_timeout: The request took too long to process.
+
+
+            client_timeout: The request was cancelled by the client.'
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'conflict: Request conflicted with current state of the resource, likely a concurrent update.'
+        '412':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'precondition_failed: A required condition hasn''t been met.'
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'payload_too_large: The request payload is too large.'
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'validation_error: A required field was not provided, or the provided data was invalid.'
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'too_many_requests: Too many requests hit the API too quickly. We recommend an exponential backoff of your requests.
+
+
+            rate_limit_reached: The rate limit associated with this resource or API key has been exceeded. Try again later.'
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'api_error: Something went wrong and has been reported internally.'
+      summary: Show Alert Notes V1
+      tags:
+      - Alert Notes V1
+      x-docs-display-name: Show
+      x-docs-group-name: Alert Notes V1
+      x-docs-resource-type: AlertNoteV1
+      x-mint:
+        content: 🔑 Requires the `alerts.view` scope.
+      x-rbac-scopes:
+      - alerts.view
+      x-operation-id-source: normalized
+      x-operation-id-original: Alert Notes V1#Show
+    put:
+      description: Replace the content of an alert note.
+      operationId: AlertNotesV1#Update
+      parameters:
+      - description: ID of the alert note
+        example: 01J1X9J85C7Y12G8P8W8K55Q5Y
+        in: path
+        name: id
+        required: true
+        schema:
+          description: ID of the alert note
+          example: 01J1X9J85C7Y12G8P8W8K55Q5Y
+          type: string
+      requestBody:
+        content:
+          application/json:
+            example:
+              content: 'Customer reports **checkout 500s** starting ~14:32 UTC. Investigating `payments-api`.
+
+
+                - Error rate: ~12% on `/checkout`
+
+                - Region: `eu-west-1`
+
+                - See [dashboard](https://grafana.example.com/d/abc)
+
+                '
+            schema:
+              $ref: '#/components/schemas/AlertNotesUpdatePayloadV1'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              example:
+                alert_note:
+                  alert_group_id: 01HB9Z8WANK6P870EA6S7TK1DS
+                  alert_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  content: 'Customer reports **checkout 500s** starting ~14:32 UTC. Investigating `payments-api`.
+
+
+                    - Error rate: ~12% on `/checkout`
+
+                    - Region: `eu-west-1`
+
+                    - See [dashboard](https://grafana.example.com/d/abc)
+
+                    '
+                  created_at: '2026-05-28T15:30:00Z'
+                  creator:
+                    api_key:
+                      id: 01FCNDV6P870EA6S7TK1DSYDG0
+                      name: My test API key
+                    user:
+                      email: lisa@incident.io
+                      id: 01FCNDV6P870EA6S7TK1DSYDG0
+                      name: Lisa Karlin Curtis
+                      role: viewer
+                      slack_user_id: U02AYNF2XJM
+                  id: 01J1X9J85C7Y12G8P8W8K55Q5Y
+                  images:
+                  - id: 01G0J1EXE7AXZ2C93K61WBPYEH
+                    url: https://storage.googleapis.com/incident-io/images/...
+                  last_edited_at: '2026-05-28T15:35:00Z'
+                  updated_at: '2026-05-28T15:35:00Z'
+              schema:
+                $ref: '#/components/schemas/AlertNotesUpdateResultV1'
+          description: OK response.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'invalid_request_error: There was a problem with the request, like a missing header or querying a resource that doesn''t exist.'
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'authentication_error: Authentication failed.'
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'resource_forbidden: Access to this resource is forbidden for the authenticated user.'
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_found: The referenced resource could not be found.'
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'method_not_allowed: The endpoint does not support this operation for the specified resource.'
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_acceptable: Requested a media type this endpoint does not support.'
+        '408':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'request_timeout: The request took too long to process.
+
+
+            client_timeout: The request was cancelled by the client.'
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'conflict: Request conflicted with current state of the resource, likely a concurrent update.'
+        '412':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'precondition_failed: A required condition hasn''t been met.'
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'payload_too_large: The request payload is too large.'
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'validation_error: A required field was not provided, or the provided data was invalid.'
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'too_many_requests: Too many requests hit the API too quickly. We recommend an exponential backoff of your requests.
+
+
+            rate_limit_reached: The rate limit associated with this resource or API key has been exceeded. Try again later.'
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'api_error: Something went wrong and has been reported internally.'
+      summary: Update Alert Notes V1
+      tags:
+      - Alert Notes V1
+      x-docs-display-name: Update
+      x-docs-group-name: Alert Notes V1
+      x-docs-resource-type: AlertNoteV1
+      x-mint:
+        content: 🔑 Requires the `alerts.edit` scope.
+      x-rbac-scopes:
+      - alerts.edit
+      x-operation-id-source: normalized
+      x-operation-id-original: Alert Notes V1#Update
+components:
+  schemas:
+    APIKeyActorV1:
+      example:
+        id: 01FCNDV6P870EA6S7TK1DSYDG0
+        name: My test API key
+      properties:
+        id:
+          description: Unique identifier for this API key
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+        name:
+          description: The name of the API key, for the user's reference
+          example: My test API key
+          type: string
+      required:
+      - id
+      - name
+      type: object
+    ActorV1:
+      example:
+        api_key:
+          id: 01FCNDV6P870EA6S7TK1DSYDG0
+          name: My test API key
+        user:
+          email: lisa@incident.io
+          id: 01FCNDV6P870EA6S7TK1DSYDG0
+          name: Lisa Karlin Curtis
+          role: viewer
+          slack_user_id: U02AYNF2XJM
+      properties:
+        api_key:
+          $ref: '#/components/schemas/APIKeyActorV1'
+        user:
+          $ref: '#/components/schemas/UserV1'
+      type: object
+    ErrorRateLimit:
+      example:
+        limit: 100
+        name: client_ip
+        remaining: 98
+        retry_after: '2020-01-01T00:00:00Z'
+      properties:
+        limit:
+          description: The maximum number of requests that the consumer is permitted to make per minute
+          example: 100
+          format: int64
+          type: integer
+        name:
+          description: Which rate limit was exceeded
+          example: client_ip
+          type: string
+        remaining:
+          description: The number of requests remaining in the current rate limit window
+          example: 98
+          format: int64
+          type: integer
+        retry_after:
+          description: When the client can retry, as an RFC3339 timestamp in UTC. Prefer the Retry-After response header, which carries the same instant as a number of seconds
+          example: '2020-01-01T00:00:00Z'
+          type: string
+      required:
+      - name
+      - limit
+      - remaining
+      - retry_after
+      type: object
+    ImageV1:
+      example:
+        id: 01G0J1EXE7AXZ2C93K61WBPYEH
+        url: https://storage.googleapis.com/incident-io/images/...
+      properties:
+        id:
+          description: Unique identifier for the image
+          example: 01G0J1EXE7AXZ2C93K61WBPYEH
+          type: string
+        url:
+          description: Pre-signed URL to fetch the image, valid for 10 minutes
+          example: https://storage.googleapis.com/incident-io/images/...
+          type: string
+      required:
+      - id
+      - url
+      type: object
+    AlertNoteV1:
+      example:
+        alert_group_id: 01HB9Z8WANK6P870EA6S7TK1DS
+        alert_id: 01FCNDV6P870EA6S7TK1DSYDG0
+        content: 'Customer reports **checkout 500s** starting ~14:32 UTC. Investigating `payments-api`.
+
+
+          - Error rate: ~12% on `/checkout`
+
+          - Region: `eu-west-1`
+
+          - See [dashboard](https://grafana.example.com/d/abc)
+
+          '
+        created_at: '2026-05-28T15:30:00Z'
+        creator:
+          api_key:
+            id: 01FCNDV6P870EA6S7TK1DSYDG0
+            name: My test API key
+          user:
+            email: lisa@incident.io
+            id: 01FCNDV6P870EA6S7TK1DSYDG0
+            name: Lisa Karlin Curtis
+            role: viewer
+            slack_user_id: U02AYNF2XJM
+        id: 01J1X9J85C7Y12G8P8W8K55Q5Y
+        images:
+        - id: 01G0J1EXE7AXZ2C93K61WBPYEH
+          url: https://storage.googleapis.com/incident-io/images/...
+        last_edited_at: '2026-05-28T15:35:00Z'
+        updated_at: '2026-05-28T15:35:00Z'
+      properties:
+        alert_group_id:
+          description: ID of the alert group this note is attached to. Exactly one of alert_id or alert_group_id is set; the other is null.
+          example: 01HB9Z8WANK6P870EA6S7TK1DS
+          type: string
+        alert_id:
+          description: ID of the alert this note is attached to. Exactly one of alert_id or alert_group_id is set; the other is null.
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+        content:
+          description: Markdown body of the note
+          example: 'Customer reports **checkout 500s** starting ~14:32 UTC. Investigating `payments-api`.
+
+
+            - Error rate: ~12% on `/checkout`
+
+            - Region: `eu-west-1`
+
+            - See [dashboard](https://grafana.example.com/d/abc)
+
+            '
+          type: string
+        created_at:
+          description: When this note was first created
+          example: '2026-05-28T15:30:00Z'
+          format: date-time
+          type: string
+        creator:
+          $ref: '#/components/schemas/ActorV1'
+        id:
+          description: Unique identifier for the alert note
+          example: 01J1X9J85C7Y12G8P8W8K55Q5Y
+          type: string
+        images:
+          description: Images attached to the current version of the note, with signed URLs valid for 10 minutes
+          example:
+          - id: 01G0J1EXE7AXZ2C93K61WBPYEH
+            url: https://storage.googleapis.com/incident-io/images/...
+          items:
+            $ref: '#/components/schemas/ImageV1'
+          type: array
+        last_edited_at:
+          description: When this note was last edited, only set if it has been edited at least once since creation
+          example: '2026-05-28T15:35:00Z'
+          format: date-time
+          type: string
+        updated_at:
+          description: When this note was last updated
+          example: '2026-05-28T15:35:00Z'
+          format: date-time
+          type: string
+      required:
+      - id
+      - content
+      - creator
+      - images
+      - created_at
+      - updated_at
+      type: object
+    AlertNotesCreatePayloadV1:
+      example:
+        alert_group_id: 01HB9Z8WANK6P870EA6S7TK1DS
+        alert_id: 01FCNDV6P870EA6S7TK1DSYDG0
+        content: 'Customer reports **checkout 500s** starting ~14:32 UTC. Investigating `payments-api`.
+
+
+          - Error rate: ~12% on `/checkout`
+
+          - Region: `eu-west-1`
+
+          - See [dashboard](https://grafana.example.com/d/abc)
+
+          '
+      properties:
+        alert_group_id:
+          description: ID of the alert group to add the note to. Provide exactly one of alert_id or alert_group_id.
+          example: 01HB9Z8WANK6P870EA6S7TK1DS
+          type: string
+        alert_id:
+          description: ID of the alert to add the note to. Provide exactly one of alert_id or alert_group_id.
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+        content:
+          description: Markdown body of the note
+          example: 'Customer reports **checkout 500s** starting ~14:32 UTC. Investigating `payments-api`.
+
+
+            - Error rate: ~12% on `/checkout`
+
+            - Region: `eu-west-1`
+
+            - See [dashboard](https://grafana.example.com/d/abc)
+
+            '
+          type: string
+      required:
+      - content
+      type: object
+    ErrorResponse:
+      example:
+        debug:
+          message: 'Something broke: and something else: and something else'
+          stacktrace:
+          - thing.go:123
+        errors:
+        - code: trial_expired
+          message: Default incident call link must be a valid URL
+          metadata:
+            abc123: abc123
+          source:
+            field: default_call_url
+            pointer: /settings/default_call_url
+        rate_limit:
+          limit: 100
+          name: client_ip
+          remaining: 98
+          retry_after: '2020-01-01T00:00:00Z'
+        request_id: 2T1p0e3j
+        status: 408
+        type: invalid_request_error
+      properties:
+        debug:
+          $ref: '#/components/schemas/ErrorDebug'
+        errors:
+          description: List of errors that caused this request to fail
+          example:
+          - code: trial_expired
+            message: Default incident call link must be a valid URL
+            metadata:
+              abc123: abc123
+            source:
+              field: default_call_url
+              pointer: /settings/default_call_url
+          items:
+            $ref: '#/components/schemas/ErrorSingle'
+          type: array
+        rate_limit:
+          $ref: '#/components/schemas/ErrorRateLimit'
+        request_id:
+          description: Unique identifier of the request
+          example: 2T1p0e3j
+          type: string
+        status:
+          description: HTTP status of the response
+          example: 408
+          format: int64
+          type: integer
+        type:
+          description: Machine-readable identifier for the general category of error
+          enum:
+          - invalid_request_error
+          - authentication_error
+          - resource_forbidden
+          - not_found
+          - not_acceptable
+          - method_not_allowed
+          - request_timeout
+          - conflict
+          - precondition_failed
+          - payload_too_large
+          - validation_error
+          - too_many_requests
+          - api_error
+          - rate_limit_reached
+          - client_timeout
+          example: invalid_request_error
+          type: string
+      required:
+      - type
+      - status
+      - request_id
+      - errors
+      type: object
+    ErrorDebug:
+      example:
+        message: 'Something broke: and something else: and something else'
+        stacktrace:
+        - thing.go:123
+      properties:
+        message:
+          description: Original internal error message
+          example: 'Something broke: and something else: and something else'
+          type: string
+        stacktrace:
+          description: Stacktrace of the error, if applicable
+          example:
+          - thing.go:123
+          items:
+            example: thing.go:123
+            type: string
+          type: array
+      required:
+      - message
+      - stacktrace
+      type: object
+    AlertNotesListResultV1:
+      example:
+        alert_notes:
+        - alert_group_id: 01HB9Z8WANK6P870EA6S7TK1DS
+          alert_id: 01FCNDV6P870EA6S7TK1DSYDG0
+          content: 'Customer reports **checkout 500s** starting ~14:32 UTC. Investigating `payments-api`.
+
+
+            - Error rate: ~12% on `/checkout`
+
+            - Region: `eu-west-1`
+
+            - See [dashboard](https://grafana.example.com/d/abc)
+
+            '
+          created_at: '2026-05-28T15:30:00Z'
+          creator:
+            api_key:
+              id: 01FCNDV6P870EA6S7TK1DSYDG0
+              name: My test API key
+            user:
+              email: lisa@incident.io
+              id: 01FCNDV6P870EA6S7TK1DSYDG0
+              name: Lisa Karlin Curtis
+              role: viewer
+              slack_user_id: U02AYNF2XJM
+          id: 01J1X9J85C7Y12G8P8W8K55Q5Y
+          images:
+          - id: 01G0J1EXE7AXZ2C93K61WBPYEH
+            url: https://storage.googleapis.com/incident-io/images/...
+          last_edited_at: '2026-05-28T15:35:00Z'
+          updated_at: '2026-05-28T15:35:00Z'
+        pagination_meta:
+          after: 01FCNDV6P870EA6S7TK1DSYDG0
+          page_size: 25
+      properties:
+        alert_notes:
+          example:
+          - alert_group_id: 01HB9Z8WANK6P870EA6S7TK1DS
+            alert_id: 01FCNDV6P870EA6S7TK1DSYDG0
+            content: 'Customer reports **checkout 500s** starting ~14:32 UTC. Investigating `payments-api`.
+
+
+              - Error rate: ~12% on `/checkout`
+
+              - Region: `eu-west-1`
+
+              - See [dashboard](https://grafana.example.com/d/abc)
+
+              '
+            created_at: '2026-05-28T15:30:00Z'
+            creator:
+              api_key:
+                id: 01FCNDV6P870EA6S7TK1DSYDG0
+                name: My test API key
+              user:
+                email: lisa@incident.io
+                id: 01FCNDV6P870EA6S7TK1DSYDG0
+                name: Lisa Karlin Curtis
+                role: viewer
+                slack_user_id: U02AYNF2XJM
+            id: 01J1X9J85C7Y12G8P8W8K55Q5Y
+            images:
+            - id: 01G0J1EXE7AXZ2C93K61WBPYEH
+              url: https://storage.googleapis.com/incident-io/images/...
+            last_edited_at: '2026-05-28T15:35:00Z'
+            updated_at: '2026-05-28T15:35:00Z'
+          items:
+            $ref: '#/components/schemas/AlertNoteV1'
+          type: array
+        pagination_meta:
+          $ref: '#/components/schemas/PaginationMetaResultV1'
+      required:
+      - alert_notes
+      - pagination_meta
+      type: object
+    AlertNotesUpdatePayloadV1:
+      example:
+        content: 'Customer reports **checkout 500s** starting ~14:32 UTC. Investigating `payments-api`.
+
+
+          - Error rate: ~12% on `/checkout`
+
+          - Region: `eu-west-1`
+
+          - See [dashboard](https://grafana.example.com/d/abc)
+
+          '
+      properties:
+        content:
+          description: Markdown body of the note
+          example: 'Customer reports **checkout 500s** starting ~14:32 UTC. Investigating `payments-api`.
+
+
+            - Error rate: ~12% on `/checkout`
+
+            - Region: `eu-west-1`
+
+            - See [dashboard](https://grafana.example.com/d/abc)
+
+            '
+          type: string
+      required:
+      - content
+      type: object
+    AlertNotesCreateResultV1:
+      example:
+        alert_note:
+          alert_group_id: 01HB9Z8WANK6P870EA6S7TK1DS
+          alert_id: 01FCNDV6P870EA6S7TK1DSYDG0
+          content: 'Customer reports **checkout 500s** starting ~14:32 UTC. Investigating `payments-api`.
+
+
+            - Error rate: ~12% on `/checkout`
+
+            - Region: `eu-west-1`
+
+            - See [dashboard](https://grafana.example.com/d/abc)
+
+            '
+          created_at: '2026-05-28T15:30:00Z'
+          creator:
+            api_key:
+              id: 01FCNDV6P870EA6S7TK1DSYDG0
+              name: My test API key
+            user:
+              email: lisa@incident.io
+              id: 01FCNDV6P870EA6S7TK1DSYDG0
+              name: Lisa Karlin Curtis
+              role: viewer
+              slack_user_id: U02AYNF2XJM
+          id: 01J1X9J85C7Y12G8P8W8K55Q5Y
+          images:
+          - id: 01G0J1EXE7AXZ2C93K61WBPYEH
+            url: https://storage.googleapis.com/incident-io/images/...
+          last_edited_at: '2026-05-28T15:35:00Z'
+          updated_at: '2026-05-28T15:35:00Z'
+      properties:
+        alert_note:
+          $ref: '#/components/schemas/AlertNoteV1'
+      required:
+      - alert_note
+      type: object
+    AlertNotesShowResultV1:
+      example:
+        alert_note:
+          alert_group_id: 01HB9Z8WANK6P870EA6S7TK1DS
+          alert_id: 01FCNDV6P870EA6S7TK1DSYDG0
+          content: 'Customer reports **checkout 500s** starting ~14:32 UTC. Investigating `payments-api`.
+
+
+            - Error rate: ~12% on `/checkout`
+
+            - Region: `eu-west-1`
+
+            - See [dashboard](https://grafana.example.com/d/abc)
+
+            '
+          created_at: '2026-05-28T15:30:00Z'
+          creator:
+            api_key:
+              id: 01FCNDV6P870EA6S7TK1DSYDG0
+              name: My test API key
+            user:
+              email: lisa@incident.io
+              id: 01FCNDV6P870EA6S7TK1DSYDG0
+              name: Lisa Karlin Curtis
+              role: viewer
+              slack_user_id: U02AYNF2XJM
+          id: 01J1X9J85C7Y12G8P8W8K55Q5Y
+          images:
+          - id: 01G0J1EXE7AXZ2C93K61WBPYEH
+            url: https://storage.googleapis.com/incident-io/images/...
+          last_edited_at: '2026-05-28T15:35:00Z'
+          updated_at: '2026-05-28T15:35:00Z'
+      properties:
+        alert_note:
+          $ref: '#/components/schemas/AlertNoteV1'
+      required:
+      - alert_note
+      type: object
+    ErrorSource:
+      example:
+        field: default_call_url
+        pointer: /settings/default_call_url
+      properties:
+        field:
+          description: Field name that is the source of the error
+          example: default_call_url
+          type: string
+        pointer:
+          description: JSON pointer to the request field that is the source of the error
+          example: /settings/default_call_url
+          type: string
+      required:
+      - field
+      - pointer
+      type: object
+    AlertNotesUpdateResultV1:
+      example:
+        alert_note:
+          alert_group_id: 01HB9Z8WANK6P870EA6S7TK1DS
+          alert_id: 01FCNDV6P870EA6S7TK1DSYDG0
+          content: 'Customer reports **checkout 500s** starting ~14:32 UTC. Investigating `payments-api`.
+
+
+            - Error rate: ~12% on `/checkout`
+
+            - Region: `eu-west-1`
+
+            - See [dashboard](https://grafana.example.com/d/abc)
+
+            '
+          created_at: '2026-05-28T15:30:00Z'
+          creator:
+            api_key:
+              id: 01FCNDV6P870EA6S7TK1DSYDG0
+              name: My test API key
+            user:
+              email: lisa@incident.io
+              id: 01FCNDV6P870EA6S7TK1DSYDG0
+              name: Lisa Karlin Curtis
+              role: viewer
+              slack_user_id: U02AYNF2XJM
+          id: 01J1X9J85C7Y12G8P8W8K55Q5Y
+          images:
+          - id: 01G0J1EXE7AXZ2C93K61WBPYEH
+            url: https://storage.googleapis.com/incident-io/images/...
+          last_edited_at: '2026-05-28T15:35:00Z'
+          updated_at: '2026-05-28T15:35:00Z'
+      properties:
+        alert_note:
+          $ref: '#/components/schemas/AlertNoteV1'
+      required:
+      - alert_note
+      type: object
+    UserV1:
+      example:
+        email: lisa@incident.io
+        id: 01FCNDV6P870EA6S7TK1DSYDG0
+        name: Lisa Karlin Curtis
+        role: viewer
+        slack_user_id: U02AYNF2XJM
+      properties:
+        email:
+          description: Email address of the user.
+          example: lisa@incident.io
+          type: string
+        id:
+          description: Unique identifier of the user
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+        name:
+          description: Name of the user
+          example: Lisa Karlin Curtis
+          type: string
+        role:
+          description: 'DEPRECATED: Role of the user as of March 9th 2023, this value is no longer updated.'
+          enum:
+          - viewer
+          - responder
+          - administrator
+          - owner
+          - unset
+          example: viewer
+          type: string
+        slack_user_id:
+          description: Slack ID of the user
+          example: U02AYNF2XJM
+          type: string
+      required:
+      - role
+      - id
+      - name
+      type: object
+    PaginationMetaResultV1:
+      example:
+        after: 01FCNDV6P870EA6S7TK1DSYDG0
+        page_size: 25
+      properties:
+        after:
+          description: If provided, pass this as the 'after' param to load the next page
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+        page_size:
+          default: 25
+          description: What was the maximum number of results requested
+          example: 25
+          format: int64
+          maximum: 250
+          type: integer
+      required:
+      - page_size
+      type: object
+    ErrorSingle:
+      example:
+        code: trial_expired
+        message: Default incident call link must be a valid URL
+        metadata:
+          abc123: abc123
+        source:
+          field: default_call_url
+          pointer: /settings/default_call_url
+      properties:
+        code:
+          description: Machine-readable identifier for this specific error
+          example: trial_expired
+          type: string
+        message:
+          description: Human readable description of the error
+          example: Default incident call link must be a valid URL
+          type: string
+        metadata:
+          additionalProperties:
+            example: abc123
+            type: string
+          description: Additional metadata about the error, keyed by a string identifier
+          example:
+            abc123: abc123
+          type: object
+        source:
+          $ref: '#/components/schemas/ErrorSource'
+      required:
+      - code
+      - message
+      type: object
+  securitySchemes:
+    BearerAuth:
+      description: API key from your incident.io dashboard (Settings > API keys)
+      scheme: bearer
+      type: http
+externalDocs:
+  description: View our API docs at api-docs.incident.io
+  url: https://api-docs.incident.io/

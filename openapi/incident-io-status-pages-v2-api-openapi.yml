@@ -1,0 +1,4342 @@
+openapi: 3.2.0
+info:
+  description: 'This is the API reference for incident.io. It documents available API endpoints, provides examples of how to use it, and
+
+    instructions around things like authentication and error handling. The API is hosted at:
+
+
+    - https://api.incident.io/
+
+
+    And you will need to create an API key via your incident.io
+
+    dashboard to make requests. # Making requests
+
+
+    Here are the key concepts required to make requests to the incident.io API. ## Authentication
+
+
+    For all requests made to the incident.io API, you''ll need an API key. To create an API key, head to the incident dashboard and visit API
+
+    keys. When you create the key, you''ll be able to choose what actions it
+
+    can take for your account: choose carefully, as those roles can only be set
+
+    when you first create the key. We''ll only show you the token once, so make sure
+
+    you store it somewhere safe. API keys are global to your incident.io account, and can be managed by anyone
+
+    who has the right permissions. We display the user that created the API key,
+
+    and the API key will remain valid if that user becomes deactivated. Once you have the key, you should make requests to the API that set the
+
+    `Authorization` request header using a "Bearer" authentication scheme:
+
+
+    ```
+
+    Authorization: Bearer
+
+    ```
+
+
+    ## Rate Limits
+
+
+    The incident.io API enforces rate limits to ensure consistent performance for all users. The default rate limit is 1200 requests/minute per API key. This limit applies to most endpoints across the API. Limits are token buckets that refill continuously rather than resetting on a fixed window boundary. The default
+
+    bucket holds 1200 requests and refills at 20 per second, so you can burst up to the full bucket and then sustain
+
+    20 requests/second indefinitely. There is no boundary at which your quota resets to full in one step. Some endpoints have lower rate limits, particularly those that interact with external third-party systems that impose
+
+    their own limitations. These specific limits vary by endpoint. ### Rate limit headers
+
+
+    Responses to requests authenticated with an API key carry your current allowance, so you can pace yourself rather
+
+    than waiting to be throttled:
+
+
+    ```
+
+    X-RateLimit-Limit: 60, 1200;window=60, 60;window=60
+
+    X-RateLimit-Remaining: 59
+
+    X-RateLimit-Used: 1
+
+    X-RateLimit-Reset: 1785173199
+
+    ```
+
+
+    | Header | Meaning |
+
+    | --- | --- |
+
+    | `X-RateLimit-Limit` | The quota that binds this request, followed by every limit that applied and the window it applies over |
+
+    | `X-RateLimit-Remaining` | Requests you can make right now against the binding limit |
+
+    | `X-RateLimit-Used` | Requests you have spent against it |
+
+    | `X-RateLimit-Reset` | Unix timestamp (seconds) at which that limit will be back to full |
+
+
+    More than one limit can apply to a request: your API key''s overall limit, and for some endpoints a lower limit of
+
+    their own. `X-RateLimit-Limit` lists all of them, each with its window, so `1200;window=60` means 1200 requests per
+
+    minute. Because our limits refill continuously rather than resetting on a boundary, that window is what tells you
+
+    the rate you can sustain: 1200 per 60 seconds is 20 requests/second indefinitely. `Remaining`, `Used` and `Reset` describe whichever limit has the least allowance left, since that is the one you
+
+    will hit first. `X-RateLimit-Remaining` may lag by a small number of requests under high concurrency, and can move by more than the
+
+    requests you made, because limits scoped to your whole organisation are shared with your other API keys. Headers are omitted rather than guessed if we cannot determine your allowance for a request. ### Exceeding a rate limit
+
+
+    When you exceed a rate limit the API responds with `429 Too Many Requests` and a `Retry-After` header giving the
+
+    number of seconds to wait:
+
+
+    ```
+
+    X-RateLimit-Limit: 1200, 1200;window=60
+
+    X-RateLimit-Remaining: 0
+
+    X-RateLimit-Used: 1200
+
+    X-RateLimit-Reset: 1785173199
+
+    Retry-After: 1
+
+    ```
+
+
+    Prefer `Retry-After` over `X-RateLimit-Reset` when deciding how long to back off.'
+  title: incident.io Status Pages V2 API
+  version: 1.0.0
+servers:
+- url: https://api.incident.io
+security:
+- BearerAuth: []
+tags:
+- description: 'Manage and publish to status pages.
+
+
+    Before using these endpoints, you must create a status page in the incident.io dashboard (find Status Pages in the left navigation bar). You can then use the ListStatusPages endpoint to find your status page IDs, and the ShowStatusPageStructure endpoint to find component IDs and group IDs for your status page.
+
+
+    For read-only access (listing status pages, viewing structure, incidents, maintenance windows, and component availability), any valid API key will work. For write requests (creating incidents, maintenance windows, and publishing updates), you will need an API key with the "Create status page incidents, status page maintenance windows, and publish status page updates" scope.'
+  name: Status Pages V2
+paths:
+  /v2/status_page_incident_updates:
+    post:
+      description: 'Post an update on a Status Page incident.
+
+
+        This is the endpoint to use when resolving an incident - set incident_status to "resolved" to end the incident. There is a limit of 100 updates per incident.
+
+
+        This endpoint requires an API key with the "Create status page incidents, status page maintenance windows, and publish status page updates" scope.'
+      operationId: StatusPagesV2#CreateStatusPageIncidentUpdate
+      requestBody:
+        content:
+          application/json:
+            example:
+              component_statuses:
+              - component_id: 01FCNDV6P870EA6S7TK1DSYDG2
+                component_status: operational
+              incident_status: investigating
+              message: The fix has been deployed and we are monitoring the situation. Some users may still experience intermittent issues.
+              notify_subscribers: true
+              status_page_incident_id: 01FCNDV6P870EA6S7TK1DSYDG1
+            schema:
+              $ref: '#/components/schemas/StatusPagesCreateStatusPageIncidentUpdatePayloadV2'
+        required: true
+      responses:
+        '201':
+          content:
+            application/json:
+              example:
+                status_page_incident_update:
+                  component_statuses:
+                  - component_id: 01FCNDV6P870EA6S7TK1DSYDG2
+                    component_status: operational
+                  id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  incident_status: investigating
+                  message: abc123
+                  published_at: '2021-08-17T13:28:57.801578Z'
+                  status_page_incident_id: 01FCNDV6P870EA6S7TK1DSYDG1
+              schema:
+                $ref: '#/components/schemas/StatusPagesCreateStatusPageIncidentUpdateResultV2'
+          description: Created response.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'invalid_request_error: There was a problem with the request, like a missing header or querying a resource that doesn''t exist.'
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'authentication_error: Authentication failed.'
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'resource_forbidden: Access to this resource is forbidden for the authenticated user.'
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_found: The referenced resource could not be found.'
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'method_not_allowed: The endpoint does not support this operation for the specified resource.'
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_acceptable: Requested a media type this endpoint does not support.'
+        '408':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'request_timeout: The request took too long to process.
+
+
+            client_timeout: The request was cancelled by the client.'
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'conflict: Request conflicted with current state of the resource, likely a concurrent update.'
+        '412':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'precondition_failed: A required condition hasn''t been met.'
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'payload_too_large: The request payload is too large.'
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'validation_error: A required field was not provided, or the provided data was invalid.'
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'too_many_requests: Too many requests hit the API too quickly. We recommend an exponential backoff of your requests.
+
+
+            rate_limit_reached: The rate limit associated with this resource or API key has been exceeded. Try again later.'
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'api_error: Something went wrong and has been reported internally.'
+      summary: CreateStatusPageIncidentUpdate Status Pages V2
+      tags:
+      - Status Pages V2
+      x-display-name: Create
+      x-docs-display-name: Create
+      x-docs-group-name: Status Page Incident Updates V2
+      x-docs-resource-type: StatusPageIncidentUpdateV2
+      x-mint:
+        content: 🔑 Requires the `status_pages.publish_updates` scope.
+      x-rbac-scopes:
+      - status_pages.publish_updates
+      x-operation-id-source: normalized
+      x-operation-id-original: Status Pages V2#CreateStatusPageIncidentUpdate
+  /v2/status_page_incidents:
+    get:
+      description: 'List status page incidents.
+
+
+        This endpoint requires a valid API key but no specific scopes.'
+      operationId: StatusPagesV2#ListStatusPageIncidents
+      parameters:
+      - allowEmptyValue: true
+        description: ID of the status page. You can find this by calling the ListStatusPages endpoint.
+        example: 01FCNDV6P870EA6S7TK1DSYDG0
+        in: query
+        name: status_page_id
+        required: true
+        schema:
+          description: ID of the status page. You can find this by calling the ListStatusPages endpoint.
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+      - allowEmptyValue: true
+        description: Filter status page incidents to only those that impacted the specified component. This ID may be found by calling the ShowStatusPageStructure endpoint.
+        example: 01FCNDV6P870EA6S7TK1DSYDG1
+        in: query
+        name: component_id
+        schema:
+          description: Filter status page incidents to only those that impacted the specified component. This ID may be found by calling the ShowStatusPageStructure endpoint.
+          example: 01FCNDV6P870EA6S7TK1DSYDG1
+          type: string
+      - allowEmptyValue: true
+        description: Filter status page incidents to only those that impacted components in the specified group. This ID may be found by calling the ShowStatusPageStructure endpoint.
+        example: 01FCNDV6P870EA6S7TK1DSYDG2
+        in: query
+        name: group_id
+        schema:
+          description: Filter status page incidents to only those that impacted components in the specified group. This ID may be found by calling the ShowStatusPageStructure endpoint.
+          example: 01FCNDV6P870EA6S7TK1DSYDG2
+          type: string
+      - allowEmptyValue: true
+        description: Filter status page incidents to only those that impacted the specified sub-page. This ID may be found by calling the ShowStatusPageStructure endpoint.
+        example: 01FCNDV6P870EA6S7TK1DSYDG3
+        in: query
+        name: sub_page_id
+        schema:
+          description: Filter status page incidents to only those that impacted the specified sub-page. This ID may be found by calling the ShowStatusPageStructure endpoint.
+          example: 01FCNDV6P870EA6S7TK1DSYDG3
+          type: string
+      - allowEmptyValue: true
+        description: Filter status page incidents to only those that had impacts during or after this time.
+        example: '2021-08-17T13:28:57.801578Z'
+        in: query
+        name: start_at
+        schema:
+          description: Filter status page incidents to only those that had impacts during or after this time.
+          example: '2021-08-17T13:28:57.801578Z'
+          format: date-time
+          type: string
+      - allowEmptyValue: true
+        description: Filter status page incidents to only those that had impacts during or before this time.
+        example: '2021-08-17T13:28:57.801578Z'
+        in: query
+        name: end_at
+        schema:
+          description: Filter status page incidents to only those that had impacts during or before this time.
+          example: '2021-08-17T13:28:57.801578Z'
+          format: date-time
+          type: string
+      - allowEmptyValue: true
+        description: Integer number of records to return
+        example: 25
+        in: query
+        name: page_size
+        schema:
+          default: 25
+          description: Integer number of records to return
+          example: 25
+          format: int64
+          maximum: 250
+          minimum: 1
+          type: integer
+      - allowEmptyValue: true
+        description: An record's ID. This endpoint will return a list of records after this ID in relation to the API response order.
+        example: 01FDAG4SAP5TYPT98WGR2N7W91
+        in: query
+        name: after
+        schema:
+          description: An record's ID. This endpoint will return a list of records after this ID in relation to the API response order.
+          example: 01FDAG4SAP5TYPT98WGR2N7W91
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              example:
+                pagination_meta:
+                  after: 01FCNDV6P870EA6S7TK1DSYDG0
+                  page_size: 25
+                status_page_incidents:
+                - component_impacts:
+                  - component_id: 01GW7P4ES31Q6V1ZQH321T0GJN
+                    component_status: degraded_performance
+                    end_at: '2021-08-17T13:28:57.801578Z'
+                    start_at: '2021-08-17T13:28:57.801578Z'
+                  id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  incident_status: investigating
+                  name: Elevated API latency
+                  published_at: '2021-08-17T13:28:57.801578Z'
+                  status_page_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  updates:
+                  - component_statuses:
+                    - component_id: 01FCNDV6P870EA6S7TK1DSYDG2
+                      component_status: operational
+                    id: 01FCNDV6P870EA6S7TK1DSYDG0
+                    incident_status: investigating
+                    message: abc123
+                    published_at: '2021-08-17T13:28:57.801578Z'
+                    status_page_incident_id: 01FCNDV6P870EA6S7TK1DSYDG1
+              schema:
+                $ref: '#/components/schemas/StatusPagesListStatusPageIncidentsResultV2'
+          description: OK response.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'invalid_request_error: There was a problem with the request, like a missing header or querying a resource that doesn''t exist.'
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'authentication_error: Authentication failed.'
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'resource_forbidden: Access to this resource is forbidden for the authenticated user.'
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_found: The referenced resource could not be found.'
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'method_not_allowed: The endpoint does not support this operation for the specified resource.'
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_acceptable: Requested a media type this endpoint does not support.'
+        '408':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'request_timeout: The request took too long to process.
+
+
+            client_timeout: The request was cancelled by the client.'
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'conflict: Request conflicted with current state of the resource, likely a concurrent update.'
+        '412':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'precondition_failed: A required condition hasn''t been met.'
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'payload_too_large: The request payload is too large.'
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'validation_error: A required field was not provided, or the provided data was invalid.'
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'too_many_requests: Too many requests hit the API too quickly. We recommend an exponential backoff of your requests.
+
+
+            rate_limit_reached: The rate limit associated with this resource or API key has been exceeded. Try again later.'
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'api_error: Something went wrong and has been reported internally.'
+      summary: ListStatusPageIncidents Status Pages V2
+      tags:
+      - Status Pages V2
+      x-display-name: List
+      x-docs-display-name: List
+      x-docs-group-name: Status Page Incidents V2
+      x-docs-resource-type: StatusPageIncidentV2
+      x-operation-id-source: normalized
+      x-operation-id-original: Status Pages V2#ListStatusPageIncidents
+    post:
+      description: 'Create a status page incident.
+
+
+        This endpoint requires an API key with the "Create status page incidents, status page maintenance windows, and publish status page updates" scope.'
+      operationId: StatusPagesV2#CreateStatusPageIncident
+      requestBody:
+        content:
+          application/json:
+            example:
+              component_statuses:
+              - component_id: 01FCNDV6P870EA6S7TK1DSYDG2
+                component_status: operational
+              idempotency_key: alert-12345-abcde
+              incident_status: investigating
+              message: We are currently investigating reports of elevated error rates affecting our API.
+              name: Elevated API latency
+              notify_subscribers: true
+              status_page_id: 01FCNDV6P870EA6S7TK1DSYDG0
+            schema:
+              $ref: '#/components/schemas/StatusPagesCreateStatusPageIncidentPayloadV2'
+        required: true
+      responses:
+        '201':
+          content:
+            application/json:
+              example:
+                status_page_incident:
+                  component_impacts:
+                  - component_id: 01GW7P4ES31Q6V1ZQH321T0GJN
+                    component_status: degraded_performance
+                    end_at: '2021-08-17T13:28:57.801578Z'
+                    start_at: '2021-08-17T13:28:57.801578Z'
+                  id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  incident_status: investigating
+                  name: Elevated API latency
+                  published_at: '2021-08-17T13:28:57.801578Z'
+                  status_page_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  updates:
+                  - component_statuses:
+                    - component_id: 01FCNDV6P870EA6S7TK1DSYDG2
+                      component_status: operational
+                    id: 01FCNDV6P870EA6S7TK1DSYDG0
+                    incident_status: investigating
+                    message: abc123
+                    published_at: '2021-08-17T13:28:57.801578Z'
+                    status_page_incident_id: 01FCNDV6P870EA6S7TK1DSYDG1
+              schema:
+                $ref: '#/components/schemas/StatusPagesCreateStatusPageIncidentResultV2'
+          description: Created response.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'invalid_request_error: There was a problem with the request, like a missing header or querying a resource that doesn''t exist.'
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'authentication_error: Authentication failed.'
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'resource_forbidden: Access to this resource is forbidden for the authenticated user.'
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_found: The referenced resource could not be found.'
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'method_not_allowed: The endpoint does not support this operation for the specified resource.'
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_acceptable: Requested a media type this endpoint does not support.'
+        '408':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'request_timeout: The request took too long to process.
+
+
+            client_timeout: The request was cancelled by the client.'
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'conflict: Request conflicted with current state of the resource, likely a concurrent update.'
+        '412':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'precondition_failed: A required condition hasn''t been met.'
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'payload_too_large: The request payload is too large.'
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'validation_error: A required field was not provided, or the provided data was invalid.'
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'too_many_requests: Too many requests hit the API too quickly. We recommend an exponential backoff of your requests.
+
+
+            rate_limit_reached: The rate limit associated with this resource or API key has been exceeded. Try again later.'
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'api_error: Something went wrong and has been reported internally.'
+      summary: CreateStatusPageIncident Status Pages V2
+      tags:
+      - Status Pages V2
+      x-display-name: Create
+      x-docs-display-name: Create
+      x-docs-group-name: Status Page Incidents V2
+      x-docs-resource-type: StatusPageIncidentV2
+      x-mint:
+        content: 🔑 Requires the `status_pages.publish_updates` scope.
+      x-rbac-scopes:
+      - status_pages.publish_updates
+      x-operation-id-source: normalized
+      x-operation-id-original: Status Pages V2#CreateStatusPageIncident
+  /v2/status_page_incidents/{status_page_incident_id}:
+    get:
+      description: 'Show a status page incident.
+
+
+        This endpoint requires a valid API key but no specific scopes.'
+      operationId: StatusPagesV2#ShowStatusPageIncident
+      parameters:
+      - description: ID of the status page incident
+        example: 01FCNDV6P870EA6S7TK1DSYDG1
+        in: path
+        name: status_page_incident_id
+        required: true
+        schema:
+          description: ID of the status page incident
+          example: 01FCNDV6P870EA6S7TK1DSYDG1
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              example:
+                status_page_incident:
+                  component_impacts:
+                  - component_id: 01GW7P4ES31Q6V1ZQH321T0GJN
+                    component_status: degraded_performance
+                    end_at: '2021-08-17T13:28:57.801578Z'
+                    start_at: '2021-08-17T13:28:57.801578Z'
+                  id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  incident_status: investigating
+                  name: Elevated API latency
+                  published_at: '2021-08-17T13:28:57.801578Z'
+                  status_page_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  updates:
+                  - component_statuses:
+                    - component_id: 01FCNDV6P870EA6S7TK1DSYDG2
+                      component_status: operational
+                    id: 01FCNDV6P870EA6S7TK1DSYDG0
+                    incident_status: investigating
+                    message: abc123
+                    published_at: '2021-08-17T13:28:57.801578Z'
+                    status_page_incident_id: 01FCNDV6P870EA6S7TK1DSYDG1
+              schema:
+                $ref: '#/components/schemas/StatusPagesShowStatusPageIncidentResultV2'
+          description: OK response.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'invalid_request_error: There was a problem with the request, like a missing header or querying a resource that doesn''t exist.'
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'authentication_error: Authentication failed.'
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'resource_forbidden: Access to this resource is forbidden for the authenticated user.'
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_found: The referenced resource could not be found.'
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'method_not_allowed: The endpoint does not support this operation for the specified resource.'
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_acceptable: Requested a media type this endpoint does not support.'
+        '408':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'request_timeout: The request took too long to process.
+
+
+            client_timeout: The request was cancelled by the client.'
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'conflict: Request conflicted with current state of the resource, likely a concurrent update.'
+        '412':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'precondition_failed: A required condition hasn''t been met.'
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'payload_too_large: The request payload is too large.'
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'validation_error: A required field was not provided, or the provided data was invalid.'
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'too_many_requests: Too many requests hit the API too quickly. We recommend an exponential backoff of your requests.
+
+
+            rate_limit_reached: The rate limit associated with this resource or API key has been exceeded. Try again later.'
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'api_error: Something went wrong and has been reported internally.'
+      summary: ShowStatusPageIncident Status Pages V2
+      tags:
+      - Status Pages V2
+      x-display-name: Show
+      x-docs-display-name: Show
+      x-docs-group-name: Status Page Incidents V2
+      x-docs-resource-type: StatusPageIncidentV2
+      x-operation-id-source: normalized
+      x-operation-id-original: Status Pages V2#ShowStatusPageIncident
+    put:
+      description: 'Update a status page incident.
+
+
+        This endpoint requires an API key with the "Create status page incidents, status page maintenance windows, and publish status page updates" scope.'
+      operationId: StatusPagesV2#UpdateStatusPageIncident
+      parameters:
+      - description: ID of the status page incident
+        example: 01FCNDV6P870EA6S7TK1DSYDG1
+        in: path
+        name: status_page_incident_id
+        required: true
+        schema:
+          description: ID of the status page incident
+          example: 01FCNDV6P870EA6S7TK1DSYDG1
+          type: string
+      requestBody:
+        content:
+          application/json:
+            example:
+              name: Elevated API latency
+            schema:
+              $ref: '#/components/schemas/StatusPagesUpdateStatusPageIncidentPayloadV2'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              example:
+                status_page_incident:
+                  component_impacts:
+                  - component_id: 01GW7P4ES31Q6V1ZQH321T0GJN
+                    component_status: degraded_performance
+                    end_at: '2021-08-17T13:28:57.801578Z'
+                    start_at: '2021-08-17T13:28:57.801578Z'
+                  id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  incident_status: investigating
+                  name: Elevated API latency
+                  published_at: '2021-08-17T13:28:57.801578Z'
+                  status_page_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  updates:
+                  - component_statuses:
+                    - component_id: 01FCNDV6P870EA6S7TK1DSYDG2
+                      component_status: operational
+                    id: 01FCNDV6P870EA6S7TK1DSYDG0
+                    incident_status: investigating
+                    message: abc123
+                    published_at: '2021-08-17T13:28:57.801578Z'
+                    status_page_incident_id: 01FCNDV6P870EA6S7TK1DSYDG1
+              schema:
+                $ref: '#/components/schemas/StatusPagesUpdateStatusPageIncidentResultV2'
+          description: OK response.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'invalid_request_error: There was a problem with the request, like a missing header or querying a resource that doesn''t exist.'
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'authentication_error: Authentication failed.'
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'resource_forbidden: Access to this resource is forbidden for the authenticated user.'
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_found: The referenced resource could not be found.'
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'method_not_allowed: The endpoint does not support this operation for the specified resource.'
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_acceptable: Requested a media type this endpoint does not support.'
+        '408':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'request_timeout: The request took too long to process.
+
+
+            client_timeout: The request was cancelled by the client.'
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'conflict: Request conflicted with current state of the resource, likely a concurrent update.'
+        '412':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'precondition_failed: A required condition hasn''t been met.'
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'payload_too_large: The request payload is too large.'
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'validation_error: A required field was not provided, or the provided data was invalid.'
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'too_many_requests: Too many requests hit the API too quickly. We recommend an exponential backoff of your requests.
+
+
+            rate_limit_reached: The rate limit associated with this resource or API key has been exceeded. Try again later.'
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'api_error: Something went wrong and has been reported internally.'
+      summary: UpdateStatusPageIncident Status Pages V2
+      tags:
+      - Status Pages V2
+      x-display-name: Update
+      x-docs-display-name: Update
+      x-docs-group-name: Status Page Incidents V2
+      x-docs-resource-type: StatusPageIncidentV2
+      x-mint:
+        content: 🔑 Requires the `status_pages.publish_updates` scope.
+      x-rbac-scopes:
+      - status_pages.publish_updates
+      x-operation-id-source: normalized
+      x-operation-id-original: Status Pages V2#UpdateStatusPageIncident
+  /v2/status_page_maintenance_updates:
+    post:
+      description: 'Post an update on a Status Page maintenance window.
+
+
+        This is the endpoint to use when completing a maintenance window - set maintenance_status to "maintenance_complete" to end the maintenance. There is a limit of 100 updates per maintenance window.
+
+
+        This endpoint requires an API key with the "Create status page incidents, status page maintenance windows, and publish status page updates" scope.'
+      operationId: StatusPagesV2#CreateStatusPageMaintenanceUpdate
+      requestBody:
+        content:
+          application/json:
+            example:
+              component_statuses:
+              - component_id: 01FCNDV6P870EA6S7TK1DSYDG2
+                component_status: operational
+              maintenance_status: maintenance_scheduled
+              message: Scheduled maintenance is underway for our database infrastructure. Some services may experience brief interruptions during this window.
+              notify_subscribers: true
+              status_page_maintenance_id: 01FCNDV6P870EA6S7TK1DSYDG1
+            schema:
+              $ref: '#/components/schemas/StatusPagesCreateStatusPageMaintenanceUpdatePayloadV2'
+        required: true
+      responses:
+        '201':
+          content:
+            application/json:
+              example:
+                status_page_maintenance_update:
+                  component_statuses:
+                  - component_id: 01FCNDV6P870EA6S7TK1DSYDG2
+                    component_status: operational
+                  id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  maintenance_status: maintenance_scheduled
+                  message: abc123
+                  published_at: '2021-08-17T13:28:57.801578Z'
+                  status_page_maintenance_id: 01FCNDV6P870EA6S7TK1DSYDG1
+              schema:
+                $ref: '#/components/schemas/StatusPagesCreateStatusPageMaintenanceUpdateResultV2'
+          description: Created response.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'invalid_request_error: There was a problem with the request, like a missing header or querying a resource that doesn''t exist.'
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'authentication_error: Authentication failed.'
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'resource_forbidden: Access to this resource is forbidden for the authenticated user.'
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_found: The referenced resource could not be found.'
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'method_not_allowed: The endpoint does not support this operation for the specified resource.'
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_acceptable: Requested a media type this endpoint does not support.'
+        '408':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'request_timeout: The request took too long to process.
+
+
+            client_timeout: The request was cancelled by the client.'
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'conflict: Request conflicted with current state of the resource, likely a concurrent update.'
+        '412':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'precondition_failed: A required condition hasn''t been met.'
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'payload_too_large: The request payload is too large.'
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'validation_error: A required field was not provided, or the provided data was invalid.'
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'too_many_requests: Too many requests hit the API too quickly. We recommend an exponential backoff of your requests.
+
+
+            rate_limit_reached: The rate limit associated with this resource or API key has been exceeded. Try again later.'
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'api_error: Something went wrong and has been reported internally.'
+      summary: CreateStatusPageMaintenanceUpdate Status Pages V2
+      tags:
+      - Status Pages V2
+      x-display-name: Create
+      x-docs-display-name: Create
+      x-docs-group-name: Status Page Maintenance Updates V2
+      x-docs-resource-type: StatusPageMaintenanceUpdateV2
+      x-mint:
+        content: 🔑 Requires the `status_pages.publish_updates` scope.
+      x-rbac-scopes:
+      - status_pages.publish_updates
+      x-operation-id-source: normalized
+      x-operation-id-original: Status Pages V2#CreateStatusPageMaintenanceUpdate
+  /v2/status_page_maintenances:
+    get:
+      description: 'List status page maintenances.
+
+
+        This endpoint requires a valid API key but no specific scopes.'
+      operationId: StatusPagesV2#ListStatusPageMaintenances
+      parameters:
+      - allowEmptyValue: true
+        description: ID of the status page. You can find this by calling the ListStatusPages endpoint.
+        example: 01FCNDV6P870EA6S7TK1DSYDG0
+        in: query
+        name: status_page_id
+        required: true
+        schema:
+          description: ID of the status page. You can find this by calling the ListStatusPages endpoint.
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+      - allowEmptyValue: true
+        description: Filter status page maintenance windows to only those that impacted the specified component. This ID may be found by calling the ShowStatusPageStructure endpoint.
+        example: 01FCNDV6P870EA6S7TK1DSYDG1
+        in: query
+        name: component_id
+        schema:
+          description: Filter status page maintenance windows to only those that impacted the specified component. This ID may be found by calling the ShowStatusPageStructure endpoint.
+          example: 01FCNDV6P870EA6S7TK1DSYDG1
+          type: string
+      - allowEmptyValue: true
+        description: Filter status page maintenance windows to only those that impacted components in the specified group. This ID may be found by calling the ShowStatusPageStructure endpoint.
+        example: 01FCNDV6P870EA6S7TK1DSYDG2
+        in: query
+        name: group_id
+        schema:
+          description: Filter status page maintenance windows to only those that impacted components in the specified group. This ID may be found by calling the ShowStatusPageStructure endpoint.
+          example: 01FCNDV6P870EA6S7TK1DSYDG2
+          type: string
+      - allowEmptyValue: true
+        description: Filter status page maintenance windows to only those that impacted the specified sub-page. This ID may be found by calling the ShowStatusPageStructure endpoint.
+        example: 01FCNDV6P870EA6S7TK1DSYDG3
+        in: query
+        name: sub_page_id
+        schema:
+          description: Filter status page maintenance windows to only those that impacted the specified sub-page. This ID may be found by calling the ShowStatusPageStructure endpoint.
+          example: 01FCNDV6P870EA6S7TK1DSYDG3
+          type: string
+      - allowEmptyValue: true
+        description: Filter status page maintenance windows to only those that had impacts during or after this time.
+        example: '2021-08-17T13:28:57.801578Z'
+        in: query
+        name: start_at
+        schema:
+          description: Filter status page maintenance windows to only those that had impacts during or after this time.
+          example: '2021-08-17T13:28:57.801578Z'
+          format: date-time
+          type: string
+      - allowEmptyValue: true
+        description: Filter status page maintenance windows to only those that had impacts during or before this time.
+        example: '2021-08-17T13:28:57.801578Z'
+        in: query
+        name: end_at
+        schema:
+          description: Filter status page maintenance windows to only those that had impacts during or before this time.
+          example: '2021-08-17T13:28:57.801578Z'
+          format: date-time
+          type: string
+      - allowEmptyValue: true
+        description: Integer number of records to return
+        example: 25
+        in: query
+        name: page_size
+        schema:
+          default: 25
+          description: Integer number of records to return
+          example: 25
+          format: int64
+          maximum: 250
+          minimum: 1
+          type: integer
+      - allowEmptyValue: true
+        description: An record's ID. This endpoint will return a list of records after this ID in relation to the API response order.
+        example: 01FDAG4SAP5TYPT98WGR2N7W91
+        in: query
+        name: after
+        schema:
+          description: An record's ID. This endpoint will return a list of records after this ID in relation to the API response order.
+          example: 01FDAG4SAP5TYPT98WGR2N7W91
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              example:
+                pagination_meta:
+                  after: 01FCNDV6P870EA6S7TK1DSYDG0
+                  page_size: 25
+                status_page_maintenances:
+                - automate_maintenance_status: true
+                  component_maintenance_periods:
+                  - component_id: 01GW7P4ES31Q6V1ZQH321T0GJN
+                    end_at: '2021-08-17T13:28:57.801578Z'
+                    start_at: '2021-08-17T13:28:57.801578Z'
+                  id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  maintenance_status: maintenance_scheduled
+                  name: Routine infrastructure upgrade
+                  published_at: '2021-08-17T13:28:57.801578Z'
+                  status_page_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  updates:
+                  - component_statuses:
+                    - component_id: 01FCNDV6P870EA6S7TK1DSYDG2
+                      component_status: operational
+                    id: 01FCNDV6P870EA6S7TK1DSYDG0
+                    maintenance_status: maintenance_scheduled
+                    message: abc123
+                    published_at: '2021-08-17T13:28:57.801578Z'
+                    status_page_maintenance_id: 01FCNDV6P870EA6S7TK1DSYDG1
+              schema:
+                $ref: '#/components/schemas/StatusPagesListStatusPageMaintenancesResultV2'
+          description: OK response.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'invalid_request_error: There was a problem with the request, like a missing header or querying a resource that doesn''t exist.'
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'authentication_error: Authentication failed.'
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'resource_forbidden: Access to this resource is forbidden for the authenticated user.'
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_found: The referenced resource could not be found.'
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'method_not_allowed: The endpoint does not support this operation for the specified resource.'
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_acceptable: Requested a media type this endpoint does not support.'
+        '408':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'request_timeout: The request took too long to process.
+
+
+            client_timeout: The request was cancelled by the client.'
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'conflict: Request conflicted with current state of the resource, likely a concurrent update.'
+        '412':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'precondition_failed: A required condition hasn''t been met.'
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'payload_too_large: The request payload is too large.'
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'validation_error: A required field was not provided, or the provided data was invalid.'
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'too_many_requests: Too many requests hit the API too quickly. We recommend an exponential backoff of your requests.
+
+
+            rate_limit_reached: The rate limit associated with this resource or API key has been exceeded. Try again later.'
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'api_error: Something went wrong and has been reported internally.'
+      summary: ListStatusPageMaintenances Status Pages V2
+      tags:
+      - Status Pages V2
+      x-display-name: List
+      x-docs-display-name: List
+      x-docs-group-name: Status Page Maintenances V2
+      x-docs-resource-type: StatusPageMaintenanceV2
+      x-operation-id-source: normalized
+      x-operation-id-original: Status Pages V2#ListStatusPageMaintenances
+    post:
+      description: 'Schedule a Status Page maintenance window.
+
+
+        This endpoint requires an API key with the "Create status page incidents, status page maintenance windows, and publish status page updates" scope.'
+      operationId: StatusPagesV2#CreateStatusPageMaintenance
+      requestBody:
+        content:
+          application/json:
+            example:
+              affected_component_ids:
+              - 01FCNDV6P870EA6S7TK1DSYDG2
+              automate_maintenance_status: true
+              end_at: '2025-01-28T12:00:00Z'
+              idempotency_key: maintenance-12345-abcde
+              maintenance_status: maintenance_scheduled
+              message: Planned maintenance has been scheduled to upgrade our infrastructure. We expect minimal disruption, but some features may be briefly unavailable.
+              name: Routine infrastructure upgrade
+              notify_subscribers: true
+              start_at: '2025-01-28T10:00:00Z'
+              status_page_id: 01FCNDV6P870EA6S7TK1DSYDG0
+            schema:
+              $ref: '#/components/schemas/StatusPagesCreateStatusPageMaintenancePayloadV2'
+        required: true
+      responses:
+        '201':
+          content:
+            application/json:
+              example:
+                status_page_maintenance:
+                  automate_maintenance_status: true
+                  component_maintenance_periods:
+                  - component_id: 01GW7P4ES31Q6V1ZQH321T0GJN
+                    end_at: '2021-08-17T13:28:57.801578Z'
+                    start_at: '2021-08-17T13:28:57.801578Z'
+                  id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  maintenance_status: maintenance_scheduled
+                  name: Routine infrastructure upgrade
+                  published_at: '2021-08-17T13:28:57.801578Z'
+                  status_page_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  updates:
+                  - component_statuses:
+                    - component_id: 01FCNDV6P870EA6S7TK1DSYDG2
+                      component_status: operational
+                    id: 01FCNDV6P870EA6S7TK1DSYDG0
+                    maintenance_status: maintenance_scheduled
+                    message: abc123
+                    published_at: '2021-08-17T13:28:57.801578Z'
+                    status_page_maintenance_id: 01FCNDV6P870EA6S7TK1DSYDG1
+              schema:
+                $ref: '#/components/schemas/StatusPagesCreateStatusPageMaintenanceResultV2'
+          description: Created response.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'invalid_request_error: There was a problem with the request, like a missing header or querying a resource that doesn''t exist.'
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'authentication_error: Authentication failed.'
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'resource_forbidden: Access to this resource is forbidden for the authenticated user.'
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_found: The referenced resource could not be found.'
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'method_not_allowed: The endpoint does not support this operation for the specified resource.'
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_acceptable: Requested a media type this endpoint does not support.'
+        '408':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'request_timeout: The request took too long to process.
+
+
+            client_timeout: The request was cancelled by the client.'
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'conflict: Request conflicted with current state of the resource, likely a concurrent update.'
+        '412':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'precondition_failed: A required condition hasn''t been met.'
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'payload_too_large: The request payload is too large.'
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'validation_error: A required field was not provided, or the provided data was invalid.'
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'too_many_requests: Too many requests hit the API too quickly. We recommend an exponential backoff of your requests.
+
+
+            rate_limit_reached: The rate limit associated with this resource or API key has been exceeded. Try again later.'
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'api_error: Something went wrong and has been reported internally.'
+      summary: CreateStatusPageMaintenance Status Pages V2
+      tags:
+      - Status Pages V2
+      x-display-name: Create
+      x-docs-display-name: Create
+      x-docs-group-name: Status Page Maintenances V2
+      x-docs-resource-type: StatusPageMaintenanceV2
+      x-mint:
+        content: 🔑 Requires the `status_pages.publish_updates` scope.
+      x-rbac-scopes:
+      - status_pages.publish_updates
+      x-operation-id-source: normalized
+      x-operation-id-original: Status Pages V2#CreateStatusPageMaintenance
+  /v2/status_page_maintenances/{status_page_maintenance_id}:
+    delete:
+      description: 'Delete a Status Page maintenance window.
+
+
+        The maintenance window and its updates stop appearing on your public status page, links to it stop working, and a window that has not yet run publishes no further automated updates. This cannot be undone.
+
+
+        Subscribers are not told the window has been deleted, so anyone already emailed about it will have updates for a maintenance window they can no longer find.
+
+
+        This endpoint requires an API key with the "Create status page incidents, status page maintenance windows, and publish status page updates" scope.'
+      operationId: StatusPagesV2#DeleteStatusPageMaintenance
+      parameters:
+      - description: ID of the status page maintenance window
+        example: 01FCNDV6P870EA6S7TK1DSYDG1
+        in: path
+        name: status_page_maintenance_id
+        required: true
+        schema:
+          description: ID of the status page maintenance window
+          example: 01FCNDV6P870EA6S7TK1DSYDG1
+          type: string
+      responses:
+        '204':
+          description: No Content response.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'invalid_request_error: There was a problem with the request, like a missing header or querying a resource that doesn''t exist.'
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'authentication_error: Authentication failed.'
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'resource_forbidden: Access to this resource is forbidden for the authenticated user.'
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_found: The referenced resource could not be found.'
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'method_not_allowed: The endpoint does not support this operation for the specified resource.'
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_acceptable: Requested a media type this endpoint does not support.'
+        '408':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'request_timeout: The request took too long to process.
+
+
+            client_timeout: The request was cancelled by the client.'
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'conflict: Request conflicted with current state of the resource, likely a concurrent update.'
+        '412':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'precondition_failed: A required condition hasn''t been met.'
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'payload_too_large: The request payload is too large.'
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'validation_error: A required field was not provided, or the provided data was invalid.'
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'too_many_requests: Too many requests hit the API too quickly. We recommend an exponential backoff of your requests.
+
+
+            rate_limit_reached: The rate limit associated with this resource or API key has been exceeded. Try again later.'
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'api_error: Something went wrong and has been reported internally.'
+      summary: DeleteStatusPageMaintenance Status Pages V2
+      tags:
+      - Status Pages V2
+      x-display-name: Delete
+      x-docs-display-name: Delete
+      x-docs-group-name: Status Page Maintenances V2
+      x-docs-resource-type: StatusPageMaintenanceV2
+      x-mint:
+        content: 🔑 Requires the `status_pages.publish_updates` scope.
+      x-rbac-scopes:
+      - status_pages.publish_updates
+      x-operation-id-source: normalized
+      x-operation-id-original: Status Pages V2#DeleteStatusPageMaintenance
+    get:
+      description: 'Show a status page maintenance window.
+
+
+        This endpoint requires a valid API key but no specific scopes.'
+      operationId: StatusPagesV2#ShowStatusPageMaintenance
+      parameters:
+      - description: ID of the status page maintenance window
+        example: 01FCNDV6P870EA6S7TK1DSYDG1
+        in: path
+        name: status_page_maintenance_id
+        required: true
+        schema:
+          description: ID of the status page maintenance window
+          example: 01FCNDV6P870EA6S7TK1DSYDG1
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              example:
+                status_page_maintenance:
+                  automate_maintenance_status: true
+                  component_maintenance_periods:
+                  - component_id: 01GW7P4ES31Q6V1ZQH321T0GJN
+                    end_at: '2021-08-17T13:28:57.801578Z'
+                    start_at: '2021-08-17T13:28:57.801578Z'
+                  id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  maintenance_status: maintenance_scheduled
+                  name: Routine infrastructure upgrade
+                  published_at: '2021-08-17T13:28:57.801578Z'
+                  status_page_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  updates:
+                  - component_statuses:
+                    - component_id: 01FCNDV6P870EA6S7TK1DSYDG2
+                      component_status: operational
+                    id: 01FCNDV6P870EA6S7TK1DSYDG0
+                    maintenance_status: maintenance_scheduled
+                    message: abc123
+                    published_at: '2021-08-17T13:28:57.801578Z'
+                    status_page_maintenance_id: 01FCNDV6P870EA6S7TK1DSYDG1
+              schema:
+                $ref: '#/components/schemas/StatusPagesShowStatusPageMaintenanceResultV2'
+          description: OK response.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'invalid_request_error: There was a problem with the request, like a missing header or querying a resource that doesn''t exist.'
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'authentication_error: Authentication failed.'
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'resource_forbidden: Access to this resource is forbidden for the authenticated user.'
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_found: The referenced resource could not be found.'
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'method_not_allowed: The endpoint does not support this operation for the specified resource.'
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_acceptable: Requested a media type this endpoint does not support.'
+        '408':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'request_timeout: The request took too long to process.
+
+
+            client_timeout: The request was cancelled by the client.'
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'conflict: Request conflicted with current state of the resource, likely a concurrent update.'
+        '412':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'precondition_failed: A required condition hasn''t been met.'
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'payload_too_large: The request payload is too large.'
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'validation_error: A required field was not provided, or the provided data was invalid.'
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'too_many_requests: Too many requests hit the API too quickly. We recommend an exponential backoff of your requests.
+
+
+            rate_limit_reached: The rate limit associated with this resource or API key has been exceeded. Try again later.'
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'api_error: Something went wrong and has been reported internally.'
+      summary: ShowStatusPageMaintenance Status Pages V2
+      tags:
+      - Status Pages V2
+      x-display-name: Show
+      x-docs-display-name: Show
+      x-docs-group-name: Status Page Maintenances V2
+      x-docs-resource-type: StatusPageMaintenanceV2
+      x-operation-id-source: normalized
+      x-operation-id-original: Status Pages V2#ShowStatusPageMaintenance
+    put:
+      description: 'Update the name and scheduled window of a Status Page maintenance window.
+
+
+        The new start_at and end_at apply to every component this maintenance window affects.
+
+
+        This does not publish an update to your status page and does not notify subscribers. Automated updates only move a window forwards, so one that has already started or completed will not move back to an earlier status. To move a status backwards, or to tell subscribers the schedule has changed, post a maintenance update to POST /status_page_maintenance_updates.
+
+
+        This endpoint requires an API key with the "Create status page incidents, status page maintenance windows, and publish status page updates" scope.'
+      operationId: StatusPagesV2#UpdateStatusPageMaintenance
+      parameters:
+      - description: ID of the status page maintenance window
+        example: 01FCNDV6P870EA6S7TK1DSYDG1
+        in: path
+        name: status_page_maintenance_id
+        required: true
+        schema:
+          description: ID of the status page maintenance window
+          example: 01FCNDV6P870EA6S7TK1DSYDG1
+          type: string
+      requestBody:
+        content:
+          application/json:
+            example:
+              end_at: '2025-01-28T12:00:00Z'
+              name: Routine infrastructure upgrade
+              start_at: '2025-01-28T10:00:00Z'
+            schema:
+              $ref: '#/components/schemas/StatusPagesUpdateStatusPageMaintenancePayloadV2'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              example:
+                status_page_maintenance:
+                  automate_maintenance_status: true
+                  component_maintenance_periods:
+                  - component_id: 01GW7P4ES31Q6V1ZQH321T0GJN
+                    end_at: '2021-08-17T13:28:57.801578Z'
+                    start_at: '2021-08-17T13:28:57.801578Z'
+                  id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  maintenance_status: maintenance_scheduled
+                  name: Routine infrastructure upgrade
+                  published_at: '2021-08-17T13:28:57.801578Z'
+                  status_page_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  updates:
+                  - component_statuses:
+                    - component_id: 01FCNDV6P870EA6S7TK1DSYDG2
+                      component_status: operational
+                    id: 01FCNDV6P870EA6S7TK1DSYDG0
+                    maintenance_status: maintenance_scheduled
+                    message: abc123
+                    published_at: '2021-08-17T13:28:57.801578Z'
+                    status_page_maintenance_id: 01FCNDV6P870EA6S7TK1DSYDG1
+              schema:
+                $ref: '#/components/schemas/StatusPagesUpdateStatusPageMaintenanceResultV2'
+          description: OK response.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'invalid_request_error: There was a problem with the request, like a missing header or querying a resource that doesn''t exist.'
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'authentication_error: Authentication failed.'
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'resource_forbidden: Access to this resource is forbidden for the authenticated user.'
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_found: The referenced resource could not be found.'
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'method_not_allowed: The endpoint does not support this operation for the specified resource.'
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_acceptable: Requested a media type this endpoint does not support.'
+        '408':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'request_timeout: The request took too long to process.
+
+
+            client_timeout: The request was cancelled by the client.'
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'conflict: Request conflicted with current state of the resource, likely a concurrent update.'
+        '412':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'precondition_failed: A required condition hasn''t been met.'
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'payload_too_large: The request payload is too large.'
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'validation_error: A required field was not provided, or the provided data was invalid.'
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'too_many_requests: Too many requests hit the API too quickly. We recommend an exponential backoff of your requests.
+
+
+            rate_limit_reached: The rate limit associated with this resource or API key has been exceeded. Try again later.'
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'api_error: Something went wrong and has been reported internally.'
+      summary: UpdateStatusPageMaintenance Status Pages V2
+      tags:
+      - Status Pages V2
+      x-display-name: Update
+      x-docs-display-name: Update
+      x-docs-group-name: Status Page Maintenances V2
+      x-docs-resource-type: StatusPageMaintenanceV2
+      x-mint:
+        content: 🔑 Requires the `status_pages.publish_updates` scope.
+      x-rbac-scopes:
+      - status_pages.publish_updates
+      x-operation-id-source: normalized
+      x-operation-id-original: Status Pages V2#UpdateStatusPageMaintenance
+  /v2/status_page_retrospective_incidents:
+    post:
+      description: 'Create a retrospective (historical) status page incident.
+
+
+        Use this to backfill a completed incident with a reconstructed timeline of past updates, for example when migrating from another status page provider. Every update''s published_at must be in the past, the updates must be ordered chronologically (earliest first), and the final update must set incident_status to "resolved".
+
+
+        Retrospective incidents never notify subscribers.
+
+
+        As this endpoint is intended for bulk historical backfill, it has a dedicated rate limit of 5 requests per second (with a burst allowance of 300 requests) per API key. If you exceed it you''ll receive a 429 response with a Retry-After header; back off and retry to resume your backfill.
+
+
+        This endpoint requires an API key with the "Create status page incidents, status page maintenance windows, and publish status page updates" scope.'
+      operationId: StatusPagesV2#CreateStatusPageRetrospectiveIncident
+      requestBody:
+        content:
+          application/json:
+            example:
+              idempotency_key: historical-incident-2021-08-17
+              name: Elevated API latency
+              status_page_id: 01FCNDV6P870EA6S7TK1DSYDG0
+              updates:
+              - component_statuses:
+                - component_id: 01FCNDV6P870EA6S7TK1DSYDG2
+                  component_status: operational
+                incident_status: investigating
+                message: We are currently investigating reports of elevated error rates affecting our API.
+                published_at: '2021-08-17T13:28:57.801578Z'
+            schema:
+              $ref: '#/components/schemas/StatusPagesCreateStatusPageRetrospectiveIncidentPayloadV2'
+        required: true
+      responses:
+        '201':
+          content:
+            application/json:
+              example:
+                status_page_incident:
+                  component_impacts:
+                  - component_id: 01GW7P4ES31Q6V1ZQH321T0GJN
+                    component_status: degraded_performance
+                    end_at: '2021-08-17T13:28:57.801578Z'
+                    start_at: '2021-08-17T13:28:57.801578Z'
+                  id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  incident_status: investigating
+                  name: Elevated API latency
+                  published_at: '2021-08-17T13:28:57.801578Z'
+                  status_page_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  updates:
+                  - component_statuses:
+                    - component_id: 01FCNDV6P870EA6S7TK1DSYDG2
+                      component_status: operational
+                    id: 01FCNDV6P870EA6S7TK1DSYDG0
+                    incident_status: investigating
+                    message: abc123
+                    published_at: '2021-08-17T13:28:57.801578Z'
+                    status_page_incident_id: 01FCNDV6P870EA6S7TK1DSYDG1
+              schema:
+                $ref: '#/components/schemas/StatusPagesCreateStatusPageRetrospectiveIncidentResultV2'
+          description: Created response.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'invalid_request_error: There was a problem with the request, like a missing header or querying a resource that doesn''t exist.'
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'authentication_error: Authentication failed.'
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'resource_forbidden: Access to this resource is forbidden for the authenticated user.'
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_found: The referenced resource could not be found.'
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'method_not_allowed: The endpoint does not support this operation for the specified resource.'
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_acceptable: Requested a media type this endpoint does not support.'
+        '408':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'request_timeout: The request took too long to process.
+
+
+            client_timeout: The request was cancelled by the client.'
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'conflict: Request conflicted with current state of the resource, likely a concurrent update.'
+        '412':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'precondition_failed: A required condition hasn''t been met.'
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'payload_too_large: The request payload is too large.'
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'validation_error: A required field was not provided, or the provided data was invalid.'
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'too_many_requests: Too many requests hit the API too quickly. We recommend an exponential backoff of your requests.
+
+
+            rate_limit_reached: The rate limit associated with this resource or API key has been exceeded. Try again later.'
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'api_error: Something went wrong and has been reported internally.'
+      summary: CreateStatusPageRetrospectiveIncident Status Pages V2
+      tags:
+      - Status Pages V2
+      x-display-name: Create retrospective
+      x-docs-display-name: Create retrospective
+      x-docs-group-name: Status Page Incidents V2
+      x-docs-resource-type: StatusPageIncidentV2
+      x-mint:
+        content: 🔑 Requires the `status_pages.publish_updates` scope.
+      x-rbac-scopes:
+      - status_pages.publish_updates
+      x-operation-id-source: normalized
+      x-operation-id-original: Status Pages V2#CreateStatusPageRetrospectiveIncident
+  /v2/status_page_structures/{status_page_id}:
+    get:
+      description: 'Show the structure of a status page.
+
+
+        This endpoint requires a valid API key but no specific scopes. Returns the components and component groups configured on a status page, with their display settings, and how the page shows uptime. Use this to find component IDs when specifying affected components for incidents or maintenance windows.'
+      operationId: StatusPagesV2#ShowStatusPageStructure
+      parameters:
+      - description: ID of the status page
+        example: abc123
+        in: path
+        name: status_page_id
+        required: true
+        schema:
+          description: ID of the status page
+          example: abc123
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              example:
+                current_structure:
+                  items:
+                  - component:
+                      component_id: 01FCNDV6P870EA6S7TK1DSYDG1
+                      display_uptime: true
+                      hidden: false
+                      name: App
+                    group:
+                      components:
+                      - component_id: 01FCNDV6P870EA6S7TK1DSYDG1
+                        display_uptime: true
+                        hidden: false
+                        name: App
+                      description: Services hosted in our EU data center
+                      display_aggregated_uptime: true
+                      hidden: false
+                      id: 01FCNDV6P870EA6S7TK1DSYDG1
+                      name: EU Data center
+                    sub_page:
+                      id: 01FCNDV6P870EA6S7TK1DSYDG1
+                      items:
+                      - component:
+                          component_id: 01FCNDV6P870EA6S7TK1DSYDG1
+                          display_uptime: true
+                          hidden: false
+                          name: App
+                        group:
+                          components:
+                          - component_id: 01FCNDV6P870EA6S7TK1DSYDG1
+                            display_uptime: true
+                            hidden: false
+                            name: App
+                          description: Services hosted in our EU data center
+                          display_aggregated_uptime: true
+                          hidden: false
+                          id: 01FCNDV6P870EA6S7TK1DSYDG1
+                          name: EU Data center
+                      name: United Kingdom
+                display_uptime_mode: chart_and_percentage
+                management_meta:
+                  annotations:
+                    incident.io/terraform/version: 3.0.0
+                  managed_by: dashboard
+                  source_url: https://github.com/my-company/infrastructure
+              schema:
+                $ref: '#/components/schemas/StatusPagesShowStatusPageStructureResultV2'
+          description: OK response.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'invalid_request_error: There was a problem with the request, like a missing header or querying a resource that doesn''t exist.'
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'authentication_error: Authentication failed.'
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'resource_forbidden: Access to this resource is forbidden for the authenticated user.'
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_found: The referenced resource could not be found.'
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'method_not_allowed: The endpoint does not support this operation for the specified resource.'
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_acceptable: Requested a media type this endpoint does not support.'
+        '408':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'request_timeout: The request took too long to process.
+
+
+            client_timeout: The request was cancelled by the client.'
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'conflict: Request conflicted with current state of the resource, likely a concurrent update.'
+        '412':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'precondition_failed: A required condition hasn''t been met.'
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'payload_too_large: The request payload is too large.'
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'validation_error: A required field was not provided, or the provided data was invalid.'
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'too_many_requests: Too many requests hit the API too quickly. We recommend an exponential backoff of your requests.
+
+
+            rate_limit_reached: The rate limit associated with this resource or API key has been exceeded. Try again later.'
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'api_error: Something went wrong and has been reported internally.'
+      summary: ShowStatusPageStructure Status Pages V2
+      tags:
+      - Status Pages V2
+      x-display-name: Show
+      x-docs-display-name: Show
+      x-docs-group-name: Status Page Structures V2
+      x-docs-resource-type: StatusPageStructureV2
+      x-operation-id-source: normalized
+      x-operation-id-original: Status Pages V2#ShowStatusPageStructure
+  /v2/status_pages:
+    get:
+      description: 'List all status pages for your organisation.
+
+
+        This endpoint requires a valid API key but no specific scopes. Use this to find status page IDs for use in other endpoints.'
+      operationId: StatusPagesV2#ListStatusPages
+      parameters:
+      - allowEmptyValue: true
+        description: Integer number of records to return
+        example: 25
+        in: query
+        name: page_size
+        schema:
+          default: 25
+          description: Integer number of records to return
+          example: 25
+          format: int64
+          maximum: 250
+          minimum: 1
+          type: integer
+      - allowEmptyValue: true
+        description: An record's ID. This endpoint will return a list of records after this ID in relation to the API response order.
+        example: 01FDAG4SAP5TYPT98WGR2N7W91
+        in: query
+        name: after
+        schema:
+          description: An record's ID. This endpoint will return a list of records after this ID in relation to the API response order.
+          example: 01FDAG4SAP5TYPT98WGR2N7W91
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              example:
+                pagination_meta:
+                  after: 01FCNDV6P870EA6S7TK1DSYDG0
+                  page_size: 25
+                status_pages:
+                - description: This status page is our public status page.
+                  id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  name: Our public status page
+                  public_url: https://statuspage.incident.io/our-public-status-page
+              schema:
+                $ref: '#/components/schemas/StatusPagesListStatusPagesResultV2'
+          description: OK response.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'invalid_request_error: There was a problem with the request, like a missing header or querying a resource that doesn''t exist.'
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'authentication_error: Authentication failed.'
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'resource_forbidden: Access to this resource is forbidden for the authenticated user.'
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_found: The referenced resource could not be found.'
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'method_not_allowed: The endpoint does not support this operation for the specified resource.'
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_acceptable: Requested a media type this endpoint does not support.'
+        '408':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'request_timeout: The request took too long to process.
+
+
+            client_timeout: The request was cancelled by the client.'
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'conflict: Request conflicted with current state of the resource, likely a concurrent update.'
+        '412':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'precondition_failed: A required condition hasn''t been met.'
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'payload_too_large: The request payload is too large.'
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'validation_error: A required field was not provided, or the provided data was invalid.'
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'too_many_requests: Too many requests hit the API too quickly. We recommend an exponential backoff of your requests.
+
+
+            rate_limit_reached: The rate limit associated with this resource or API key has been exceeded. Try again later.'
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'api_error: Something went wrong and has been reported internally.'
+      summary: ListStatusPages Status Pages V2
+      tags:
+      - Status Pages V2
+      x-display-name: List
+      x-docs-display-name: List
+      x-docs-group-name: Status Pages V2
+      x-docs-resource-type: StatusPageV2
+      x-operation-id-source: normalized
+      x-operation-id-original: Status Pages V2#ListStatusPages
+  /v2/status_pages/{status_page_id}:
+    get:
+      description: 'Show a single status page.
+
+
+        This endpoint requires a valid API key but no specific scopes. Use ShowStatusPageStructure to see the components and groups configured on the page.'
+      operationId: StatusPagesV2#ShowStatusPage
+      parameters:
+      - description: ID of the status page. You can find this by calling the ListStatusPages endpoint.
+        example: 01FCNDV6P870EA6S7TK1DSYDG0
+        in: path
+        name: status_page_id
+        required: true
+        schema:
+          description: ID of the status page. You can find this by calling the ListStatusPages endpoint.
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              example:
+                status_page:
+                  description: This status page is our public status page.
+                  id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  name: Our public status page
+                  public_url: https://statuspage.incident.io/our-public-status-page
+              schema:
+                $ref: '#/components/schemas/StatusPagesShowStatusPageResultV2'
+          description: OK response.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'invalid_request_error: There was a problem with the request, like a missing header or querying a resource that doesn''t exist.'
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'authentication_error: Authentication failed.'
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'resource_forbidden: Access to this resource is forbidden for the authenticated user.'
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_found: The referenced resource could not be found.'
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'method_not_allowed: The endpoint does not support this operation for the specified resource.'
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_acceptable: Requested a media type this endpoint does not support.'
+        '408':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'request_timeout: The request took too long to process.
+
+
+            client_timeout: The request was cancelled by the client.'
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'conflict: Request conflicted with current state of the resource, likely a concurrent update.'
+        '412':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'precondition_failed: A required condition hasn''t been met.'
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'payload_too_large: The request payload is too large.'
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'validation_error: A required field was not provided, or the provided data was invalid.'
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'too_many_requests: Too many requests hit the API too quickly. We recommend an exponential backoff of your requests.
+
+
+            rate_limit_reached: The rate limit associated with this resource or API key has been exceeded. Try again later.'
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'api_error: Something went wrong and has been reported internally.'
+      summary: ShowStatusPage Status Pages V2
+      tags:
+      - Status Pages V2
+      x-display-name: Show
+      x-docs-display-name: Show
+      x-docs-group-name: Status Pages V2
+      x-docs-resource-type: StatusPageV2
+      x-operation-id-source: normalized
+      x-operation-id-original: Status Pages V2#ShowStatusPage
+  /v2/status_pages/{status_page_id}/components/{component_id}/availability:
+    get:
+      description: 'Show availability for a status page component over a time window.
+
+
+        Pass start_at and end_at as RFC3339 timestamps. The window cannot be longer than 366 days. Availability uses the same rules as the public status page: full and partial outages count as downtime, overlapping impacts are merged, and time before we have data for the component is excluded rather than counted as up.
+
+
+        This endpoint requires a valid API key but no specific scopes. Use ListStatusPages and ShowStatusPageStructure to find status page and component IDs.'
+      operationId: StatusPagesV2#ShowStatusPageComponentAvailability
+      parameters:
+      - allowEmptyValue: true
+        description: Start of the availability window
+        example: '2026-01-01T00:00:00Z'
+        in: query
+        name: start_at
+        required: true
+        schema:
+          description: Start of the availability window
+          example: '2026-01-01T00:00:00Z'
+          format: date-time
+          type: string
+      - allowEmptyValue: true
+        description: End of the availability window
+        example: '2026-02-01T00:00:00Z'
+        in: query
+        name: end_at
+        required: true
+        schema:
+          description: End of the availability window
+          example: '2026-02-01T00:00:00Z'
+          format: date-time
+          type: string
+      - description: ID of the status page. You can find this by calling the ListStatusPages endpoint.
+        example: 01FCNDV6P870EA6S7TK1DSYDG0
+        in: path
+        name: status_page_id
+        required: true
+        schema:
+          description: ID of the status page. You can find this by calling the ListStatusPages endpoint.
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+      - description: ID of the component. You can find this by calling the ShowStatusPageStructure endpoint.
+        example: 01FCNDV6P870EA6S7TK1DSYDG1
+        in: path
+        name: component_id
+        required: true
+        schema:
+          description: ID of the component. You can find this by calling the ShowStatusPageStructure endpoint.
+          example: 01FCNDV6P870EA6S7TK1DSYDG1
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              example:
+                availability:
+                  availability_percent: '99.94'
+                  component_id: 01FCNDV6P870EA6S7TK1DSYDG1
+                  data_available_since: '2025-06-01T00:00:00Z'
+                  end_at: '2026-02-01T00:00:00Z'
+                  start_at: '2026-01-01T00:00:00Z'
+                  status_page_id: 01FCNDV6P870EA6S7TK1DSYDG0
+              schema:
+                $ref: '#/components/schemas/StatusPagesShowStatusPageComponentAvailabilityResultV2'
+          description: OK response.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'invalid_request_error: There was a problem with the request, like a missing header or querying a resource that doesn''t exist.'
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'authentication_error: Authentication failed.'
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'resource_forbidden: Access to this resource is forbidden for the authenticated user.'
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_found: The referenced resource could not be found.'
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'method_not_allowed: The endpoint does not support this operation for the specified resource.'
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_acceptable: Requested a media type this endpoint does not support.'
+        '408':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'request_timeout: The request took too long to process.
+
+
+            client_timeout: The request was cancelled by the client.'
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'conflict: Request conflicted with current state of the resource, likely a concurrent update.'
+        '412':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'precondition_failed: A required condition hasn''t been met.'
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'payload_too_large: The request payload is too large.'
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'validation_error: A required field was not provided, or the provided data was invalid.'
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'too_many_requests: Too many requests hit the API too quickly. We recommend an exponential backoff of your requests.
+
+
+            rate_limit_reached: The rate limit associated with this resource or API key has been exceeded. Try again later.'
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'api_error: Something went wrong and has been reported internally.'
+      summary: ShowStatusPageComponentAvailability Status Pages V2
+      tags:
+      - Status Pages V2
+      x-display-name: Show Component Availability
+      x-docs-display-name: Show Component Availability
+      x-docs-group-name: Status Pages V2
+      x-docs-resource-type: StatusPageV2
+      x-operation-id-source: normalized
+      x-operation-id-original: Status Pages V2#ShowStatusPageComponentAvailability
+components:
+  schemas:
+    StatusPagesListStatusPagesResultV2:
+      example:
+        pagination_meta:
+          after: 01FCNDV6P870EA6S7TK1DSYDG0
+          page_size: 25
+        status_pages:
+        - description: This status page is our public status page.
+          id: 01FCNDV6P870EA6S7TK1DSYDG0
+          name: Our public status page
+          public_url: https://statuspage.incident.io/our-public-status-page
+      properties:
+        pagination_meta:
+          $ref: '#/components/schemas/PaginationMetaResultV2'
+        status_pages:
+          example:
+          - description: This status page is our public status page.
+            id: 01FCNDV6P870EA6S7TK1DSYDG0
+            name: Our public status page
+            public_url: https://statuspage.incident.io/our-public-status-page
+          items:
+            $ref: '#/components/schemas/StatusPageV2'
+          type: array
+      required:
+      - status_pages
+      - pagination_meta
+      type: object
+    StatusPagesCreateStatusPageMaintenanceUpdatePayloadV2:
+      example:
+        component_statuses:
+        - component_id: 01FCNDV6P870EA6S7TK1DSYDG2
+          component_status: operational
+        maintenance_status: maintenance_scheduled
+        message: Scheduled maintenance is underway for our database infrastructure. Some services may experience brief interruptions during this window.
+        notify_subscribers: true
+        status_page_maintenance_id: 01FCNDV6P870EA6S7TK1DSYDG1
+      properties:
+        component_statuses:
+          description: An array of mappings from component ID to component status. This must not be set if the status page maintenance window status is being set to "maintenance_complete", as all components statuses will update to "operational".
+          example:
+          - component_id: 01FCNDV6P870EA6S7TK1DSYDG2
+            component_status: operational
+          items:
+            $ref: '#/components/schemas/StatusPageMaintenanceAffectedComponentV2'
+          type: array
+        maintenance_status:
+          description: Optional new status for this status page maintenance window. If not provided, the status will remain unchanged. Setting to "maintenance_complete" will end the maintenance window and all component statuses will update to "operational".
+          enum:
+          - maintenance_scheduled
+          - maintenance_in_progress
+          - maintenance_complete
+          example: maintenance_scheduled
+          type: string
+        message:
+          description: Markdown update on what's changed about this status page maintenance window
+          example: Scheduled maintenance is underway for our database infrastructure. Some services may experience brief interruptions during this window.
+          maxLength: 4096
+          type: string
+        notify_subscribers:
+          description: 'Whether to notify subscribers about this status page maintenance update. If your status page has more than 1000 subscribers, requests that set this to true are rejected. This limit applies only to the public API: publishing from the incident.io dashboard or Slack always notifies every subscriber.'
+          example: true
+          type: boolean
+        status_page_maintenance_id:
+          description: ID of the status page maintenance window
+          example: 01FCNDV6P870EA6S7TK1DSYDG1
+          type: string
+      required:
+      - status_page_maintenance_id
+      - message
+      - notify_subscribers
+      type: object
+    StatusPageStructureComponentV2:
+      example:
+        component_id: 01FCNDV6P870EA6S7TK1DSYDG1
+        display_uptime: true
+        hidden: false
+        name: App
+      properties:
+        component_id:
+          description: The ID of the affected component. This may be found by calling the ShowStatusPageStructure endpoint.
+          example: 01FCNDV6P870EA6S7TK1DSYDG1
+          type: string
+        display_uptime:
+          description: Whether the page shows this component's uptime
+          example: true
+          type: boolean
+        hidden:
+          description: Whether the component is hidden from the page
+          example: false
+          type: boolean
+        name:
+          description: The name of this component
+          example: App
+          type: string
+      required:
+      - component_id
+      - name
+      - hidden
+      - display_uptime
+      type: object
+    StatusPagesCreateStatusPageIncidentUpdateResultV2:
+      example:
+        status_page_incident_update:
+          component_statuses:
+          - component_id: 01FCNDV6P870EA6S7TK1DSYDG2
+            component_status: operational
+          id: 01FCNDV6P870EA6S7TK1DSYDG0
+          incident_status: investigating
+          message: abc123
+          published_at: '2021-08-17T13:28:57.801578Z'
+          status_page_incident_id: 01FCNDV6P870EA6S7TK1DSYDG1
+      properties:
+        status_page_incident_update:
+          $ref: '#/components/schemas/StatusPageIncidentUpdateV2'
+      type: object
+    StatusPagesCreateStatusPageIncidentPayloadV2:
+      example:
+        component_statuses:
+        - component_id: 01FCNDV6P870EA6S7TK1DSYDG2
+          component_status: operational
+        idempotency_key: alert-12345-abcde
+        incident_status: investigating
+        message: We are currently investigating reports of elevated error rates affecting our API.
+        name: Elevated API latency
+        notify_subscribers: true
+        status_page_id: 01FCNDV6P870EA6S7TK1DSYDG0
+      properties:
+        component_statuses:
+          description: An array of mappings from component ID to current component status
+          example:
+          - component_id: 01FCNDV6P870EA6S7TK1DSYDG2
+            component_status: operational
+          items:
+            $ref: '#/components/schemas/StatusPageIncidentAffectedComponentV2'
+          type: array
+        idempotency_key:
+          description: A unique key to de-duplicate requests. If you send a request with an idempotency_key that was already used, the original response will be returned.
+          example: alert-12345-abcde
+          type: string
+        incident_status:
+          description: Current status for this status page incident
+          enum:
+          - investigating
+          - identified
+          - monitoring
+          - resolved
+          example: investigating
+          type: string
+        message:
+          description: Markdown initial update on this status page incident
+          example: We are currently investigating reports of elevated error rates affecting our API.
+          maxLength: 4096
+          type: string
+        name:
+          description: A title for the incident
+          example: Elevated API latency
+          maxLength: 200
+          type: string
+        notify_subscribers:
+          description: 'Whether to notify subscribers about this status page incident. If your status page has more than 1000 subscribers, requests that set this to true are rejected. This limit applies only to the public API: publishing from the incident.io dashboard or Slack always notifies every subscriber.'
+          example: true
+          type: boolean
+        status_page_id:
+          description: ID of the status page. You can find this by calling the ListStatusPages endpoint.
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+      required:
+      - status_page_id
+      - name
+      - incident_status
+      - idempotency_key
+      - message
+      - notify_subscribers
+      type: object
+    StatusPagesUpdateStatusPageMaintenanceResultV2:
+      example:
+        status_page_maintenance:
+          automate_maintenance_status: true
+          component_maintenance_periods:
+          - component_id: 01GW7P4ES31Q6V1ZQH321T0GJN
+            end_at: '2021-08-17T13:28:57.801578Z'
+            start_at: '2021-08-17T13:28:57.801578Z'
+          id: 01FCNDV6P870EA6S7TK1DSYDG0
+          maintenance_status: maintenance_scheduled
+          name: Routine infrastructure upgrade
+          published_at: '2021-08-17T13:28:57.801578Z'
+          status_page_id: 01FCNDV6P870EA6S7TK1DSYDG0
+          updates:
+          - component_statuses:
+            - component_id: 01FCNDV6P870EA6S7TK1DSYDG2
+              component_status: operational
+            id: 01FCNDV6P870EA6S7TK1DSYDG0
+            maintenance_status: maintenance_scheduled
+            message: abc123
+            published_at: '2021-08-17T13:28:57.801578Z'
+            status_page_maintenance_id: 01FCNDV6P870EA6S7TK1DSYDG1
+      properties:
+        status_page_maintenance:
+          $ref: '#/components/schemas/StatusPageMaintenanceV2'
+      type: object
+    StatusPagesUpdateStatusPageIncidentPayloadV2:
+      example:
+        name: Elevated API latency
+      properties:
+        name:
+          description: A title for the incident
+          example: Elevated API latency
+          maxLength: 200
+          type: string
+      required:
+      - name
+      type: object
+    StatusPageMaintenanceUpdateV2:
+      example:
+        component_statuses:
+        - component_id: 01FCNDV6P870EA6S7TK1DSYDG2
+          component_status: operational
+        id: 01FCNDV6P870EA6S7TK1DSYDG0
+        maintenance_status: maintenance_scheduled
+        message: abc123
+        published_at: '2021-08-17T13:28:57.801578Z'
+        status_page_maintenance_id: 01FCNDV6P870EA6S7TK1DSYDG1
+      properties:
+        component_statuses:
+          description: The updated statuses of affected components
+          example:
+          - component_id: 01FCNDV6P870EA6S7TK1DSYDG2
+            component_status: operational
+          items:
+            $ref: '#/components/schemas/StatusPageMaintenanceAffectedComponentV2'
+          type: array
+        id:
+          description: A unique ID for this status page maintenance update
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+        maintenance_status:
+          description: Current status for this maintenance window
+          enum:
+          - maintenance_scheduled
+          - maintenance_in_progress
+          - maintenance_complete
+          example: maintenance_scheduled
+          type: string
+          x-public-api-version: v2
+        message:
+          description: Markdown update on what's changed about this status page maintenance window
+          example: abc123
+          type: string
+        published_at:
+          description: When this status page maintenance update was published to the status page
+          example: '2021-08-17T13:28:57.801578Z'
+          format: date-time
+          type: string
+        status_page_maintenance_id:
+          description: The ID of the corresponding status page maintenance window
+          example: 01FCNDV6P870EA6S7TK1DSYDG1
+          type: string
+      required:
+      - id
+      - status_page_maintenance_id
+      - published_at
+      - message
+      - maintenance_status
+      - component_statuses
+      type: object
+    StatusPagesCreateStatusPageIncidentUpdatePayloadV2:
+      example:
+        component_statuses:
+        - component_id: 01FCNDV6P870EA6S7TK1DSYDG2
+          component_status: operational
+        incident_status: investigating
+        message: The fix has been deployed and we are monitoring the situation. Some users may still experience intermittent issues.
+        notify_subscribers: true
+        status_page_incident_id: 01FCNDV6P870EA6S7TK1DSYDG1
+      properties:
+        component_statuses:
+          description: An array of mappings from component ID to component status. This must not be set if the status page incident status is being set to "resolved", as all components statuses will update to "operational".
+          example:
+          - component_id: 01FCNDV6P870EA6S7TK1DSYDG2
+            component_status: operational
+          items:
+            $ref: '#/components/schemas/StatusPageIncidentAffectedComponentV2'
+          type: array
+        incident_status:
+          description: Optional new status for this status page incident. If not provided, the status will remain unchanged. Setting to "resolved" will end the incident and all component statuses will update to "operational".
+          enum:
+          - investigating
+          - identified
+          - monitoring
+          - resolved
+          example: investigating
+          type: string
+        message:
+          description: Markdown update on what's changed about this status page incident
+          example: The fix has been deployed and we are monitoring the situation. Some users may still experience intermittent issues.
+          maxLength: 4096
+          type: string
+        notify_subscribers:
+          description: 'Whether to notify subscribers about this incident update. If your status page has more than 1000 subscribers, requests that set this to true are rejected. This limit applies only to the public API: publishing from the incident.io dashboard or Slack always notifies every subscriber.'
+          example: true
+          type: boolean
+        status_page_incident_id:
+          description: ID of the status page incident
+          example: 01FCNDV6P870EA6S7TK1DSYDG1
+          type: string
+      required:
+      - status_page_incident_id
+      - message
+      - notify_subscribers
+      type: object
+    StatusPagesCreateStatusPageIncidentResultV2:
+      example:
+        status_page_incident:
+          component_impacts:
+          - component_id: 01GW7P4ES31Q6V1ZQH321T0GJN
+            component_status: degraded_performance
+            end_at: '2021-08-17T13:28:57.801578Z'
+            start_at: '2021-08-17T13:28:57.801578Z'
+          id: 01FCNDV6P870EA6S7TK1DSYDG0
+          incident_status: investigating
+          name: Elevated API latency
+          published_at: '2021-08-17T13:28:57.801578Z'
+          status_page_id: 01FCNDV6P870EA6S7TK1DSYDG0
+          updates:
+          - component_statuses:
+            - component_id: 01FCNDV6P870EA6S7TK1DSYDG2
+              component_status: operational
+            id: 01FCNDV6P870EA6S7TK1DSYDG0
+            incident_status: investigating
+            message: abc123
+            published_at: '2021-08-17T13:28:57.801578Z'
+            status_page_incident_id: 01FCNDV6P870EA6S7TK1DSYDG1
+      properties:
+        status_page_incident:
+          $ref: '#/components/schemas/StatusPageIncidentV2'
+      type: object
+    StatusPageIncidentUpdateV2:
+      example:
+        component_statuses:
+        - component_id: 01FCNDV6P870EA6S7TK1DSYDG2
+          component_status: operational
+        id: 01FCNDV6P870EA6S7TK1DSYDG0
+        incident_status: investigating
+        message: abc123
+        published_at: '2021-08-17T13:28:57.801578Z'
+        status_page_incident_id: 01FCNDV6P870EA6S7TK1DSYDG1
+      properties:
+        component_statuses:
+          description: The updated statuses of affected components
+          example:
+          - component_id: 01FCNDV6P870EA6S7TK1DSYDG2
+            component_status: operational
+          items:
+            $ref: '#/components/schemas/StatusPageIncidentAffectedComponentV2'
+          type: array
+        id:
+          description: A unique ID for this status page incident update
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+        incident_status:
+          description: Current status for this incident
+          enum:
+          - investigating
+          - identified
+          - monitoring
+          - resolved
+          example: investigating
+          type: string
+          x-public-api-version: v2
+        message:
+          description: Markdown update on what's changed about this status page incident
+          example: abc123
+          type: string
+        published_at:
+          description: When this status page incident update was published to the status page
+          example: '2021-08-17T13:28:57.801578Z'
+          format: date-time
+          type: string
+        status_page_incident_id:
+          description: The ID of the corresponding status page incident
+          example: 01FCNDV6P870EA6S7TK1DSYDG1
+          type: string
+      required:
+      - id
+      - status_page_incident_id
+      - published_at
+      - message
+      - incident_status
+      - component_statuses
+      type: object
+    PaginationMetaResultV2:
+      example:
+        after: 01FCNDV6P870EA6S7TK1DSYDG0
+        page_size: 25
+      properties:
+        after:
+          description: If provided, pass this as the 'after' param to load the next page
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+        page_size:
+          default: 25
+          description: What was the maximum number of results requested
+          example: 25
+          format: int64
+          maximum: 250
+          type: integer
+      required:
+      - page_size
+      type: object
+    StatusPagesListStatusPageMaintenancesResultV2:
+      example:
+        pagination_meta:
+          after: 01FCNDV6P870EA6S7TK1DSYDG0
+          page_size: 25
+        status_page_maintenances:
+        - automate_maintenance_status: true
+          component_maintenance_periods:
+          - component_id: 01GW7P4ES31Q6V1ZQH321T0GJN
+            end_at: '2021-08-17T13:28:57.801578Z'
+            start_at: '2021-08-17T13:28:57.801578Z'
+          id: 01FCNDV6P870EA6S7TK1DSYDG0
+          maintenance_status: maintenance_scheduled
+          name: Routine infrastructure upgrade
+          published_at: '2021-08-17T13:28:57.801578Z'
+          status_page_id: 01FCNDV6P870EA6S7TK1DSYDG0
+          updates:
+          - component_statuses:
+            - component_id: 01FCNDV6P870EA6S7TK1DSYDG2
+              component_status: operational
+            id: 01FCNDV6P870EA6S7TK1DSYDG0
+            maintenance_status: maintenance_scheduled
+            message: abc123
+            published_at: '2021-08-17T13:28:57.801578Z'
+            status_page_maintenance_id: 01FCNDV6P870EA6S7TK1DSYDG1
+      properties:
+        pagination_meta:
+          $ref: '#/components/schemas/PaginationMetaResultV2'
+        status_page_maintenances:
+          example:
+          - automate_maintenance_status: true
+            component_maintenance_periods:
+            - component_id: 01GW7P4ES31Q6V1ZQH321T0GJN
+              end_at: '2021-08-17T13:28:57.801578Z'
+              start_at: '2021-08-17T13:28:57.801578Z'
+            id: 01FCNDV6P870EA6S7TK1DSYDG0
+            maintenance_status: maintenance_scheduled
+            name: Routine infrastructure upgrade
+            published_at: '2021-08-17T13:28:57.801578Z'
+            status_page_id: 01FCNDV6P870EA6S7TK1DSYDG0
+            updates:
+            - component_statuses:
+              - component_id: 01FCNDV6P870EA6S7TK1DSYDG2
+                component_status: operational
+              id: 01FCNDV6P870EA6S7TK1DSYDG0
+              maintenance_status: maintenance_scheduled
+              message: abc123
+              published_at: '2021-08-17T13:28:57.801578Z'
+              status_page_maintenance_id: 01FCNDV6P870EA6S7TK1DSYDG1
+          items:
+            $ref: '#/components/schemas/StatusPageMaintenanceV2'
+          type: array
+      required:
+      - status_page_maintenances
+      - pagination_meta
+      type: object
+    ErrorResponse:
+      example:
+        debug:
+          message: 'Something broke: and something else: and something else'
+          stacktrace:
+          - thing.go:123
+        errors:
+        - code: trial_expired
+          message: Default incident call link must be a valid URL
+          metadata:
+            abc123: abc123
+          source:
+            field: default_call_url
+            pointer: /settings/default_call_url
+        rate_limit:
+          limit: 100
+          name: client_ip
+          remaining: 98
+          retry_after: '2020-01-01T00:00:00Z'
+        request_id: 2T1p0e3j
+        status: 408
+        type: invalid_request_error
+      properties:
+        debug:
+          $ref: '#/components/schemas/ErrorDebug'
+        errors:
+          description: List of errors that caused this request to fail
+          example:
+          - code: trial_expired
+            message: Default incident call link must be a valid URL
+            metadata:
+              abc123: abc123
+            source:
+              field: default_call_url
+              pointer: /settings/default_call_url
+          items:
+            $ref: '#/components/schemas/ErrorSingle'
+          type: array
+        rate_limit:
+          $ref: '#/components/schemas/ErrorRateLimit'
+        request_id:
+          description: Unique identifier of the request
+          example: 2T1p0e3j
+          type: string
+        status:
+          description: HTTP status of the response
+          example: 408
+          format: int64
+          type: integer
+        type:
+          description: Machine-readable identifier for the general category of error
+          enum:
+          - invalid_request_error
+          - authentication_error
+          - resource_forbidden
+          - not_found
+          - not_acceptable
+          - method_not_allowed
+          - request_timeout
+          - conflict
+          - precondition_failed
+          - payload_too_large
+          - validation_error
+          - too_many_requests
+          - api_error
+          - rate_limit_reached
+          - client_timeout
+          example: invalid_request_error
+          type: string
+      required:
+      - type
+      - status
+      - request_id
+      - errors
+      type: object
+    StatusPageIncidentV2:
+      example:
+        component_impacts:
+        - component_id: 01GW7P4ES31Q6V1ZQH321T0GJN
+          component_status: degraded_performance
+          end_at: '2021-08-17T13:28:57.801578Z'
+          start_at: '2021-08-17T13:28:57.801578Z'
+        id: 01FCNDV6P870EA6S7TK1DSYDG0
+        incident_status: investigating
+        name: Elevated API latency
+        published_at: '2021-08-17T13:28:57.801578Z'
+        status_page_id: 01FCNDV6P870EA6S7TK1DSYDG0
+        updates:
+        - component_statuses:
+          - component_id: 01FCNDV6P870EA6S7TK1DSYDG2
+            component_status: operational
+          id: 01FCNDV6P870EA6S7TK1DSYDG0
+          incident_status: investigating
+          message: abc123
+          published_at: '2021-08-17T13:28:57.801578Z'
+          status_page_incident_id: 01FCNDV6P870EA6S7TK1DSYDG1
+      properties:
+        component_impacts:
+          description: A list of time periods that this status page incident had an impact on a component
+          example:
+          - component_id: 01GW7P4ES31Q6V1ZQH321T0GJN
+            component_status: degraded_performance
+            end_at: '2021-08-17T13:28:57.801578Z'
+            start_at: '2021-08-17T13:28:57.801578Z'
+          items:
+            $ref: '#/components/schemas/StatusPageIncidentComponentImpactV2'
+          type: array
+        id:
+          description: A unique ID for this status page incident
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+        incident_status:
+          description: Current status for this incident
+          enum:
+          - investigating
+          - identified
+          - monitoring
+          - resolved
+          example: investigating
+          type: string
+          x-public-api-version: v2
+        name:
+          description: A title for the incident
+          example: Elevated API latency
+          type: string
+        published_at:
+          description: When this status page incident was published to the status page
+          example: '2021-08-17T13:28:57.801578Z'
+          format: date-time
+          type: string
+        status_page_id:
+          description: The ID of the corresponding status page
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+        updates:
+          description: A list of updates posted to this status page incident
+          example:
+          - component_statuses:
+            - component_id: 01FCNDV6P870EA6S7TK1DSYDG2
+              component_status: operational
+            id: 01FCNDV6P870EA6S7TK1DSYDG0
+            incident_status: investigating
+            message: abc123
+            published_at: '2021-08-17T13:28:57.801578Z'
+            status_page_incident_id: 01FCNDV6P870EA6S7TK1DSYDG1
+          items:
+            $ref: '#/components/schemas/StatusPageIncidentUpdateV2'
+          type: array
+      required:
+      - id
+      - status_page_id
+      - name
+      - published_at
+      - incident_status
+      - updates
+      - component_impacts
+      type: object
+    StatusPageMaintenanceV2:
+      example:
+        automate_maintenance_status: true
+        component_maintenance_periods:
+        - component_id: 01GW7P4ES31Q6V1ZQH321T0GJN
+          end_at: '2021-08-17T13:28:57.801578Z'
+          start_at: '2021-08-17T13:28:57.801578Z'
+        id: 01FCNDV6P870EA6S7TK1DSYDG0
+        maintenance_status: maintenance_scheduled
+        name: Routine infrastructure upgrade
+        published_at: '2021-08-17T13:28:57.801578Z'
+        status_page_id: 01FCNDV6P870EA6S7TK1DSYDG0
+        updates:
+        - component_statuses:
+          - component_id: 01FCNDV6P870EA6S7TK1DSYDG2
+            component_status: operational
+          id: 01FCNDV6P870EA6S7TK1DSYDG0
+          maintenance_status: maintenance_scheduled
+          message: abc123
+          published_at: '2021-08-17T13:28:57.801578Z'
+          status_page_maintenance_id: 01FCNDV6P870EA6S7TK1DSYDG1
+      properties:
+        automate_maintenance_status:
+          description: Whether updates are published automatically, moving this maintenance window to in progress at its start time and to complete at its end time
+          example: true
+          type: boolean
+        component_maintenance_periods:
+          description: A list of time periods where components were under maintenance during this status page maintenance window
+          example:
+          - component_id: 01GW7P4ES31Q6V1ZQH321T0GJN
+            end_at: '2021-08-17T13:28:57.801578Z'
+            start_at: '2021-08-17T13:28:57.801578Z'
+          items:
+            $ref: '#/components/schemas/StatusPageMaintenanceComponentMaintenancePeriodV2'
+          type: array
+        id:
+          description: A unique ID for this status page maintenance window
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+        maintenance_status:
+          description: Current status for this maintenance window
+          enum:
+          - maintenance_scheduled
+          - maintenance_in_progress
+          - maintenance_complete
+          example: maintenance_scheduled
+          type: string
+          x-public-api-version: v2
+        name:
+          description: A title for the maintenance window
+          example: Routine infrastructure upgrade
+          type: string
+        published_at:
+          description: When this status page maintenance window was published to the status page
+          example: '2021-08-17T13:28:57.801578Z'
+          format: date-time
+          type: string
+        status_page_id:
+          description: The ID of the corresponding status page
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+        updates:
+          description: A list of updates posted to this status page maintenance window
+          example:
+          - component_statuses:
+            - component_id: 01FCNDV6P870EA6S7TK1DSYDG2
+              component_status: operational
+            id: 01FCNDV6P870EA6S7TK1DSYDG0
+            maintenance_status: maintenance_scheduled
+            message: abc123
+            published_at: '2021-08-17T13:28:57.801578Z'
+            status_page_maintenance_id: 01FCNDV6P870EA6S7TK1DSYDG1
+          items:
+            $ref: '#/components/schemas/StatusPageMaintenanceUpdateV2'
+          type: array
+      required:
+      - id
+      - status_page_id
+      - name
+      - published_at
+      - maintenance_status
+      - updates
+      - component_maintenance_periods
+      - automate_maintenance_status
+      type: object
+    StatusPagesCreateStatusPageMaintenancePayloadV2:
+      example:
+        affected_component_ids:
+        - 01FCNDV6P870EA6S7TK1DSYDG2
+        automate_maintenance_status: true
+        end_at: '2025-01-28T12:00:00Z'
+        idempotency_key: maintenance-12345-abcde
+        maintenance_status: maintenance_scheduled
+        message: Planned maintenance has been scheduled to upgrade our infrastructure. We expect minimal disruption, but some features may be briefly unavailable.
+        name: Routine infrastructure upgrade
+        notify_subscribers: true
+        start_at: '2025-01-28T10:00:00Z'
+        status_page_id: 01FCNDV6P870EA6S7TK1DSYDG0
+      properties:
+        affected_component_ids:
+          description: An array of IDs of component affected by the maintenance window
+          example:
+          - 01FCNDV6P870EA6S7TK1DSYDG2
+          items:
+            example: abc123
+            type: string
+          type: array
+        automate_maintenance_status:
+          description: Whether to publish updates automatically, moving this maintenance window to in progress at start_at and to complete at end_at. Defaults to false, which means you publish those updates yourself. When notify_subscribers is true, the automated updates notify subscribers too. Publishing your own update that sets maintenance_status turns automation off.
+          example: true
+          type: boolean
+        end_at:
+          description: The time the maintenance window ends
+          example: '2025-01-28T12:00:00Z'
+          format: date-time
+          type: string
+        idempotency_key:
+          description: A unique key to de-duplicate requests. If you send a request with an idempotency_key that was already used, the original response will be returned.
+          example: maintenance-12345-abcde
+          type: string
+        maintenance_status:
+          description: Current status for this status page maintenance window
+          enum:
+          - maintenance_scheduled
+          - maintenance_in_progress
+          - maintenance_complete
+          example: maintenance_scheduled
+          type: string
+        message:
+          description: Markdown initial update on this status page maintenance window
+          example: Planned maintenance has been scheduled to upgrade our infrastructure. We expect minimal disruption, but some features may be briefly unavailable.
+          maxLength: 4096
+          type: string
+        name:
+          description: A title for the maintenance window
+          example: Routine infrastructure upgrade
+          maxLength: 200
+          type: string
+        notify_subscribers:
+          description: 'Whether to notify subscribers about this status page maintenance. If your status page has more than 1000 subscribers, requests that set this to true are rejected. This limit applies only to the public API: publishing from the incident.io dashboard or Slack always notifies every subscriber.'
+          example: true
+          type: boolean
+        start_at:
+          description: The time the maintenance window starts
+          example: '2025-01-28T10:00:00Z'
+          format: date-time
+          type: string
+        status_page_id:
+          description: ID of the status page. You can find this by calling the ListStatusPages endpoint.
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+      required:
+      - status_page_id
+      - name
+      - maintenance_status
+      - idempotency_key
+      - affected_component_ids
+      - start_at
+      - end_at
+      - message
+      - notify_subscribers
+      type: object
+    StatusPagesCreateStatusPageMaintenanceResultV2:
+      example:
+        status_page_maintenance:
+          automate_maintenance_status: true
+          component_maintenance_periods:
+          - component_id: 01GW7P4ES31Q6V1ZQH321T0GJN
+            end_at: '2021-08-17T13:28:57.801578Z'
+            start_at: '2021-08-17T13:28:57.801578Z'
+          id: 01FCNDV6P870EA6S7TK1DSYDG0
+          maintenance_status: maintenance_scheduled
+          name: Routine infrastructure upgrade
+          published_at: '2021-08-17T13:28:57.801578Z'
+          status_page_id: 01FCNDV6P870EA6S7TK1DSYDG0
+          updates:
+          - component_statuses:
+            - component_id: 01FCNDV6P870EA6S7TK1DSYDG2
+              component_status: operational
+            id: 01FCNDV6P870EA6S7TK1DSYDG0
+            maintenance_status: maintenance_scheduled
+            message: abc123
+            published_at: '2021-08-17T13:28:57.801578Z'
+            status_page_maintenance_id: 01FCNDV6P870EA6S7TK1DSYDG1
+      properties:
+        status_page_maintenance:
+          $ref: '#/components/schemas/StatusPageMaintenanceV2'
+      type: object
+    StatusPagesShowStatusPageComponentAvailabilityResultV2:
+      example:
+        availability:
+          availability_percent: '99.94'
+          component_id: 01FCNDV6P870EA6S7TK1DSYDG1
+          data_available_since: '2025-06-01T00:00:00Z'
+          end_at: '2026-02-01T00:00:00Z'
+          start_at: '2026-01-01T00:00:00Z'
+          status_page_id: 01FCNDV6P870EA6S7TK1DSYDG0
+      properties:
+        availability:
+          $ref: '#/components/schemas/StatusPageComponentAvailabilityV2'
+      required:
+      - availability
+      type: object
+    StatusPageMaintenanceComponentMaintenancePeriodV2:
+      example:
+        component_id: 01GW7P4ES31Q6V1ZQH321T0GJN
+        end_at: '2021-08-17T13:28:57.801578Z'
+        start_at: '2021-08-17T13:28:57.801578Z'
+      properties:
+        component_id:
+          description: The ID of the affected component. This may be found by calling the ShowStatusPageStructure endpoint.
+          example: 01GW7P4ES31Q6V1ZQH321T0GJN
+          type: string
+        end_at:
+          description: When the component stopped being under maintenance. If this is null, the impact is ongoing.
+          example: '2021-08-17T13:28:57.801578Z'
+          format: date-time
+          type: string
+        start_at:
+          description: When the component started being under maintenance
+          example: '2021-08-17T13:28:57.801578Z'
+          format: date-time
+          type: string
+      required:
+      - component_id
+      - start_at
+      type: object
+    ErrorSource:
+      example:
+        field: default_call_url
+        pointer: /settings/default_call_url
+      properties:
+        field:
+          description: Field name that is the source of the error
+          example: default_call_url
+          type: string
+        pointer:
+          description: JSON pointer to the request field that is the source of the error
+          example: /settings/default_call_url
+          type: string
+      required:
+      - field
+      - pointer
+      type: object
+    ManagementMetaV2:
+      example:
+        annotations:
+          incident.io/terraform/version: 3.0.0
+        managed_by: dashboard
+        source_url: https://github.com/my-company/infrastructure
+      properties:
+        annotations:
+          additionalProperties:
+            example: abc123
+            type: string
+          description: Annotations that track metadata about this resource
+          example:
+            incident.io/terraform/version: 3.0.0
+          type: object
+        managed_by:
+          description: How is this resource managed
+          enum:
+          - dashboard
+          - terraform
+          - external
+          example: dashboard
+          type: string
+        source_url:
+          description: The url of the external repository where this resource is managed (if there is one)
+          example: https://github.com/my-company/infrastructure
+          type: string
+      required:
+      - annotations
+      - managed_by
+      type: object
+    StatusPageRetrospectiveIncidentUpdateV2:
+      description: A single update in the reconstructed timeline of a retrospective status page incident.
+      example:
+        component_statuses:
+        - component_id: 01FCNDV6P870EA6S7TK1DSYDG2
+          component_status: operational
+        incident_status: investigating
+        message: We are currently investigating reports of elevated error rates affecting our API.
+        published_at: '2021-08-17T13:28:57.801578Z'
+      properties:
+        component_statuses:
+          description: An array of mappings from component ID to component status at the time this update was published
+          example:
+          - component_id: 01FCNDV6P870EA6S7TK1DSYDG2
+            component_status: operational
+          items:
+            $ref: '#/components/schemas/StatusPageIncidentAffectedComponentV2'
+          type: array
+        incident_status:
+          description: Current status for this incident
+          enum:
+          - investigating
+          - identified
+          - monitoring
+          - resolved
+          example: investigating
+          type: string
+          x-public-api-version: v2
+        message:
+          description: Markdown update on what's changed about this status page incident
+          example: We are currently investigating reports of elevated error rates affecting our API.
+          maxLength: 4096
+          type: string
+        published_at:
+          description: When this update was published. Must be in the past.
+          example: '2021-08-17T13:28:57.801578Z'
+          format: date-time
+          type: string
+      required:
+      - incident_status
+      - message
+      - published_at
+      type: object
+    StatusPageStructureSubPageV2:
+      example:
+        id: 01FCNDV6P870EA6S7TK1DSYDG1
+        items:
+        - component:
+            component_id: 01FCNDV6P870EA6S7TK1DSYDG1
+            display_uptime: true
+            hidden: false
+            name: App
+          group:
+            components:
+            - component_id: 01FCNDV6P870EA6S7TK1DSYDG1
+              display_uptime: true
+              hidden: false
+              name: App
+            description: Services hosted in our EU data center
+            display_aggregated_uptime: true
+            hidden: false
+            id: 01FCNDV6P870EA6S7TK1DSYDG1
+            name: EU Data center
+        name: United Kingdom
+      properties:
+        id:
+          description: Unique ID of this subpage
+          example: 01FCNDV6P870EA6S7TK1DSYDG1
+          type: string
+        items:
+          description: Array of components and groups belonging to this subpage
+          example:
+          - component:
+              component_id: 01FCNDV6P870EA6S7TK1DSYDG1
+              display_uptime: true
+              hidden: false
+              name: App
+            group:
+              components:
+              - component_id: 01FCNDV6P870EA6S7TK1DSYDG1
+                display_uptime: true
+                hidden: false
+                name: App
+              description: Services hosted in our EU data center
+              display_aggregated_uptime: true
+              hidden: false
+              id: 01FCNDV6P870EA6S7TK1DSYDG1
+              name: EU Data center
+          items:
+            $ref: '#/components/schemas/StatusPageStructureSubPageItemV2'
+          type: array
+        name:
+          description: The name of this subpage
+          example: United Kingdom
+          type: string
+      required:
+      - id
+      - name
+      - items
+      type: object
+    StatusPageStructureV2:
+      example:
+        items:
+        - component:
+            component_id: 01FCNDV6P870EA6S7TK1DSYDG1
+            display_uptime: true
+            hidden: false
+            name: App
+          group:
+            components:
+            - component_id: 01FCNDV6P870EA6S7TK1DSYDG1
+              display_uptime: true
+              hidden: false
+              name: App
+            description: Services hosted in our EU data center
+            display_aggregated_uptime: true
+            hidden: false
+            id: 01FCNDV6P870EA6S7TK1DSYDG1
+            name: EU Data center
+          sub_page:
+            id: 01FCNDV6P870EA6S7TK1DSYDG1
+            items:
+            - component:
+                component_id: 01FCNDV6P870EA6S7TK1DSYDG1
+                display_uptime: true
+                hidden: false
+                name: App
+              group:
+                components:
+                - component_id: 01FCNDV6P870EA6S7TK1DSYDG1
+                  display_uptime: true
+                  hidden: false
+                  name: App
+                description: Services hosted in our EU data center
+                display_aggregated_uptime: true
+                hidden: false
+                id: 01FCNDV6P870EA6S7TK1DSYDG1
+                name: EU Data center
+            name: United Kingdom
+      properties:
+        items:
+          description: Array of components and groups to display in the status page
+          example:
+          - component:
+              component_id: 01FCNDV6P870EA6S7TK1DSYDG1
+              display_uptime: true
+              hidden: false
+              name: App
+            group:
+              components:
+              - component_id: 01FCNDV6P870EA6S7TK1DSYDG1
+                display_uptime: true
+                hidden: false
+                name: App
+              description: Services hosted in our EU data center
+              display_aggregated_uptime: true
+              hidden: false
+              id: 01FCNDV6P870EA6S7TK1DSYDG1
+              name: EU Data center
+            sub_page:
+              id: 01FCNDV6P870EA6S7TK1DSYDG1
+              items:
+              - component:
+                  component_id: 01FCNDV6P870EA6S7TK1DSYDG1
+                  display_uptime: true
+                  hidden: false
+                  name: App
+                group:
+                  components:
+                  - component_id: 01FCNDV6P870EA6S7TK1DSYDG1
+                    display_uptime: true
+                    hidden: false
+                    name: App
+                  description: Services hosted in our EU data center
+                  display_aggregated_uptime: true
+                  hidden: false
+                  id: 01FCNDV6P870EA6S7TK1DSYDG1
+                  name: EU Data center
+              name: United Kingdom
+          items:
+            $ref: '#/components/schemas/StatusPageStructureItemV2'
+          type: array
+      required:
+      - items
+      type: object
+    StatusPagesShowStatusPageIncidentResultV2:
+      example:
+        status_page_incident:
+          component_impacts:
+          - component_id: 01GW7P4ES31Q6V1ZQH321T0GJN
+            component_status: degraded_performance
+            end_at: '2021-08-17T13:28:57.801578Z'
+            start_at: '2021-08-17T13:28:57.801578Z'
+          id: 01FCNDV6P870EA6S7TK1DSYDG0
+          incident_status: investigating
+          name: Elevated API latency
+          published_at: '2021-08-17T13:28:57.801578Z'
+          status_page_id: 01FCNDV6P870EA6S7TK1DSYDG0
+          updates:
+          - component_statuses:
+            - component_id: 01FCNDV6P870EA6S7TK1DSYDG2
+              component_status: operational
+            id: 01FCNDV6P870EA6S7TK1DSYDG0
+            incident_status: investigating
+            message: abc123
+            published_at: '2021-08-17T13:28:57.801578Z'
+            status_page_incident_id: 01FCNDV6P870EA6S7TK1DSYDG1
+      properties:
+        status_page_incident:
+          $ref: '#/components/schemas/StatusPageIncidentV2'
+      type: object
+    ErrorRateLimit:
+      example:
+        limit: 100
+        name: client_ip
+        remaining: 98
+        retry_after: '2020-01-01T00:00:00Z'
+      properties:
+        limit:
+          description: The maximum number of requests that the consumer is permitted to make per minute
+          example: 100
+          format: int64
+          type: integer
+        name:
+          description: Which rate limit was exceeded
+          example: client_ip
+          type: string
+        remaining:
+          description: The number of requests remaining in the current rate limit window
+          example: 98
+          format: int64
+          type: integer
+        retry_after:
+          description: When the client can retry, as an RFC3339 timestamp in UTC. Prefer the Retry-After response header, which carries the same instant as a number of seconds
+          example: '2020-01-01T00:00:00Z'
+          type: string
+      required:
+      - name
+      - limit
+      - remaining
+      - retry_after
+      type: object
+    StatusPageStructureSubPageItemV2:
+      example:
+        component:
+          component_id: 01FCNDV6P870EA6S7TK1DSYDG1
+          display_uptime: true
+          hidden: false
+          name: App
+        group:
+          components:
+          - component_id: 01FCNDV6P870EA6S7TK1DSYDG1
+            display_uptime: true
+            hidden: false
+            name: App
+          description: Services hosted in our EU data center
+          display_aggregated_uptime: true
+          hidden: false
+          id: 01FCNDV6P870EA6S7TK1DSYDG1
+          name: EU Data center
+      properties:
+        component:
+          $ref: '#/components/schemas/StatusPageStructureComponentV2'
+        group:
+          $ref: '#/components/schemas/StatusPageStructureGroupV2'
+      type: object
+    StatusPagesCreateStatusPageRetrospectiveIncidentPayloadV2:
+      example:
+        idempotency_key: historical-incident-2021-08-17
+        name: Elevated API latency
+        status_page_id: 01FCNDV6P870EA6S7TK1DSYDG0
+        updates:
+        - component_statuses:
+          - component_id: 01FCNDV6P870EA6S7TK1DSYDG2
+            component_status: operational
+          incident_status: investigating
+          message: We are currently investigating reports of elevated error rates affecting our API.
+          published_at: '2021-08-17T13:28:57.801578Z'
+      properties:
+        idempotency_key:
+          description: A unique key to de-duplicate requests. If you send a request with an idempotency_key that was already used, the original response will be returned.
+          example: historical-incident-2021-08-17
+          type: string
+        name:
+          description: A title for the incident
+          example: Elevated API latency
+          maxLength: 200
+          type: string
+        status_page_id:
+          description: ID of the status page. You can find this by calling the ListStatusPages endpoint.
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+        updates:
+          description: The reconstructed timeline of updates for this incident, ordered chronologically (earliest first). The final update must set incident_status to "resolved".
+          example:
+          - component_statuses:
+            - component_id: 01FCNDV6P870EA6S7TK1DSYDG2
+              component_status: operational
+            incident_status: investigating
+            message: We are currently investigating reports of elevated error rates affecting our API.
+            published_at: '2021-08-17T13:28:57.801578Z'
+          items:
+            $ref: '#/components/schemas/StatusPageRetrospectiveIncidentUpdateV2'
+          type: array
+      required:
+      - status_page_id
+      - name
+      - idempotency_key
+      - updates
+      type: object
+    StatusPagesShowStatusPageMaintenanceResultV2:
+      example:
+        status_page_maintenance:
+          automate_maintenance_status: true
+          component_maintenance_periods:
+          - component_id: 01GW7P4ES31Q6V1ZQH321T0GJN
+            end_at: '2021-08-17T13:28:57.801578Z'
+            start_at: '2021-08-17T13:28:57.801578Z'
+          id: 01FCNDV6P870EA6S7TK1DSYDG0
+          maintenance_status: maintenance_scheduled
+          name: Routine infrastructure upgrade
+          published_at: '2021-08-17T13:28:57.801578Z'
+          status_page_id: 01FCNDV6P870EA6S7TK1DSYDG0
+          updates:
+          - component_statuses:
+            - component_id: 01FCNDV6P870EA6S7TK1DSYDG2
+              component_status: operational
+            id: 01FCNDV6P870EA6S7TK1DSYDG0
+            maintenance_status: maintenance_scheduled
+            message: abc123
+            published_at: '2021-08-17T13:28:57.801578Z'
+            status_page_maintenance_id: 01FCNDV6P870EA6S7TK1DSYDG1
+      properties:
+        status_page_maintenance:
+          $ref: '#/components/schemas/StatusPageMaintenanceV2'
+      type: object
+    StatusPagesUpdateStatusPageMaintenancePayloadV2:
+      example:
+        end_at: '2025-01-28T12:00:00Z'
+        name: Routine infrastructure upgrade
+        start_at: '2025-01-28T10:00:00Z'
+      properties:
+        end_at:
+          description: The time the maintenance window ends
+          example: '2025-01-28T12:00:00Z'
+          format: date-time
+          type: string
+        name:
+          description: A title for the maintenance window
+          example: Routine infrastructure upgrade
+          maxLength: 200
+          type: string
+        start_at:
+          description: The time the maintenance window starts
+          example: '2025-01-28T10:00:00Z'
+          format: date-time
+          type: string
+      required:
+      - name
+      - start_at
+      - end_at
+      type: object
+    ErrorDebug:
+      example:
+        message: 'Something broke: and something else: and something else'
+        stacktrace:
+        - thing.go:123
+      properties:
+        message:
+          description: Original internal error message
+          example: 'Something broke: and something else: and something else'
+          type: string
+        stacktrace:
+          description: Stacktrace of the error, if applicable
+          example:
+          - thing.go:123
+          items:
+            example: thing.go:123
+            type: string
+          type: array
+      required:
+      - message
+      - stacktrace
+      type: object
+    StatusPageMaintenanceAffectedComponentV2:
+      example:
+        component_id: 01FCNDV6P870EA6S7TK1DSYDG2
+        component_status: operational
+      properties:
+        component_id:
+          description: The ID of the affected component. This may be found by calling the ShowStatusPageStructure endpoint.
+          example: 01FCNDV6P870EA6S7TK1DSYDG2
+          type: string
+        component_status:
+          description: The status of the relevant component in a status page maintenance window
+          enum:
+          - operational
+          - under_maintenance
+          example: operational
+          type: string
+          x-public-api-version: v2
+      required:
+      - component_id
+      - component_status
+      type: object
+    StatusPageV2:
+      example:
+        description: This status page is our public status page.
+        id: 01FCNDV6P870EA6S7TK1DSYDG0
+        name: Our public status page
+        public_url: https://statuspage.incident.io/our-public-status-page
+      properties:
+        description:
+          description: The description of this status page
+          example: This status page is our public status page.
+          type: string
+        id:
+          description: Unique ID of this status page
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+        name:
+          description: The title of this status page
+          example: Our public status page
+          type: string
+        public_url:
+          description: The public URL of this status page
+          example: https://statuspage.incident.io/our-public-status-page
+          type: string
+      required:
+      - id
+      - name
+      type: object
+    StatusPagesUpdateStatusPageIncidentResultV2:
+      example:
+        status_page_incident:
+          component_impacts:
+          - component_id: 01GW7P4ES31Q6V1ZQH321T0GJN
+            component_status: degraded_performance
+            end_at: '2021-08-17T13:28:57.801578Z'
+            start_at: '2021-08-17T13:28:57.801578Z'
+          id: 01FCNDV6P870EA6S7TK1DSYDG0
+          incident_status: investigating
+          name: Elevated API latency
+          published_at: '2021-08-17T13:28:57.801578Z'
+          status_page_id: 01FCNDV6P870EA6S7TK1DSYDG0
+          updates:
+          - component_statuses:
+            - component_id: 01FCNDV6P870EA6S7TK1DSYDG2
+              component_status: operational
+            id: 01FCNDV6P870EA6S7TK1DSYDG0
+            incident_status: investigating
+            message: abc123
+            published_at: '2021-08-17T13:28:57.801578Z'
+            status_page_incident_id: 01FCNDV6P870EA6S7TK1DSYDG1
+      properties:
+        status_page_incident:
+          $ref: '#/components/schemas/StatusPageIncidentV2'
+      type: object
+    StatusPageIncidentAffectedComponentV2:
+      example:
+        component_id: 01FCNDV6P870EA6S7TK1DSYDG2
+        component_status: operational
+      properties:
+        component_id:
+          description: The ID of the affected component. This may be found by calling the ShowStatusPageStructure endpoint.
+          example: 01FCNDV6P870EA6S7TK1DSYDG2
+          type: string
+        component_status:
+          description: The status of the relevant component in a status page incident
+          enum:
+          - operational
+          - degraded_performance
+          - partial_outage
+          - full_outage
+          example: operational
+          type: string
+          x-public-api-version: v2
+      required:
+      - component_id
+      - component_status
+      type: object
+    StatusPagesCreateStatusPageRetrospectiveIncidentResultV2:
+      example:
+        status_page_incident:
+          component_impacts:
+          - component_id: 01GW7P4ES31Q6V1ZQH321T0GJN
+            component_status: degraded_performance
+            end_at: '2021-08-17T13:28:57.801578Z'
+            start_at: '2021-08-17T13:28:57.801578Z'
+          id: 01FCNDV6P870EA6S7TK1DSYDG0
+          incident_status: investigating
+          name: Elevated API latency
+          published_at: '2021-08-17T13:28:57.801578Z'
+          status_page_id: 01FCNDV6P870EA6S7TK1DSYDG0
+          updates:
+          - component_statuses:
+            - component_id: 01FCNDV6P870EA6S7TK1DSYDG2
+              component_status: operational
+            id: 01FCNDV6P870EA6S7TK1DSYDG0
+            incident_status: investigating
+            message: abc123
+            published_at: '2021-08-17T13:28:57.801578Z'
+            status_page_incident_id: 01FCNDV6P870EA6S7TK1DSYDG1
+      properties:
+        status_page_incident:
+          $ref: '#/components/schemas/StatusPageIncidentV2'
+      type: object
+    StatusPageComponentAvailabilityV2:
+      description: Availability of a status page component over a requested time window.
+      example:
+        availability_percent: '99.94'
+        component_id: 01FCNDV6P870EA6S7TK1DSYDG1
+        data_available_since: '2025-06-01T00:00:00Z'
+        end_at: '2026-02-01T00:00:00Z'
+        start_at: '2026-01-01T00:00:00Z'
+        status_page_id: 01FCNDV6P870EA6S7TK1DSYDG0
+      properties:
+        availability_percent:
+          description: Availability over the window as a percentage, floored (for example "99.94"). Omitted when we have no data covering the window.
+          example: '99.94'
+          type: string
+        component_id:
+          description: ID of the component. This may be found by calling the ShowStatusPageStructure endpoint.
+          example: 01FCNDV6P870EA6S7TK1DSYDG1
+          type: string
+        data_available_since:
+          description: Earliest time we have status data for this component. Before this, availability is unknown rather than assumed operational.
+          example: '2025-06-01T00:00:00Z'
+          format: date-time
+          type: string
+        end_at:
+          description: End of the requested availability window
+          example: '2026-02-01T00:00:00Z'
+          format: date-time
+          type: string
+        start_at:
+          description: Start of the requested availability window
+          example: '2026-01-01T00:00:00Z'
+          format: date-time
+          type: string
+        status_page_id:
+          description: ID of the status page
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+      required:
+      - status_page_id
+      - component_id
+      - start_at
+      - end_at
+      - data_available_since
+      type: object
+    StatusPagesShowStatusPageStructureResultV2:
+      example:
+        current_structure:
+          items:
+          - component:
+              component_id: 01FCNDV6P870EA6S7TK1DSYDG1
+              display_uptime: true
+              hidden: false
+              name: App
+            group:
+              components:
+              - component_id: 01FCNDV6P870EA6S7TK1DSYDG1
+                display_uptime: true
+                hidden: false
+                name: App
+              description: Services hosted in our EU data center
+              display_aggregated_uptime: true
+              hidden: false
+              id: 01FCNDV6P870EA6S7TK1DSYDG1
+              name: EU Data center
+            sub_page:
+              id: 01FCNDV6P870EA6S7TK1DSYDG1
+              items:
+              - component:
+                  component_id: 01FCNDV6P870EA6S7TK1DSYDG1
+                  display_uptime: true
+                  hidden: false
+                  name: App
+                group:
+                  components:
+                  - component_id: 01FCNDV6P870EA6S7TK1DSYDG1
+                    display_uptime: true
+                    hidden: false
+                    name: App
+                  description: Services hosted in our EU data center
+                  display_aggregated_uptime: true
+                  hidden: false
+                  id: 01FCNDV6P870EA6S7TK1DSYDG1
+                  name: EU Data center
+              name: United Kingdom
+        display_uptime_mode: chart_and_percentage
+        management_meta:
+          annotations:
+            incident.io/terraform/version: 3.0.0
+          managed_by: dashboard
+          source_url: https://github.com/my-company/infrastructure
+      properties:
+        current_structure:
+          $ref: '#/components/schemas/StatusPageStructureV2'
+        display_uptime_mode:
+          description: How the page shows uptime against its components
+          enum:
+          - chart_and_percentage
+          - chart_only
+          - nothing
+          example: chart_and_percentage
+          type: string
+        management_meta:
+          $ref: '#/components/schemas/ManagementMetaV2'
+      required:
+      - current_structure
+      - display_uptime_mode
+      - management_meta
+      type: object
+    StatusPageIncidentComponentImpactV2:
+      example:
+        component_id: 01GW7P4ES31Q6V1ZQH321T0GJN
+        component_status: degraded_performance
+        end_at: '2021-08-17T13:28:57.801578Z'
+        start_at: '2021-08-17T13:28:57.801578Z'
+      properties:
+        component_id:
+          description: The ID of the affected component. This may be found by calling the ShowStatusPageStructure endpoint.
+          example: 01GW7P4ES31Q6V1ZQH321T0GJN
+          type: string
+        component_status:
+          description: The status of the relevant component impact in a status page incident - this excludes the operational status.
+          enum:
+          - degraded_performance
+          - partial_outage
+          - full_outage
+          example: degraded_performance
+          type: string
+          x-public-api-version: v2
+        end_at:
+          description: When the component left this status. If this is null, the impact is ongoing.
+          example: '2021-08-17T13:28:57.801578Z'
+          format: date-time
+          type: string
+        start_at:
+          description: When the component entered this status
+          example: '2021-08-17T13:28:57.801578Z'
+          format: date-time
+          type: string
+      required:
+      - component_id
+      - component_status
+      - start_at
+      type: object
+    StatusPagesShowStatusPageResultV2:
+      example:
+        status_page:
+          description: This status page is our public status page.
+          id: 01FCNDV6P870EA6S7TK1DSYDG0
+          name: Our public status page
+          public_url: https://statuspage.incident.io/our-public-status-page
+      properties:
+        status_page:
+          $ref: '#/components/schemas/StatusPageV2'
+      required:
+      - status_page
+      type: object
+    StatusPageStructureGroupV2:
+      example:
+        components:
+        - component_id: 01FCNDV6P870EA6S7TK1DSYDG1
+          display_uptime: true
+          hidden: false
+          name: App
+        description: Services hosted in our EU data center
+        display_aggregated_uptime: true
+        hidden: false
+        id: 01FCNDV6P870EA6S7TK1DSYDG1
+        name: EU Data center
+      properties:
+        components:
+          description: Array of components belonging to this group
+          example:
+          - component_id: 01FCNDV6P870EA6S7TK1DSYDG1
+            display_uptime: true
+            hidden: false
+            name: App
+          items:
+            $ref: '#/components/schemas/StatusPageStructureComponentV2'
+          type: array
+        description:
+          description: A description shown under the group's name
+          example: Services hosted in our EU data center
+          type: string
+        display_aggregated_uptime:
+          description: Whether the page shows uptime aggregated across the group's components
+          example: true
+          type: boolean
+        hidden:
+          description: Whether the group is hidden from the page
+          example: false
+          type: boolean
+        id:
+          description: Unique ID of this component group
+          example: 01FCNDV6P870EA6S7TK1DSYDG1
+          type: string
+        name:
+          description: The name of this component group
+          example: EU Data center
+          type: string
+      required:
+      - id
+      - name
+      - hidden
+      - display_aggregated_uptime
+      - components
+      type: object
+    StatusPageStructureItemV2:
+      example:
+        component:
+          component_id: 01FCNDV6P870EA6S7TK1DSYDG1
+          display_uptime: true
+          hidden: false
+          name: App
+        group:
+          components:
+          - component_id: 01FCNDV6P870EA6S7TK1DSYDG1
+            display_uptime: true
+            hidden: false
+            name: App
+          description: Services hosted in our EU data center
+          display_aggregated_uptime: true
+          hidden: false
+          id: 01FCNDV6P870EA6S7TK1DSYDG1
+          name: EU Data center
+        sub_page:
+          id: 01FCNDV6P870EA6S7TK1DSYDG1
+          items:
+          - component:
+              component_id: 01FCNDV6P870EA6S7TK1DSYDG1
+              display_uptime: true
+              hidden: false
+              name: App
+            group:
+              components:
+              - component_id: 01FCNDV6P870EA6S7TK1DSYDG1
+                display_uptime: true
+                hidden: false
+                name: App
+              description: Services hosted in our EU data center
+              display_aggregated_uptime: true
+              hidden: false
+              id: 01FCNDV6P870EA6S7TK1DSYDG1
+              name: EU Data center
+          name: United Kingdom
+      properties:
+        component:
+          $ref: '#/components/schemas/StatusPageStructureComponentV2'
+        group:
+          $ref: '#/components/schemas/StatusPageStructureGroupV2'
+        sub_page:
+          $ref: '#/components/schemas/StatusPageStructureSubPageV2'
+      type: object
+    StatusPagesCreateStatusPageMaintenanceUpdateResultV2:
+      example:
+        status_page_maintenance_update:
+          component_statuses:
+          - component_id: 01FCNDV6P870EA6S7TK1DSYDG2
+            component_status: operational
+          id: 01FCNDV6P870EA6S7TK1DSYDG0
+          maintenance_status: maintenance_scheduled
+          message: abc123
+          published_at: '2021-08-17T13:28:57.801578Z'
+          status_page_maintenance_id: 01FCNDV6P870EA6S7TK1DSYDG1
+      properties:
+        status_page_maintenance_update:
+          $ref: '#/components/schemas/StatusPageMaintenanceUpdateV2'
+      type: object
+    StatusPagesListStatusPageIncidentsResultV2:
+      example:
+        pagination_meta:
+          after: 01FCNDV6P870EA6S7TK1DSYDG0
+          page_size: 25
+        status_page_incidents:
+        - component_impacts:
+          - component_id: 01GW7P4ES31Q6V1ZQH321T0GJN
+            component_status: degraded_performance
+            end_at: '2021-08-17T13:28:57.801578Z'
+            start_at: '2021-08-17T13:28:57.801578Z'
+          id: 01FCNDV6P870EA6S7TK1DSYDG0
+          incident_status: investigating
+          name: Elevated API latency
+          published_at: '2021-08-17T13:28:57.801578Z'
+          status_page_id: 01FCNDV6P870EA6S7TK1DSYDG0
+          updates:
+          - component_statuses:
+            - component_id: 01FCNDV6P870EA6S7TK1DSYDG2
+              component_status: operational
+            id: 01FCNDV6P870EA6S7TK1DSYDG0
+            incident_status: investigating
+            message: abc123
+            published_at: '2021-08-17T13:28:57.801578Z'
+            status_page_incident_id: 01FCNDV6P870EA6S7TK1DSYDG1
+      properties:
+        pagination_meta:
+          $ref: '#/components/schemas/PaginationMetaResultV2'
+        status_page_incidents:
+          example:
+          - component_impacts:
+            - component_id: 01GW7P4ES31Q6V1ZQH321T0GJN
+              component_status: degraded_performance
+              end_at: '2021-08-17T13:28:57.801578Z'
+              start_at: '2021-08-17T13:28:57.801578Z'
+            id: 01FCNDV6P870EA6S7TK1DSYDG0
+            incident_status: investigating
+            name: Elevated API latency
+            published_at: '2021-08-17T13:28:57.801578Z'
+            status_page_id: 01FCNDV6P870EA6S7TK1DSYDG0
+            updates:
+            - component_statuses:
+              - component_id: 01FCNDV6P870EA6S7TK1DSYDG2
+                component_status: operational
+              id: 01FCNDV6P870EA6S7TK1DSYDG0
+              incident_status: investigating
+              message: abc123
+              published_at: '2021-08-17T13:28:57.801578Z'
+              status_page_incident_id: 01FCNDV6P870EA6S7TK1DSYDG1
+          items:
+            $ref: '#/components/schemas/StatusPageIncidentV2'
+          type: array
+      required:
+      - status_page_incidents
+      - pagination_meta
+      type: object
+    ErrorSingle:
+      example:
+        code: trial_expired
+        message: Default incident call link must be a valid URL
+        metadata:
+          abc123: abc123
+        source:
+          field: default_call_url
+          pointer: /settings/default_call_url
+      properties:
+        code:
+          description: Machine-readable identifier for this specific error
+          example: trial_expired
+          type: string
+        message:
+          description: Human readable description of the error
+          example: Default incident call link must be a valid URL
+          type: string
+        metadata:
+          additionalProperties:
+            example: abc123
+            type: string
+          description: Additional metadata about the error, keyed by a string identifier
+          example:
+            abc123: abc123
+          type: object
+        source:
+          $ref: '#/components/schemas/ErrorSource'
+      required:
+      - code
+      - message
+      type: object
+  securitySchemes:
+    BearerAuth:
+      description: API key from your incident.io dashboard (Settings > API keys)
+      scheme: bearer
+      type: http
+externalDocs:
+  description: View our API docs at api-docs.incident.io
+  url: https://api-docs.incident.io/

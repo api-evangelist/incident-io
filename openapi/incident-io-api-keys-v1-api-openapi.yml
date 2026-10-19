@@ -1,0 +1,1984 @@
+openapi: 3.2.0
+info:
+  description: 'This is the API reference for incident.io. It documents available API endpoints, provides examples of how to use it, and
+
+    instructions around things like authentication and error handling. The API is hosted at:
+
+
+    - https://api.incident.io/
+
+
+    And you will need to create an API key via your incident.io
+
+    dashboard to make requests. # Making requests
+
+
+    Here are the key concepts required to make requests to the incident.io API. ## Authentication
+
+
+    For all requests made to the incident.io API, you''ll need an API key. To create an API key, head to the incident dashboard and visit API
+
+    keys. When you create the key, you''ll be able to choose what actions it
+
+    can take for your account: choose carefully, as those roles can only be set
+
+    when you first create the key. We''ll only show you the token once, so make sure
+
+    you store it somewhere safe. API keys are global to your incident.io account, and can be managed by anyone
+
+    who has the right permissions. We display the user that created the API key,
+
+    and the API key will remain valid if that user becomes deactivated. Once you have the key, you should make requests to the API that set the
+
+    `Authorization` request header using a "Bearer" authentication scheme:
+
+
+    ```
+
+    Authorization: Bearer
+
+    ```
+
+
+    ## Rate Limits
+
+
+    The incident.io API enforces rate limits to ensure consistent performance for all users. The default rate limit is 1200 requests/minute per API key. This limit applies to most endpoints across the API. Limits are token buckets that refill continuously rather than resetting on a fixed window boundary. The default
+
+    bucket holds 1200 requests and refills at 20 per second, so you can burst up to the full bucket and then sustain
+
+    20 requests/second indefinitely. There is no boundary at which your quota resets to full in one step. Some endpoints have lower rate limits, particularly those that interact with external third-party systems that impose
+
+    their own limitations. These specific limits vary by endpoint. ### Rate limit headers
+
+
+    Responses to requests authenticated with an API key carry your current allowance, so you can pace yourself rather
+
+    than waiting to be throttled:
+
+
+    ```
+
+    X-RateLimit-Limit: 60, 1200;window=60, 60;window=60
+
+    X-RateLimit-Remaining: 59
+
+    X-RateLimit-Used: 1
+
+    X-RateLimit-Reset: 1785173199
+
+    ```
+
+
+    | Header | Meaning |
+
+    | --- | --- |
+
+    | `X-RateLimit-Limit` | The quota that binds this request, followed by every limit that applied and the window it applies over |
+
+    | `X-RateLimit-Remaining` | Requests you can make right now against the binding limit |
+
+    | `X-RateLimit-Used` | Requests you have spent against it |
+
+    | `X-RateLimit-Reset` | Unix timestamp (seconds) at which that limit will be back to full |
+
+
+    More than one limit can apply to a request: your API key''s overall limit, and for some endpoints a lower limit of
+
+    their own. `X-RateLimit-Limit` lists all of them, each with its window, so `1200;window=60` means 1200 requests per
+
+    minute. Because our limits refill continuously rather than resetting on a boundary, that window is what tells you
+
+    the rate you can sustain: 1200 per 60 seconds is 20 requests/second indefinitely. `Remaining`, `Used` and `Reset` describe whichever limit has the least allowance left, since that is the one you
+
+    will hit first. `X-RateLimit-Remaining` may lag by a small number of requests under high concurrency, and can move by more than the
+
+    requests you made, because limits scoped to your whole organisation are shared with your other API keys. Headers are omitted rather than guessed if we cannot determine your allowance for a request. ### Exceeding a rate limit
+
+
+    When you exceed a rate limit the API responds with `429 Too Many Requests` and a `Retry-After` header giving the
+
+    number of seconds to wait:
+
+
+    ```
+
+    X-RateLimit-Limit: 1200, 1200;window=60
+
+    X-RateLimit-Remaining: 0
+
+    X-RateLimit-Used: 1200
+
+    X-RateLimit-Reset: 1785173199
+
+    Retry-After: 1
+
+    ```
+
+
+    Prefer `Retry-After` over `X-RateLimit-Reset` when deciding how long to back off.'
+  title: incident.io API Keys V1 API
+  version: 1.0.0
+servers:
+- url: https://api.incident.io
+security:
+- BearerAuth: []
+tags:
+- description: 'Manage API keys for your organization.
+
+
+    This API lets you view, create, update, delete, and rotate API keys programmatically, including configuring account-level roles and roles scoped to specific teams.
+
+
+    Common use cases include:
+
+    - **API key rotation**: You can issue a new access token for any API key using the `Rotate` endpoint.
+
+    - **Managing keys at scale**: use the `Show`, `List`, `Create`, `Update`, and `Delete` endpoints to automate API key lifecycle management.
+
+
+    ## Permissions model
+
+
+    To use these endpoints, your API key must have the `api_keys_manage` role granted at either the account level or for specific teams.
+
+
+    In addition, the following rules apply, when a "caller" API key is managing a "target" API key:
+
+
+    - A caller key can only assign roles whose scopes are a subset of its own scopes. For example, a key with `viewer` and `incident_creator` can assign those roles to a target key, but cannot assign the `incident_editor` role, since it has additional scopes.
+
+    - The same applies at the team level: A caller key with `schedules_editor` at the account level can create a target key with that role for a specific team, but a key with `schedules_editor` only for one team (Team A, say) cannot assign it at the account level or for another team, Team B.
+
+    - The `api_keys_manage` role cannot be assigned via the API. To create a key with that role, you must go to Settings → API keys in the dashboard, and click "Add new", creating a key with the "View, create, edit, delete or rotate API keys" role (`api_keys_manage`).
+
+    - The `Delete` endpoint does not check whether the calling API key holds the scopes of the key being deleted. However, a team-scoped key can only delete keys belonging to its teams.
+
+    - To rotate the token of an API key, use the Rotate endpoint or by clicking "Rotate token" on any API key listed in the dashboard. The same permissions limitations apply as when creating or updating an API key.
+
+
+    ## Finding role names and team IDs
+
+
+    To find valid values for `role_names`, `team_ids`, and `team_role_names`, go to Settings → API keys in the dashboard. Click to either edit an existing key or create a new one, select the desired roles and teams, and then use the copy button to get hold of the role and team identifiers as JSON.'
+  name: API Keys V1
+paths:
+  /v1/api_keys:
+    get:
+      description: 'List API keys visible to the calling API key, with pagination. An API key with account-level `api_keys_manage` access will see all keys, while a key with the `api_keys_manage` role scoped to specific teams will only see keys belonging to those teams.
+
+
+        This endpoint requires a valid API key with the `api_keys_manage` role at either the account level or team level.'
+      operationId: APIKeysV1#List
+      parameters:
+      - allowEmptyValue: true
+        description: Integer number of records to return
+        example: 25
+        in: query
+        name: page_size
+        schema:
+          default: 25
+          description: Integer number of records to return
+          example: 25
+          format: int64
+          maximum: 250
+          minimum: 1
+          type: integer
+      - allowEmptyValue: true
+        description: An record's ID. This endpoint will return a list of records after this ID in relation to the API response order.
+        example: 01FDAG4SAP5TYPT98WGR2N7W91
+        in: query
+        name: after
+        schema:
+          description: An record's ID. This endpoint will return a list of records after this ID in relation to the API response order.
+          example: 01FDAG4SAP5TYPT98WGR2N7W91
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              example:
+                api_keys:
+                - comments: Requested in https://example.slack.com/archives/C123/p456
+                  created_at: '2021-08-17T13:28:57.801578Z'
+                  creator:
+                    api_key:
+                      id: 01FCNDV6P870EA6S7TK1DSYDG0
+                      name: My test API key
+                    user:
+                      email: lisa@incident.io
+                      id: 01FCNDV6P870EA6S7TK1DSYDG0
+                      name: Lisa Karlin Curtis
+                      role: viewer
+                      slack_user_id: U02AYNF2XJM
+                  id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  last_used_at: '2021-08-17T13:28:57.801578Z'
+                  name: My test API key
+                  roles:
+                  - description: can view data, like public incidents and organization settings
+                    name: viewer
+                  team_ids:
+                  - abc123
+                  team_roles:
+                  - description: can view data, like public incidents and organization settings
+                    name: catalog_editor
+                  token_last_issued_at: '2021-08-17T13:28:57.801578Z'
+                pagination_meta:
+                  after: 01FCNDV6P870EA6S7TK1DSYDG0
+                  page_size: 25
+              schema:
+                $ref: '#/components/schemas/APIKeysListResultV1'
+          description: OK response.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'invalid_request_error: There was a problem with the request, like a missing header or querying a resource that doesn''t exist.'
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'authentication_error: Authentication failed.'
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'resource_forbidden: Access to this resource is forbidden for the authenticated user.'
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_found: The referenced resource could not be found.'
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'method_not_allowed: The endpoint does not support this operation for the specified resource.'
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_acceptable: Requested a media type this endpoint does not support.'
+        '408':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'request_timeout: The request took too long to process.
+
+
+            client_timeout: The request was cancelled by the client.'
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'conflict: Request conflicted with current state of the resource, likely a concurrent update.'
+        '412':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'precondition_failed: A required condition hasn''t been met.'
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'payload_too_large: The request payload is too large.'
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'validation_error: A required field was not provided, or the provided data was invalid.'
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'too_many_requests: Too many requests hit the API too quickly. We recommend an exponential backoff of your requests.
+
+
+            rate_limit_reached: The rate limit associated with this resource or API key has been exceeded. Try again later.'
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'api_error: Something went wrong and has been reported internally.'
+      summary: List API Keys V1
+      tags:
+      - API Keys V1
+      x-docs-display-name: List
+      x-docs-group-name: API Keys V1
+      x-docs-resource-type: APIKeyV1
+      x-mint:
+        content: 🔑 Requires the `api_keys.view` scope.
+      x-rbac-scopes:
+      - api_keys.view
+      x-operation-id-source: normalized
+      x-operation-id-original: API Keys V1#List
+    post:
+      description: 'Create a new API key. The calling API key can only assign roles whose scopes are a subset of its own. The `api_keys_manage` role cannot be assigned via the API. An organization can have a maximum of 5000 active API keys.
+
+
+        This endpoint requires a valid API key with the `api_keys_manage` role at either the account level or team level.'
+      operationId: APIKeysV1#Create
+      requestBody:
+        content:
+          application/json:
+            example:
+              comments: Requested in https://example.slack.com/archives/C123/p456
+              name: My test API key
+              role_names:
+              - viewer
+              - incident_creator
+              team_ids:
+              - 01FCNDV6P870EA6S7TK1DSYDG0
+              team_role_names:
+              - schedules_editor
+            schema:
+              $ref: '#/components/schemas/APIKeysCreatePayloadV1'
+        required: true
+      responses:
+        '201':
+          content:
+            application/json:
+              example:
+                api_key:
+                  comments: Requested in https://example.slack.com/archives/C123/p456
+                  created_at: '2021-08-17T13:28:57.801578Z'
+                  creator:
+                    api_key:
+                      id: 01FCNDV6P870EA6S7TK1DSYDG0
+                      name: My test API key
+                    user:
+                      email: lisa@incident.io
+                      id: 01FCNDV6P870EA6S7TK1DSYDG0
+                      name: Lisa Karlin Curtis
+                      role: viewer
+                      slack_user_id: U02AYNF2XJM
+                  id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  last_used_at: '2021-08-17T13:28:57.801578Z'
+                  name: My test API key
+                  roles:
+                  - description: can view data, like public incidents and organization settings
+                    name: viewer
+                  team_ids:
+                  - abc123
+                  team_roles:
+                  - description: can view data, like public incidents and organization settings
+                    name: catalog_editor
+                  token_last_issued_at: '2021-08-17T13:28:57.801578Z'
+                token: REDACTED_INCIDENT_API_KEY
+              schema:
+                $ref: '#/components/schemas/APIKeysCreateResultV1'
+          description: Created response.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'invalid_request_error: There was a problem with the request, like a missing header or querying a resource that doesn''t exist.'
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'authentication_error: Authentication failed.'
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'resource_forbidden: Access to this resource is forbidden for the authenticated user.'
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_found: The referenced resource could not be found.'
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'method_not_allowed: The endpoint does not support this operation for the specified resource.'
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_acceptable: Requested a media type this endpoint does not support.'
+        '408':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'request_timeout: The request took too long to process.
+
+
+            client_timeout: The request was cancelled by the client.'
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'conflict: Request conflicted with current state of the resource, likely a concurrent update.'
+        '412':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'precondition_failed: A required condition hasn''t been met.'
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'payload_too_large: The request payload is too large.'
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'validation_error: A required field was not provided, or the provided data was invalid.'
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'too_many_requests: Too many requests hit the API too quickly. We recommend an exponential backoff of your requests.
+
+
+            rate_limit_reached: The rate limit associated with this resource or API key has been exceeded. Try again later.'
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'api_error: Something went wrong and has been reported internally.'
+      summary: Create API Keys V1
+      tags:
+      - API Keys V1
+      x-docs-display-name: Create
+      x-docs-group-name: API Keys V1
+      x-docs-resource-type: APIKeyV1
+      x-mint:
+        content: 🔑 Requires the `api_keys.create` scope.
+      x-rbac-scopes:
+      - api_keys.create
+      x-operation-id-source: normalized
+      x-operation-id-original: API Keys V1#Create
+  /v1/api_keys/{id}:
+    delete:
+      description: 'Delete an existing API key. The calling API key does not need to hold the scopes of the key being deleted, but a team-scoped key can only delete keys belonging to its teams.
+
+
+        This endpoint requires a valid API key with the `api_keys_manage` role at either the account level or team level.'
+      operationId: APIKeysV1#Delete
+      parameters:
+      - description: Unique identifier of the API key to delete
+        example: 01FCNDV6P870EA6S7TK1DSYDG0
+        in: path
+        name: id
+        required: true
+        schema:
+          description: Unique identifier of the API key to delete
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+      responses:
+        '204':
+          description: No Content response.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'invalid_request_error: There was a problem with the request, like a missing header or querying a resource that doesn''t exist.'
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'authentication_error: Authentication failed.'
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'resource_forbidden: Access to this resource is forbidden for the authenticated user.'
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_found: The referenced resource could not be found.'
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'method_not_allowed: The endpoint does not support this operation for the specified resource.'
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_acceptable: Requested a media type this endpoint does not support.'
+        '408':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'request_timeout: The request took too long to process.
+
+
+            client_timeout: The request was cancelled by the client.'
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'conflict: Request conflicted with current state of the resource, likely a concurrent update.'
+        '412':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'precondition_failed: A required condition hasn''t been met.'
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'payload_too_large: The request payload is too large.'
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'validation_error: A required field was not provided, or the provided data was invalid.'
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'too_many_requests: Too many requests hit the API too quickly. We recommend an exponential backoff of your requests.
+
+
+            rate_limit_reached: The rate limit associated with this resource or API key has been exceeded. Try again later.'
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'api_error: Something went wrong and has been reported internally.'
+      summary: Delete API Keys V1
+      tags:
+      - API Keys V1
+      x-docs-display-name: Delete
+      x-docs-group-name: API Keys V1
+      x-docs-resource-type: APIKeyV1
+      x-mint:
+        content: 🔑 Requires the `api_keys.destroy` scope.
+      x-rbac-scopes:
+      - api_keys.destroy
+      x-operation-id-source: normalized
+      x-operation-id-original: API Keys V1#Delete
+    get:
+      description: 'Show details of a specific API key, including its roles, team assignments and when its token was last issued.
+
+
+        This endpoint requires a valid API key with the `api_keys_manage` role at either the account level or team level.'
+      operationId: APIKeysV1#Show
+      parameters:
+      - description: Unique identifier of the API key to retrieve
+        example: 01FCNDV6P870EA6S7TK1DSYDG0
+        in: path
+        name: id
+        required: true
+        schema:
+          description: Unique identifier of the API key to retrieve
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              example:
+                api_key:
+                  comments: Requested in https://example.slack.com/archives/C123/p456
+                  created_at: '2021-08-17T13:28:57.801578Z'
+                  creator:
+                    api_key:
+                      id: 01FCNDV6P870EA6S7TK1DSYDG0
+                      name: My test API key
+                    user:
+                      email: lisa@incident.io
+                      id: 01FCNDV6P870EA6S7TK1DSYDG0
+                      name: Lisa Karlin Curtis
+                      role: viewer
+                      slack_user_id: U02AYNF2XJM
+                  id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  last_used_at: '2021-08-17T13:28:57.801578Z'
+                  name: My test API key
+                  roles:
+                  - description: can view data, like public incidents and organization settings
+                    name: viewer
+                  team_ids:
+                  - abc123
+                  team_roles:
+                  - description: can view data, like public incidents and organization settings
+                    name: catalog_editor
+                  token_last_issued_at: '2021-08-17T13:28:57.801578Z'
+              schema:
+                $ref: '#/components/schemas/APIKeysShowResultV1'
+          description: OK response.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'invalid_request_error: There was a problem with the request, like a missing header or querying a resource that doesn''t exist.'
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'authentication_error: Authentication failed.'
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'resource_forbidden: Access to this resource is forbidden for the authenticated user.'
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_found: The referenced resource could not be found.'
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'method_not_allowed: The endpoint does not support this operation for the specified resource.'
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_acceptable: Requested a media type this endpoint does not support.'
+        '408':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'request_timeout: The request took too long to process.
+
+
+            client_timeout: The request was cancelled by the client.'
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'conflict: Request conflicted with current state of the resource, likely a concurrent update.'
+        '412':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'precondition_failed: A required condition hasn''t been met.'
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'payload_too_large: The request payload is too large.'
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'validation_error: A required field was not provided, or the provided data was invalid.'
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'too_many_requests: Too many requests hit the API too quickly. We recommend an exponential backoff of your requests.
+
+
+            rate_limit_reached: The rate limit associated with this resource or API key has been exceeded. Try again later.'
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'api_error: Something went wrong and has been reported internally.'
+      summary: Show API Keys V1
+      tags:
+      - API Keys V1
+      x-docs-display-name: Show
+      x-docs-group-name: API Keys V1
+      x-docs-resource-type: APIKeyV1
+      x-mint:
+        content: 🔑 Requires the `api_keys.view` scope.
+      x-rbac-scopes:
+      - api_keys.view
+      x-operation-id-source: normalized
+      x-operation-id-original: API Keys V1#Show
+    put:
+      description: 'Update an existing API key''s name, roles, or team assignments. All fields must be provided (PUT semantics). The calling API key can only assign roles whose scopes are a subset of its own. An API key cannot edit itself, and the `api_keys_manage` role cannot be assigned via the API.
+
+
+        This endpoint requires a valid API key with the `api_keys_manage` role at either the account level or team level.'
+      operationId: APIKeysV1#Update
+      parameters:
+      - description: Unique identifier of the API key to update
+        example: 01FCNDV6P870EA6S7TK1DSYDG0
+        in: path
+        name: id
+        required: true
+        schema:
+          description: Unique identifier of the API key to update
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+      requestBody:
+        content:
+          application/json:
+            example:
+              comments: Requested in https://example.slack.com/archives/C123/p456
+              name: My test API key
+              role_names:
+              - viewer
+              - incident_creator
+              team_ids:
+              - 01FCNDV6P870EA6S7TK1DSYDG0
+              team_role_names:
+              - schedules_editor
+            schema:
+              $ref: '#/components/schemas/APIKeysUpdatePayloadV1'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              example:
+                api_key:
+                  comments: Requested in https://example.slack.com/archives/C123/p456
+                  created_at: '2021-08-17T13:28:57.801578Z'
+                  creator:
+                    api_key:
+                      id: 01FCNDV6P870EA6S7TK1DSYDG0
+                      name: My test API key
+                    user:
+                      email: lisa@incident.io
+                      id: 01FCNDV6P870EA6S7TK1DSYDG0
+                      name: Lisa Karlin Curtis
+                      role: viewer
+                      slack_user_id: U02AYNF2XJM
+                  id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  last_used_at: '2021-08-17T13:28:57.801578Z'
+                  name: My test API key
+                  roles:
+                  - description: can view data, like public incidents and organization settings
+                    name: viewer
+                  team_ids:
+                  - abc123
+                  team_roles:
+                  - description: can view data, like public incidents and organization settings
+                    name: catalog_editor
+                  token_last_issued_at: '2021-08-17T13:28:57.801578Z'
+              schema:
+                $ref: '#/components/schemas/APIKeysUpdateResultV1'
+          description: OK response.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'invalid_request_error: There was a problem with the request, like a missing header or querying a resource that doesn''t exist.'
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'authentication_error: Authentication failed.'
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'resource_forbidden: Access to this resource is forbidden for the authenticated user.'
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_found: The referenced resource could not be found.'
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'method_not_allowed: The endpoint does not support this operation for the specified resource.'
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_acceptable: Requested a media type this endpoint does not support.'
+        '408':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'request_timeout: The request took too long to process.
+
+
+            client_timeout: The request was cancelled by the client.'
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'conflict: Request conflicted with current state of the resource, likely a concurrent update.'
+        '412':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'precondition_failed: A required condition hasn''t been met.'
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'payload_too_large: The request payload is too large.'
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'validation_error: A required field was not provided, or the provided data was invalid.'
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'too_many_requests: Too many requests hit the API too quickly. We recommend an exponential backoff of your requests.
+
+
+            rate_limit_reached: The rate limit associated with this resource or API key has been exceeded. Try again later.'
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'api_error: Something went wrong and has been reported internally.'
+      summary: Update API Keys V1
+      tags:
+      - API Keys V1
+      x-docs-display-name: Update
+      x-docs-group-name: API Keys V1
+      x-docs-resource-type: APIKeyV1
+      x-mint:
+        content: 🔑 Requires the `api_keys.update` scope.
+      x-rbac-scopes:
+      - api_keys.update
+      x-operation-id-source: normalized
+      x-operation-id-original: API Keys V1#Update
+  /v1/api_keys/{id}/actions/rotate:
+    post:
+      description: 'Rotate the access token for an API key. This generates a new bearer token and optionally keeps the old token valid for a configurable grace period (up to 60 minutes), allowing a seamless rollover without downtime. The calling API key must have all the scopes of the key being rotated.
+
+
+        This endpoint requires a valid API key with the `api_keys_manage` role at either the account level or team level.'
+      operationId: APIKeysV1#Rotate
+      parameters:
+      - description: Unique identifier of the API key to rotate
+        example: 01FCNDV6P870EA6S7TK1DSYDG0
+        in: path
+        name: id
+        required: true
+        schema:
+          description: Unique identifier of the API key to rotate
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+      requestBody:
+        content:
+          application/json:
+            example:
+              grace_period_minutes: 30
+            schema:
+              $ref: '#/components/schemas/APIKeysRotatePayloadV1'
+        required: true
+      responses:
+        '201':
+          content:
+            application/json:
+              example:
+                api_key:
+                  comments: Requested in https://example.slack.com/archives/C123/p456
+                  created_at: '2021-08-17T13:28:57.801578Z'
+                  creator:
+                    api_key:
+                      id: 01FCNDV6P870EA6S7TK1DSYDG0
+                      name: My test API key
+                    user:
+                      email: lisa@incident.io
+                      id: 01FCNDV6P870EA6S7TK1DSYDG0
+                      name: Lisa Karlin Curtis
+                      role: viewer
+                      slack_user_id: U02AYNF2XJM
+                  id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  last_used_at: '2021-08-17T13:28:57.801578Z'
+                  name: My test API key
+                  roles:
+                  - description: can view data, like public incidents and organization settings
+                    name: viewer
+                  team_ids:
+                  - abc123
+                  team_roles:
+                  - description: can view data, like public incidents and organization settings
+                    name: catalog_editor
+                  token_last_issued_at: '2021-08-17T13:28:57.801578Z'
+                token: REDACTED_INCIDENT_API_KEY
+              schema:
+                $ref: '#/components/schemas/APIKeysRotateResultV1'
+          description: Created response.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'invalid_request_error: There was a problem with the request, like a missing header or querying a resource that doesn''t exist.'
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'authentication_error: Authentication failed.'
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'resource_forbidden: Access to this resource is forbidden for the authenticated user.'
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_found: The referenced resource could not be found.'
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'method_not_allowed: The endpoint does not support this operation for the specified resource.'
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_acceptable: Requested a media type this endpoint does not support.'
+        '408':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'request_timeout: The request took too long to process.
+
+
+            client_timeout: The request was cancelled by the client.'
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'conflict: Request conflicted with current state of the resource, likely a concurrent update.'
+        '412':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'precondition_failed: A required condition hasn''t been met.'
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'payload_too_large: The request payload is too large.'
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'validation_error: A required field was not provided, or the provided data was invalid.'
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'too_many_requests: Too many requests hit the API too quickly. We recommend an exponential backoff of your requests.
+
+
+            rate_limit_reached: The rate limit associated with this resource or API key has been exceeded. Try again later.'
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'api_error: Something went wrong and has been reported internally.'
+      summary: Rotate API Keys V1
+      tags:
+      - API Keys V1
+      x-docs-display-name: Rotate
+      x-docs-group-name: API Keys V1
+      x-docs-resource-type: APIKeyV1
+      x-mint:
+        content: 🔑 Requires the `api_keys.rotate` scope.
+      x-rbac-scopes:
+      - api_keys.rotate
+      x-operation-id-source: normalized
+      x-operation-id-original: API Keys V1#Rotate
+components:
+  schemas:
+    ActorV1:
+      example:
+        api_key:
+          id: 01FCNDV6P870EA6S7TK1DSYDG0
+          name: My test API key
+        user:
+          email: lisa@incident.io
+          id: 01FCNDV6P870EA6S7TK1DSYDG0
+          name: Lisa Karlin Curtis
+          role: viewer
+          slack_user_id: U02AYNF2XJM
+      properties:
+        api_key:
+          $ref: '#/components/schemas/APIKeyActorV1'
+        user:
+          $ref: '#/components/schemas/UserV1'
+      type: object
+    APIKeyActorV1:
+      example:
+        id: 01FCNDV6P870EA6S7TK1DSYDG0
+        name: My test API key
+      properties:
+        id:
+          description: Unique identifier for this API key
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+        name:
+          description: The name of the API key, for the user's reference
+          example: My test API key
+          type: string
+      required:
+      - id
+      - name
+      type: object
+    APIKeysCreateResultV1:
+      example:
+        api_key:
+          comments: Requested in https://example.slack.com/archives/C123/p456
+          created_at: '2021-08-17T13:28:57.801578Z'
+          creator:
+            api_key:
+              id: 01FCNDV6P870EA6S7TK1DSYDG0
+              name: My test API key
+            user:
+              email: lisa@incident.io
+              id: 01FCNDV6P870EA6S7TK1DSYDG0
+              name: Lisa Karlin Curtis
+              role: viewer
+              slack_user_id: U02AYNF2XJM
+          id: 01FCNDV6P870EA6S7TK1DSYDG0
+          last_used_at: '2021-08-17T13:28:57.801578Z'
+          name: My test API key
+          roles:
+          - description: can view data, like public incidents and organization settings
+            name: viewer
+          team_ids:
+          - abc123
+          team_roles:
+          - description: can view data, like public incidents and organization settings
+            name: catalog_editor
+          token_last_issued_at: '2021-08-17T13:28:57.801578Z'
+        token: REDACTED_INCIDENT_API_KEY
+      properties:
+        api_key:
+          $ref: '#/components/schemas/APIKeyV1'
+        token:
+          description: The bearer token to use in API requests. This is the only time the token is returned — store it securely.
+          example: REDACTED_INCIDENT_API_KEY
+          type: string
+      required:
+      - api_key
+      - token
+      type: object
+    ErrorResponse:
+      example:
+        debug:
+          message: 'Something broke: and something else: and something else'
+          stacktrace:
+          - thing.go:123
+        errors:
+        - code: trial_expired
+          message: Default incident call link must be a valid URL
+          metadata:
+            abc123: abc123
+          source:
+            field: default_call_url
+            pointer: /settings/default_call_url
+        rate_limit:
+          limit: 100
+          name: client_ip
+          remaining: 98
+          retry_after: '2020-01-01T00:00:00Z'
+        request_id: 2T1p0e3j
+        status: 408
+        type: invalid_request_error
+      properties:
+        debug:
+          $ref: '#/components/schemas/ErrorDebug'
+        errors:
+          description: List of errors that caused this request to fail
+          example:
+          - code: trial_expired
+            message: Default incident call link must be a valid URL
+            metadata:
+              abc123: abc123
+            source:
+              field: default_call_url
+              pointer: /settings/default_call_url
+          items:
+            $ref: '#/components/schemas/ErrorSingle'
+          type: array
+        rate_limit:
+          $ref: '#/components/schemas/ErrorRateLimit'
+        request_id:
+          description: Unique identifier of the request
+          example: 2T1p0e3j
+          type: string
+        status:
+          description: HTTP status of the response
+          example: 408
+          format: int64
+          type: integer
+        type:
+          description: Machine-readable identifier for the general category of error
+          enum:
+          - invalid_request_error
+          - authentication_error
+          - resource_forbidden
+          - not_found
+          - not_acceptable
+          - method_not_allowed
+          - request_timeout
+          - conflict
+          - precondition_failed
+          - payload_too_large
+          - validation_error
+          - too_many_requests
+          - api_error
+          - rate_limit_reached
+          - client_timeout
+          example: invalid_request_error
+          type: string
+      required:
+      - type
+      - status
+      - request_id
+      - errors
+      type: object
+    APIKeysListResultV1:
+      example:
+        api_keys:
+        - comments: Requested in https://example.slack.com/archives/C123/p456
+          created_at: '2021-08-17T13:28:57.801578Z'
+          creator:
+            api_key:
+              id: 01FCNDV6P870EA6S7TK1DSYDG0
+              name: My test API key
+            user:
+              email: lisa@incident.io
+              id: 01FCNDV6P870EA6S7TK1DSYDG0
+              name: Lisa Karlin Curtis
+              role: viewer
+              slack_user_id: U02AYNF2XJM
+          id: 01FCNDV6P870EA6S7TK1DSYDG0
+          last_used_at: '2021-08-17T13:28:57.801578Z'
+          name: My test API key
+          roles:
+          - description: can view data, like public incidents and organization settings
+            name: viewer
+          team_ids:
+          - abc123
+          team_roles:
+          - description: can view data, like public incidents and organization settings
+            name: catalog_editor
+          token_last_issued_at: '2021-08-17T13:28:57.801578Z'
+        pagination_meta:
+          after: 01FCNDV6P870EA6S7TK1DSYDG0
+          page_size: 25
+      properties:
+        api_keys:
+          example:
+          - comments: Requested in https://example.slack.com/archives/C123/p456
+            created_at: '2021-08-17T13:28:57.801578Z'
+            creator:
+              api_key:
+                id: 01FCNDV6P870EA6S7TK1DSYDG0
+                name: My test API key
+              user:
+                email: lisa@incident.io
+                id: 01FCNDV6P870EA6S7TK1DSYDG0
+                name: Lisa Karlin Curtis
+                role: viewer
+                slack_user_id: U02AYNF2XJM
+            id: 01FCNDV6P870EA6S7TK1DSYDG0
+            last_used_at: '2021-08-17T13:28:57.801578Z'
+            name: My test API key
+            roles:
+            - description: can view data, like public incidents and organization settings
+              name: viewer
+            team_ids:
+            - abc123
+            team_roles:
+            - description: can view data, like public incidents and organization settings
+              name: catalog_editor
+            token_last_issued_at: '2021-08-17T13:28:57.801578Z'
+          items:
+            $ref: '#/components/schemas/APIKeyV1'
+          type: array
+        pagination_meta:
+          $ref: '#/components/schemas/PaginationMetaResultV1'
+      required:
+      - api_keys
+      - pagination_meta
+      type: object
+    APIKeyTeamRoleV1:
+      example:
+        description: can view data, like public incidents and organization settings
+        name: catalog_editor
+      properties:
+        description:
+          description: Human readable description of the role
+          example: can view data, like public incidents and organization settings
+          type: string
+        name:
+          description: API key role name that may be granted for team-scoped access
+          enum:
+          - catalog_editor
+          - schedules_editor
+          - schedules_reader
+          - schedule_overrides_editor
+          - on_call_editor
+          - escalation_creator
+          - api_keys_manage
+          - workflows_editor
+          - private_workflows_editor
+          - secrets_manage
+          - secrets_use
+          - heartbeats_ping
+          - telemetry_query_restricted
+          - telemetry_data_source_update
+          example: catalog_editor
+          type: string
+          x-public-api-version: v1
+      required:
+      - name
+      - description
+      type: object
+    APIKeyRoleV1:
+      example:
+        description: can view data, like public incidents and organization settings
+        name: viewer
+      properties:
+        description:
+          description: Human readable description of the role
+          example: can view data, like public incidents and organization settings
+          type: string
+        name:
+          description: API key role name
+          enum:
+          - viewer
+          - incident_creator
+          - incident_editor
+          - manage_settings
+          - global_access
+          - catalog_viewer
+          - catalog_editor
+          - incident_memberships_editor
+          - schedules_editor
+          - schedules_reader
+          - schedule_overrides_editor
+          - workflows_editor
+          - workflows_viewer
+          - private_workflows_editor
+          - private_escalation_workflows_editor
+          - on_call_editor
+          - on_call_viewer
+          - escalation_creator
+          - post_incident_flow_opt_out
+          - security_settings_editor
+          - investigation_download
+          - team_memberships_manage
+          - status_page_publisher
+          - status_page_viewer
+          - postmortems_manage
+          - api_keys_manage
+          - notification_methods_manage
+          - notification_methods_unredacted_viewer
+          - incident_workload_viewer
+          - incident_workload_private_viewer
+          - act_on_behalf_of_users
+          - secrets_manage
+          - secrets_use
+          - call_transcripts_viewer
+          - heartbeats_ping
+          - telemetry_query_restricted
+          - telemetry_data_source_update
+          - policies_viewer
+          - policy_findings_manage
+          - pay_reports_viewer
+          - pay_reports_editor
+          - pay_configs_viewer
+          - pay_configs_editor
+          - investigations_editor
+          - telemetry_viewer
+          - documents_viewer
+          example: viewer
+          type: string
+          x-public-api-version: v1
+      required:
+      - name
+      - description
+      type: object
+    APIKeysUpdatePayloadV1:
+      example:
+        comments: Requested in https://example.slack.com/archives/C123/p456
+        name: My test API key
+        role_names:
+        - viewer
+        - incident_creator
+        team_ids:
+        - 01FCNDV6P870EA6S7TK1DSYDG0
+        team_role_names:
+        - schedules_editor
+      properties:
+        comments:
+          description: Freeform notes about the API key
+          example: Requested in https://example.slack.com/archives/C123/p456
+          maxLength: 5000
+          pattern: ^[^]*$
+          type: string
+        name:
+          description: Human-readable name for the API key
+          example: My test API key
+          maxLength: 200
+          minLength: 1
+          type: string
+        role_names:
+          description: Account-level roles for the API key. These roles apply across the entire account, not scoped to specific teams. Pass an empty array if no account-level roles are needed.
+          example:
+          - viewer
+          - incident_creator
+          items:
+            enum:
+            - viewer
+            - incident_creator
+            - incident_editor
+            - manage_settings
+            - global_access
+            - catalog_viewer
+            - catalog_editor
+            - incident_memberships_editor
+            - schedules_editor
+            - schedules_reader
+            - schedule_overrides_editor
+            - workflows_editor
+            - workflows_viewer
+            - private_workflows_editor
+            - private_escalation_workflows_editor
+            - on_call_editor
+            - on_call_viewer
+            - escalation_creator
+            - post_incident_flow_opt_out
+            - security_settings_editor
+            - investigation_download
+            - team_memberships_manage
+            - status_page_publisher
+            - status_page_viewer
+            - postmortems_manage
+            - api_keys_manage
+            - notification_methods_manage
+            - notification_methods_unredacted_viewer
+            - incident_workload_viewer
+            - incident_workload_private_viewer
+            - act_on_behalf_of_users
+            - secrets_manage
+            - secrets_use
+            - call_transcripts_viewer
+            - heartbeats_ping
+            - telemetry_query_restricted
+            - telemetry_data_source_update
+            - policies_viewer
+            - policy_findings_manage
+            - pay_reports_viewer
+            - pay_reports_editor
+            - pay_configs_viewer
+            - pay_configs_editor
+            - investigations_editor
+            - telemetry_viewer
+            - documents_viewer
+            example: viewer
+            type: string
+          type: array
+        team_ids:
+          description: IDs of teams to scope the `team_role_names` to. If provided, `team_role_names` must also be a non-empty array, and vice versa. Pass an empty array if the key should not be scoped to any teams.
+          example:
+          - 01FCNDV6P870EA6S7TK1DSYDG0
+          items:
+            example: abc123
+            type: string
+          type: array
+        team_role_names:
+          description: Roles to grant for the teams specified in `team_ids`. If provided, `team_ids` must also be a non-empty array, and vice versa. Pass an empty array if no team-level roles are needed.
+          example:
+          - schedules_editor
+          items:
+            enum:
+            - catalog_editor
+            - schedules_editor
+            - schedules_reader
+            - schedule_overrides_editor
+            - on_call_editor
+            - escalation_creator
+            - api_keys_manage
+            - workflows_editor
+            - private_workflows_editor
+            - secrets_manage
+            - secrets_use
+            - heartbeats_ping
+            - telemetry_query_restricted
+            - telemetry_data_source_update
+            example: catalog_editor
+            type: string
+          type: array
+      required:
+      - name
+      - role_names
+      - team_ids
+      - team_role_names
+      type: object
+    APIKeysRotateResultV1:
+      example:
+        api_key:
+          comments: Requested in https://example.slack.com/archives/C123/p456
+          created_at: '2021-08-17T13:28:57.801578Z'
+          creator:
+            api_key:
+              id: 01FCNDV6P870EA6S7TK1DSYDG0
+              name: My test API key
+            user:
+              email: lisa@incident.io
+              id: 01FCNDV6P870EA6S7TK1DSYDG0
+              name: Lisa Karlin Curtis
+              role: viewer
+              slack_user_id: U02AYNF2XJM
+          id: 01FCNDV6P870EA6S7TK1DSYDG0
+          last_used_at: '2021-08-17T13:28:57.801578Z'
+          name: My test API key
+          roles:
+          - description: can view data, like public incidents and organization settings
+            name: viewer
+          team_ids:
+          - abc123
+          team_roles:
+          - description: can view data, like public incidents and organization settings
+            name: catalog_editor
+          token_last_issued_at: '2021-08-17T13:28:57.801578Z'
+        token: REDACTED_INCIDENT_API_KEY
+      properties:
+        api_key:
+          $ref: '#/components/schemas/APIKeyV1'
+        token:
+          description: The new bearer token to use in API requests. This is the only time the token is returned — store it securely.
+          example: REDACTED_INCIDENT_API_KEY
+          type: string
+      required:
+      - api_key
+      - token
+      type: object
+    ErrorSource:
+      example:
+        field: default_call_url
+        pointer: /settings/default_call_url
+      properties:
+        field:
+          description: Field name that is the source of the error
+          example: default_call_url
+          type: string
+        pointer:
+          description: JSON pointer to the request field that is the source of the error
+          example: /settings/default_call_url
+          type: string
+      required:
+      - field
+      - pointer
+      type: object
+    ErrorRateLimit:
+      example:
+        limit: 100
+        name: client_ip
+        remaining: 98
+        retry_after: '2020-01-01T00:00:00Z'
+      properties:
+        limit:
+          description: The maximum number of requests that the consumer is permitted to make per minute
+          example: 100
+          format: int64
+          type: integer
+        name:
+          description: Which rate limit was exceeded
+          example: client_ip
+          type: string
+        remaining:
+          description: The number of requests remaining in the current rate limit window
+          example: 98
+          format: int64
+          type: integer
+        retry_after:
+          description: When the client can retry, as an RFC3339 timestamp in UTC. Prefer the Retry-After response header, which carries the same instant as a number of seconds
+          example: '2020-01-01T00:00:00Z'
+          type: string
+      required:
+      - name
+      - limit
+      - remaining
+      - retry_after
+      type: object
+    ErrorDebug:
+      example:
+        message: 'Something broke: and something else: and something else'
+        stacktrace:
+        - thing.go:123
+      properties:
+        message:
+          description: Original internal error message
+          example: 'Something broke: and something else: and something else'
+          type: string
+        stacktrace:
+          description: Stacktrace of the error, if applicable
+          example:
+          - thing.go:123
+          items:
+            example: thing.go:123
+            type: string
+          type: array
+      required:
+      - message
+      - stacktrace
+      type: object
+    APIKeysUpdateResultV1:
+      example:
+        api_key:
+          comments: Requested in https://example.slack.com/archives/C123/p456
+          created_at: '2021-08-17T13:28:57.801578Z'
+          creator:
+            api_key:
+              id: 01FCNDV6P870EA6S7TK1DSYDG0
+              name: My test API key
+            user:
+              email: lisa@incident.io
+              id: 01FCNDV6P870EA6S7TK1DSYDG0
+              name: Lisa Karlin Curtis
+              role: viewer
+              slack_user_id: U02AYNF2XJM
+          id: 01FCNDV6P870EA6S7TK1DSYDG0
+          last_used_at: '2021-08-17T13:28:57.801578Z'
+          name: My test API key
+          roles:
+          - description: can view data, like public incidents and organization settings
+            name: viewer
+          team_ids:
+          - abc123
+          team_roles:
+          - description: can view data, like public incidents and organization settings
+            name: catalog_editor
+          token_last_issued_at: '2021-08-17T13:28:57.801578Z'
+      properties:
+        api_key:
+          $ref: '#/components/schemas/APIKeyV1'
+      required:
+      - api_key
+      type: object
+    APIKeysShowResultV1:
+      example:
+        api_key:
+          comments: Requested in https://example.slack.com/archives/C123/p456
+          created_at: '2021-08-17T13:28:57.801578Z'
+          creator:
+            api_key:
+              id: 01FCNDV6P870EA6S7TK1DSYDG0
+              name: My test API key
+            user:
+              email: lisa@incident.io
+              id: 01FCNDV6P870EA6S7TK1DSYDG0
+              name: Lisa Karlin Curtis
+              role: viewer
+              slack_user_id: U02AYNF2XJM
+          id: 01FCNDV6P870EA6S7TK1DSYDG0
+          last_used_at: '2021-08-17T13:28:57.801578Z'
+          name: My test API key
+          roles:
+          - description: can view data, like public incidents and organization settings
+            name: viewer
+          team_ids:
+          - abc123
+          team_roles:
+          - description: can view data, like public incidents and organization settings
+            name: catalog_editor
+          token_last_issued_at: '2021-08-17T13:28:57.801578Z'
+      properties:
+        api_key:
+          $ref: '#/components/schemas/APIKeyV1'
+      required:
+      - api_key
+      type: object
+    APIKeysCreatePayloadV1:
+      example:
+        comments: Requested in https://example.slack.com/archives/C123/p456
+        name: My test API key
+        role_names:
+        - viewer
+        - incident_creator
+        team_ids:
+        - 01FCNDV6P870EA6S7TK1DSYDG0
+        team_role_names:
+        - schedules_editor
+      properties:
+        comments:
+          description: Freeform notes about the API key
+          example: Requested in https://example.slack.com/archives/C123/p456
+          maxLength: 5000
+          pattern: ^[^]*$
+          type: string
+        name:
+          description: Human-readable name for the new API key
+          example: My test API key
+          maxLength: 200
+          minLength: 1
+          type: string
+        role_names:
+          description: Account-level roles to assign to the API key. These roles apply across the entire account, not scoped to specific teams. Pass an empty array if no account-level roles are needed.
+          example:
+          - viewer
+          - incident_creator
+          items:
+            enum:
+            - viewer
+            - incident_creator
+            - incident_editor
+            - manage_settings
+            - global_access
+            - catalog_viewer
+            - catalog_editor
+            - incident_memberships_editor
+            - schedules_editor
+            - schedules_reader
+            - schedule_overrides_editor
+            - workflows_editor
+            - workflows_viewer
+            - private_workflows_editor
+            - private_escalation_workflows_editor
+            - on_call_editor
+            - on_call_viewer
+            - escalation_creator
+            - post_incident_flow_opt_out
+            - security_settings_editor
+            - investigation_download
+            - team_memberships_manage
+            - status_page_publisher
+            - status_page_viewer
+            - postmortems_manage
+            - api_keys_manage
+            - notification_methods_manage
+            - notification_methods_unredacted_viewer
+            - incident_workload_viewer
+            - incident_workload_private_viewer
+            - act_on_behalf_of_users
+            - secrets_manage
+            - secrets_use
+            - call_transcripts_viewer
+            - heartbeats_ping
+            - telemetry_query_restricted
+            - telemetry_data_source_update
+            - policies_viewer
+            - policy_findings_manage
+            - pay_reports_viewer
+            - pay_reports_editor
+            - pay_configs_viewer
+            - pay_configs_editor
+            - investigations_editor
+            - telemetry_viewer
+            - documents_viewer
+            example: viewer
+            type: string
+          type: array
+        team_ids:
+          description: IDs of teams to scope the `team_role_names` to. If provided, `team_role_names` must also be a non-empty array, and vice versa. Pass an empty array if the key should not be scoped to any teams.
+          example:
+          - 01FCNDV6P870EA6S7TK1DSYDG0
+          items:
+            example: abc123
+            type: string
+          type: array
+        team_role_names:
+          description: Roles to grant for the teams specified in `team_ids`. If provided, `team_ids` must also be a non-empty array, and vice versa. Pass an empty array if no team-level roles are needed.
+          example:
+          - schedules_editor
+          items:
+            enum:
+            - catalog_editor
+            - schedules_editor
+            - schedules_reader
+            - schedule_overrides_editor
+            - on_call_editor
+            - escalation_creator
+            - api_keys_manage
+            - workflows_editor
+            - private_workflows_editor
+            - secrets_manage
+            - secrets_use
+            - heartbeats_ping
+            - telemetry_query_restricted
+            - telemetry_data_source_update
+            example: catalog_editor
+            type: string
+          type: array
+      required:
+      - name
+      - role_names
+      - team_ids
+      - team_role_names
+      type: object
+    UserV1:
+      example:
+        email: lisa@incident.io
+        id: 01FCNDV6P870EA6S7TK1DSYDG0
+        name: Lisa Karlin Curtis
+        role: viewer
+        slack_user_id: U02AYNF2XJM
+      properties:
+        email:
+          description: Email address of the user.
+          example: lisa@incident.io
+          type: string
+        id:
+          description: Unique identifier of the user
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+        name:
+          description: Name of the user
+          example: Lisa Karlin Curtis
+          type: string
+        role:
+          description: 'DEPRECATED: Role of the user as of March 9th 2023, this value is no longer updated.'
+          enum:
+          - viewer
+          - responder
+          - administrator
+          - owner
+          - unset
+          example: viewer
+          type: string
+        slack_user_id:
+          description: Slack ID of the user
+          example: U02AYNF2XJM
+          type: string
+      required:
+      - role
+      - id
+      - name
+      type: object
+    APIKeyV1:
+      example:
+        comments: Requested in https://example.slack.com/archives/C123/p456
+        created_at: '2021-08-17T13:28:57.801578Z'
+        creator:
+          api_key:
+            id: 01FCNDV6P870EA6S7TK1DSYDG0
+            name: My test API key
+          user:
+            email: lisa@incident.io
+            id: 01FCNDV6P870EA6S7TK1DSYDG0
+            name: Lisa Karlin Curtis
+            role: viewer
+            slack_user_id: U02AYNF2XJM
+        id: 01FCNDV6P870EA6S7TK1DSYDG0
+        last_used_at: '2021-08-17T13:28:57.801578Z'
+        name: My test API key
+        roles:
+        - description: can view data, like public incidents and organization settings
+          name: viewer
+        team_ids:
+        - abc123
+        team_roles:
+        - description: can view data, like public incidents and organization settings
+          name: catalog_editor
+        token_last_issued_at: '2021-08-17T13:28:57.801578Z'
+      properties:
+        comments:
+          description: Freeform notes about this API key
+          example: Requested in https://example.slack.com/archives/C123/p456
+          maxLength: 5000
+          pattern: ^[^]*$
+          type: string
+        created_at:
+          description: When the API key was created
+          example: '2021-08-17T13:28:57.801578Z'
+          format: date-time
+          type: string
+        creator:
+          $ref: '#/components/schemas/ActorV1'
+        id:
+          description: Unique identifier for this API key
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+        last_used_at:
+          description: When the key was last used to authenticate a request
+          example: '2021-08-17T13:28:57.801578Z'
+          format: date-time
+          type: string
+        name:
+          description: The name of the API key, for the user's reference
+          example: My test API key
+          type: string
+        roles:
+          description: The account-level roles assigned to this API key
+          example:
+          - description: can view data, like public incidents and organization settings
+            name: viewer
+          items:
+            $ref: '#/components/schemas/APIKeyRoleV1'
+          type: array
+        team_ids:
+          description: IDs of teams that this API key is scoped to
+          example:
+          - abc123
+          items:
+            example: abc123
+            type: string
+          type: array
+        team_roles:
+          description: The team-level roles assigned to this API key
+          example:
+          - description: can view data, like public incidents and organization settings
+            name: catalog_editor
+          items:
+            $ref: '#/components/schemas/APIKeyTeamRoleV1'
+          type: array
+        token_last_issued_at:
+          description: When the current token for this API was last issued. This is the last time the token was rotated, or when it was initially created. Older tokens may remain valid for up to an hour after they have been rotated, configured when you call the rotate endpoint.
+          example: '2021-08-17T13:28:57.801578Z'
+          format: date-time
+          type: string
+      required:
+      - id
+      - name
+      - roles
+      - team_ids
+      - team_roles
+      - creator
+      - created_at
+      - token_last_issued_at
+      type: object
+    APIKeysRotatePayloadV1:
+      example:
+        grace_period_minutes: 30
+      properties:
+        grace_period_minutes:
+          default: 30
+          description: How many minutes to keep the old access token alive.
+          example: 30
+          format: int64
+          maximum: 60
+          minimum: 0
+          type: integer
+      required:
+      - grace_period_minutes
+      type: object
+    PaginationMetaResultV1:
+      example:
+        after: 01FCNDV6P870EA6S7TK1DSYDG0
+        page_size: 25
+      properties:
+        after:
+          description: If provided, pass this as the 'after' param to load the next page
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+        page_size:
+          default: 25
+          description: What was the maximum number of results requested
+          example: 25
+          format: int64
+          maximum: 250
+          type: integer
+      required:
+      - page_size
+      type: object
+    ErrorSingle:
+      example:
+        code: trial_expired
+        message: Default incident call link must be a valid URL
+        metadata:
+          abc123: abc123
+        source:
+          field: default_call_url
+          pointer: /settings/default_call_url
+      properties:
+        code:
+          description: Machine-readable identifier for this specific error
+          example: trial_expired
+          type: string
+        message:
+          description: Human readable description of the error
+          example: Default incident call link must be a valid URL
+          type: string
+        metadata:
+          additionalProperties:
+            example: abc123
+            type: string
+          description: Additional metadata about the error, keyed by a string identifier
+          example:
+            abc123: abc123
+          type: object
+        source:
+          $ref: '#/components/schemas/ErrorSource'
+      required:
+      - code
+      - message
+      type: object
+  securitySchemes:
+    BearerAuth:
+      description: API key from your incident.io dashboard (Settings > API keys)
+      scheme: bearer
+      type: http
+externalDocs:
+  description: View our API docs at api-docs.incident.io
+  url: https://api-docs.incident.io/

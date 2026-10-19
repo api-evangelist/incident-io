@@ -1,0 +1,2308 @@
+openapi: 3.2.0
+info:
+  description: 'This is the API reference for incident.io. It documents available API endpoints, provides examples of how to use it, and
+
+    instructions around things like authentication and error handling. The API is hosted at:
+
+
+    - https://api.incident.io/
+
+
+    And you will need to create an API key via your incident.io
+
+    dashboard to make requests. # Making requests
+
+
+    Here are the key concepts required to make requests to the incident.io API. ## Authentication
+
+
+    For all requests made to the incident.io API, you''ll need an API key. To create an API key, head to the incident dashboard and visit API
+
+    keys. When you create the key, you''ll be able to choose what actions it
+
+    can take for your account: choose carefully, as those roles can only be set
+
+    when you first create the key. We''ll only show you the token once, so make sure
+
+    you store it somewhere safe. API keys are global to your incident.io account, and can be managed by anyone
+
+    who has the right permissions. We display the user that created the API key,
+
+    and the API key will remain valid if that user becomes deactivated. Once you have the key, you should make requests to the API that set the
+
+    `Authorization` request header using a "Bearer" authentication scheme:
+
+
+    ```
+
+    Authorization: Bearer
+
+    ```
+
+
+    ## Rate Limits
+
+
+    The incident.io API enforces rate limits to ensure consistent performance for all users. The default rate limit is 1200 requests/minute per API key. This limit applies to most endpoints across the API. Limits are token buckets that refill continuously rather than resetting on a fixed window boundary. The default
+
+    bucket holds 1200 requests and refills at 20 per second, so you can burst up to the full bucket and then sustain
+
+    20 requests/second indefinitely. There is no boundary at which your quota resets to full in one step. Some endpoints have lower rate limits, particularly those that interact with external third-party systems that impose
+
+    their own limitations. These specific limits vary by endpoint. ### Rate limit headers
+
+
+    Responses to requests authenticated with an API key carry your current allowance, so you can pace yourself rather
+
+    than waiting to be throttled:
+
+
+    ```
+
+    X-RateLimit-Limit: 60, 1200;window=60, 60;window=60
+
+    X-RateLimit-Remaining: 59
+
+    X-RateLimit-Used: 1
+
+    X-RateLimit-Reset: 1785173199
+
+    ```
+
+
+    | Header | Meaning |
+
+    | --- | --- |
+
+    | `X-RateLimit-Limit` | The quota that binds this request, followed by every limit that applied and the window it applies over |
+
+    | `X-RateLimit-Remaining` | Requests you can make right now against the binding limit |
+
+    | `X-RateLimit-Used` | Requests you have spent against it |
+
+    | `X-RateLimit-Reset` | Unix timestamp (seconds) at which that limit will be back to full |
+
+
+    More than one limit can apply to a request: your API key''s overall limit, and for some endpoints a lower limit of
+
+    their own. `X-RateLimit-Limit` lists all of them, each with its window, so `1200;window=60` means 1200 requests per
+
+    minute. Because our limits refill continuously rather than resetting on a boundary, that window is what tells you
+
+    the rate you can sustain: 1200 per 60 seconds is 20 requests/second indefinitely. `Remaining`, `Used` and `Reset` describe whichever limit has the least allowance left, since that is the one you
+
+    will hit first. `X-RateLimit-Remaining` may lag by a small number of requests under high concurrency, and can move by more than the
+
+    requests you made, because limits scoped to your whole organisation are shared with your other API keys. Headers are omitted rather than guessed if we cannot determine your allowance for a request. ### Exceeding a rate limit
+
+
+    When you exceed a rate limit the API responds with `429 Too Many Requests` and a `Retry-After` header giving the
+
+    number of seconds to wait:
+
+
+    ```
+
+    X-RateLimit-Limit: 1200, 1200;window=60
+
+    X-RateLimit-Remaining: 0
+
+    X-RateLimit-Used: 1200
+
+    X-RateLimit-Reset: 1785173199
+
+    Retry-After: 1
+
+    ```
+
+
+    Prefer `Retry-After` over `X-RateLimit-Reset` when deciding how long to back off.'
+  title: incident.io Policy Findings V2 API
+  version: 1.0.0
+servers:
+- url: https://api.incident.io
+security:
+- BearerAuth: []
+tags:
+- description: 'View and manage the findings your policies raise.
+
+
+    A finding records that a resource fell short of a policy: a follow-up that was
+
+    never exported, a schedule with a gap in cover, a user without the notification
+
+    rules their on-call policy requires.
+
+
+    Findings are materialised by a job that runs hourly, so every finding carries a
+
+    last_checked_at telling you how fresh it is.'
+  name: Policy Findings V2
+paths:
+  /v2/policy_findings:
+    get:
+      description: List the findings your policies have raised, whatever state they are in.
+      operationId: PolicyFindingsV2#List
+      parameters:
+      - allowEmptyValue: true
+        description: Number of findings to return per page
+        example: 25
+        in: query
+        name: page_size
+        schema:
+          default: 25
+          description: Number of findings to return per page
+          example: 25
+          format: int64
+          maximum: 250
+          minimum: 1
+          type: integer
+      - allowEmptyValue: true
+        description: The ID of the last finding on the previous page
+        examples:
+          default:
+            summary: default
+            value: 01FCNDV6P870EA6S7TK1DSYDG0
+        in: query
+        name: after
+        schema:
+          description: The ID of the last finding on the previous page
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+      - allowEmptyValue: true
+        description: Only findings raised by this policy
+        example: 01FDAG4SAP5TYPT98WGR2N7W91
+        in: query
+        name: policy_id
+        schema:
+          description: Only findings raised by this policy
+          example: 01FDAG4SAP5TYPT98WGR2N7W91
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              example:
+                pagination_meta:
+                  after: 01FCNDV6P870EA6S7TK1DSYDG0
+                  page_size: 25
+                policy_findings:
+                - created_at: '2021-08-17T13:28:57.801578Z'
+                  days: 3
+                  debrief:
+                    incident_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  dismissal:
+                    dismissed_at: '2021-08-17T13:28:57.801578Z'
+                    dismissed_by:
+                      alert:
+                        id: 01GW2G3V0S59R238FAHPDS1R66
+                        title: '*errors.withMessage: PG::Error failed to connect'
+                      api_key:
+                        id: 01FCNDV6P870EA6S7TK1DSYDG0
+                        name: My test API key
+                      user:
+                        email: lisa@incident.io
+                        id: 01FCNDV6P870EA6S7TK1DSYDG0
+                        name: Lisa Karlin Curtis
+                        role: owner
+                        slack_user_id: U02AYNF2XJM
+                      workflow:
+                        id: 01FCNDV6P870EA6S7TK1DSYDG0
+                        name: My little workflow
+                    reason: This incident is special.
+                  due_at: '2025-10-14T00:00:00.000000Z'
+                  follow_up:
+                    follow_up_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                    incident_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  id: 01G0J1EXE7AXZ2C93K61WBPYEH
+                  last_checked_at: '2021-08-17T13:28:57.801578Z'
+                  on_call_readiness:
+                    high_urgency:
+                    - max_delay_seconds: 300
+                      met: false
+                      method_types:
+                      - slack
+                    low_urgency:
+                    - max_delay_seconds: 300
+                      met: false
+                      method_types:
+                      - slack
+                    user_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  policy_id: 01G0J1EXE7AXZ2C93K61WBPYEH
+                  policy_type: follow_up
+                  post_mortem:
+                    incident_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  responsible_users:
+                  - email: lisa@incident.io
+                    id: 01FCNDV6P870EA6S7TK1DSYDG0
+                    name: Lisa Karlin Curtis
+                    role: owner
+                    slack_user_id: U02AYNF2XJM
+                  schedule:
+                    cause: nobody_scheduled
+                    end_at: '2021-08-17T13:28:57.801578Z'
+                    has_unscheduled_time: true
+                    impacted_users:
+                    - cause: no_on_call_seat
+                      name: Alice Green
+                      user_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                    rotation_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                    schedule_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                    start_at: '2021-08-17T13:28:57.801578Z'
+                  shift_conflict:
+                    end_at: '2021-08-17T13:28:57.801578Z'
+                    shifts:
+                    - end_at: '2021-08-17T13:28:57.801578Z'
+                      layer_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                      rotation_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                      schedule_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                      start_at: '2021-08-17T13:28:57.801578Z'
+                    start_at: '2021-08-17T13:28:57.801578Z'
+                    user_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  state: active
+                  updated_at: '2021-08-17T13:28:57.801578Z'
+                  vacation_conflict:
+                    end_at: '2021-08-17T13:28:57.801578Z'
+                    holiday_name: Joe Bloggs - Holiday
+                    rotation_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                    schedule_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                    start_at: '2021-08-17T13:28:57.801578Z'
+                    user_id: 01FCNDV6P870EA6S7TK1DSYDG0
+              schema:
+                $ref: '#/components/schemas/PolicyFindingsListResultV2'
+          description: OK response.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'invalid_request_error: There was a problem with the request, like a missing header or querying a resource that doesn''t exist.'
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'authentication_error: Authentication failed.'
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'resource_forbidden: Access to this resource is forbidden for the authenticated user.'
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_found: The referenced resource could not be found.'
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'method_not_allowed: The endpoint does not support this operation for the specified resource.'
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_acceptable: Requested a media type this endpoint does not support.'
+        '408':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'request_timeout: The request took too long to process.
+
+
+            client_timeout: The request was cancelled by the client.'
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'conflict: Request conflicted with current state of the resource, likely a concurrent update.'
+        '412':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'precondition_failed: A required condition hasn''t been met.'
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'payload_too_large: The request payload is too large.'
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'validation_error: A required field was not provided, or the provided data was invalid.'
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'too_many_requests: Too many requests hit the API too quickly. We recommend an exponential backoff of your requests.
+
+
+            rate_limit_reached: The rate limit associated with this resource or API key has been exceeded. Try again later.'
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'api_error: Something went wrong and has been reported internally.'
+      summary: List Policy Findings V2
+      tags:
+      - Policy Findings V2
+      x-docs-display-name: List
+      x-docs-group-name: Policy Findings V2
+      x-docs-resource-type: PolicyFindingV2
+      x-mint:
+        content: 🔑 Requires the `policies.view` scope.
+      x-rbac-scopes:
+      - policies.view
+      x-operation-id-source: normalized
+      x-operation-id-original: Policy Findings V2#List
+  /v2/policy_findings/{id}:
+    get:
+      description: Get a single finding.
+      operationId: PolicyFindingsV2#Show
+      parameters:
+      - description: Unique identifier for the finding
+        example: 01FCNDV6P870EA6S7TK1DSYDG0
+        in: path
+        name: id
+        required: true
+        schema:
+          description: Unique identifier for the finding
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              example:
+                policy_finding:
+                  created_at: '2021-08-17T13:28:57.801578Z'
+                  days: 3
+                  debrief:
+                    incident_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  dismissal:
+                    dismissed_at: '2021-08-17T13:28:57.801578Z'
+                    dismissed_by:
+                      alert:
+                        id: 01GW2G3V0S59R238FAHPDS1R66
+                        title: '*errors.withMessage: PG::Error failed to connect'
+                      api_key:
+                        id: 01FCNDV6P870EA6S7TK1DSYDG0
+                        name: My test API key
+                      user:
+                        email: lisa@incident.io
+                        id: 01FCNDV6P870EA6S7TK1DSYDG0
+                        name: Lisa Karlin Curtis
+                        role: owner
+                        slack_user_id: U02AYNF2XJM
+                      workflow:
+                        id: 01FCNDV6P870EA6S7TK1DSYDG0
+                        name: My little workflow
+                    reason: This incident is special.
+                  due_at: '2025-10-14T00:00:00.000000Z'
+                  follow_up:
+                    follow_up_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                    incident_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  id: 01G0J1EXE7AXZ2C93K61WBPYEH
+                  last_checked_at: '2021-08-17T13:28:57.801578Z'
+                  on_call_readiness:
+                    high_urgency:
+                    - max_delay_seconds: 300
+                      met: false
+                      method_types:
+                      - slack
+                    low_urgency:
+                    - max_delay_seconds: 300
+                      met: false
+                      method_types:
+                      - slack
+                    user_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  policy_id: 01G0J1EXE7AXZ2C93K61WBPYEH
+                  policy_type: follow_up
+                  post_mortem:
+                    incident_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  responsible_users:
+                  - email: lisa@incident.io
+                    id: 01FCNDV6P870EA6S7TK1DSYDG0
+                    name: Lisa Karlin Curtis
+                    role: owner
+                    slack_user_id: U02AYNF2XJM
+                  schedule:
+                    cause: nobody_scheduled
+                    end_at: '2021-08-17T13:28:57.801578Z'
+                    has_unscheduled_time: true
+                    impacted_users:
+                    - cause: no_on_call_seat
+                      name: Alice Green
+                      user_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                    rotation_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                    schedule_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                    start_at: '2021-08-17T13:28:57.801578Z'
+                  shift_conflict:
+                    end_at: '2021-08-17T13:28:57.801578Z'
+                    shifts:
+                    - end_at: '2021-08-17T13:28:57.801578Z'
+                      layer_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                      rotation_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                      schedule_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                      start_at: '2021-08-17T13:28:57.801578Z'
+                    start_at: '2021-08-17T13:28:57.801578Z'
+                    user_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  state: active
+                  updated_at: '2021-08-17T13:28:57.801578Z'
+                  vacation_conflict:
+                    end_at: '2021-08-17T13:28:57.801578Z'
+                    holiday_name: Joe Bloggs - Holiday
+                    rotation_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                    schedule_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                    start_at: '2021-08-17T13:28:57.801578Z'
+                    user_id: 01FCNDV6P870EA6S7TK1DSYDG0
+              schema:
+                $ref: '#/components/schemas/PolicyFindingsShowResultV2'
+          description: OK response.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'invalid_request_error: There was a problem with the request, like a missing header or querying a resource that doesn''t exist.'
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'authentication_error: Authentication failed.'
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'resource_forbidden: Access to this resource is forbidden for the authenticated user.'
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_found: The referenced resource could not be found.'
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'method_not_allowed: The endpoint does not support this operation for the specified resource.'
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_acceptable: Requested a media type this endpoint does not support.'
+        '408':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'request_timeout: The request took too long to process.
+
+
+            client_timeout: The request was cancelled by the client.'
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'conflict: Request conflicted with current state of the resource, likely a concurrent update.'
+        '412':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'precondition_failed: A required condition hasn''t been met.'
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'payload_too_large: The request payload is too large.'
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'validation_error: A required field was not provided, or the provided data was invalid.'
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'too_many_requests: Too many requests hit the API too quickly. We recommend an exponential backoff of your requests.
+
+
+            rate_limit_reached: The rate limit associated with this resource or API key has been exceeded. Try again later.'
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'api_error: Something went wrong and has been reported internally.'
+      summary: Show Policy Findings V2
+      tags:
+      - Policy Findings V2
+      x-docs-display-name: Show
+      x-docs-group-name: Policy Findings V2
+      x-docs-resource-type: PolicyFindingV2
+      x-mint:
+        content: 🔑 Requires the `policies.view` scope.
+      x-rbac-scopes:
+      - policies.view
+      x-operation-id-source: normalized
+      x-operation-id-original: Policy Findings V2#Show
+  /v2/policy_findings/{id}/actions/dismiss:
+    post:
+      description: 'Dismiss a finding, so it stops being counted as open.
+
+
+        Dismissing is a judgement that the finding doesn''t need acting on, not that the
+
+        resource now meets the policy. The finding stays queryable with a state of
+
+        dismissed.'
+      operationId: PolicyFindingsV2#Dismiss
+      parameters:
+      - description: Unique identifier for the finding
+        example: 01FCNDV6P870EA6S7TK1DSYDG0
+        in: path
+        name: id
+        required: true
+        schema:
+          description: Unique identifier for the finding
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+      requestBody:
+        content:
+          application/json:
+            example:
+              reason: This incident is special.
+            schema:
+              $ref: '#/components/schemas/PolicyFindingsDismissPayloadV2'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              example:
+                policy_finding:
+                  created_at: '2021-08-17T13:28:57.801578Z'
+                  days: 3
+                  debrief:
+                    incident_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  dismissal:
+                    dismissed_at: '2021-08-17T13:28:57.801578Z'
+                    dismissed_by:
+                      alert:
+                        id: 01GW2G3V0S59R238FAHPDS1R66
+                        title: '*errors.withMessage: PG::Error failed to connect'
+                      api_key:
+                        id: 01FCNDV6P870EA6S7TK1DSYDG0
+                        name: My test API key
+                      user:
+                        email: lisa@incident.io
+                        id: 01FCNDV6P870EA6S7TK1DSYDG0
+                        name: Lisa Karlin Curtis
+                        role: owner
+                        slack_user_id: U02AYNF2XJM
+                      workflow:
+                        id: 01FCNDV6P870EA6S7TK1DSYDG0
+                        name: My little workflow
+                    reason: This incident is special.
+                  due_at: '2025-10-14T00:00:00.000000Z'
+                  follow_up:
+                    follow_up_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                    incident_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  id: 01G0J1EXE7AXZ2C93K61WBPYEH
+                  last_checked_at: '2021-08-17T13:28:57.801578Z'
+                  on_call_readiness:
+                    high_urgency:
+                    - max_delay_seconds: 300
+                      met: false
+                      method_types:
+                      - slack
+                    low_urgency:
+                    - max_delay_seconds: 300
+                      met: false
+                      method_types:
+                      - slack
+                    user_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  policy_id: 01G0J1EXE7AXZ2C93K61WBPYEH
+                  policy_type: follow_up
+                  post_mortem:
+                    incident_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  responsible_users:
+                  - email: lisa@incident.io
+                    id: 01FCNDV6P870EA6S7TK1DSYDG0
+                    name: Lisa Karlin Curtis
+                    role: owner
+                    slack_user_id: U02AYNF2XJM
+                  schedule:
+                    cause: nobody_scheduled
+                    end_at: '2021-08-17T13:28:57.801578Z'
+                    has_unscheduled_time: true
+                    impacted_users:
+                    - cause: no_on_call_seat
+                      name: Alice Green
+                      user_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                    rotation_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                    schedule_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                    start_at: '2021-08-17T13:28:57.801578Z'
+                  shift_conflict:
+                    end_at: '2021-08-17T13:28:57.801578Z'
+                    shifts:
+                    - end_at: '2021-08-17T13:28:57.801578Z'
+                      layer_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                      rotation_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                      schedule_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                      start_at: '2021-08-17T13:28:57.801578Z'
+                    start_at: '2021-08-17T13:28:57.801578Z'
+                    user_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  state: active
+                  updated_at: '2021-08-17T13:28:57.801578Z'
+                  vacation_conflict:
+                    end_at: '2021-08-17T13:28:57.801578Z'
+                    holiday_name: Joe Bloggs - Holiday
+                    rotation_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                    schedule_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                    start_at: '2021-08-17T13:28:57.801578Z'
+                    user_id: 01FCNDV6P870EA6S7TK1DSYDG0
+              schema:
+                $ref: '#/components/schemas/PolicyFindingsDismissResultV2'
+          description: OK response.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'invalid_request_error: There was a problem with the request, like a missing header or querying a resource that doesn''t exist.'
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'authentication_error: Authentication failed.'
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'resource_forbidden: Access to this resource is forbidden for the authenticated user.'
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_found: The referenced resource could not be found.'
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'method_not_allowed: The endpoint does not support this operation for the specified resource.'
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_acceptable: Requested a media type this endpoint does not support.'
+        '408':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'request_timeout: The request took too long to process.
+
+
+            client_timeout: The request was cancelled by the client.'
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'conflict: Request conflicted with current state of the resource, likely a concurrent update.'
+        '412':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'precondition_failed: A required condition hasn''t been met.'
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'payload_too_large: The request payload is too large.'
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'validation_error: A required field was not provided, or the provided data was invalid.'
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'too_many_requests: Too many requests hit the API too quickly. We recommend an exponential backoff of your requests.
+
+
+            rate_limit_reached: The rate limit associated with this resource or API key has been exceeded. Try again later.'
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'api_error: Something went wrong and has been reported internally.'
+      summary: Dismiss Policy Findings V2
+      tags:
+      - Policy Findings V2
+      x-docs-display-name: Dismiss
+      x-docs-group-name: Policy Findings V2
+      x-docs-resource-type: PolicyFindingV2
+      x-mint:
+        content: 🔑 Requires the `policy_findings.dismiss` scope.
+      x-rbac-scopes:
+      - policy_findings.dismiss
+      x-operation-id-source: normalized
+      x-operation-id-original: Policy Findings V2#Dismiss
+  /v2/policy_findings/{id}/actions/restore:
+    post:
+      description: Undo a dismissal, returning the finding to its open state.
+      operationId: PolicyFindingsV2#Restore
+      parameters:
+      - description: Unique identifier for the finding
+        example: 01FCNDV6P870EA6S7TK1DSYDG0
+        in: path
+        name: id
+        required: true
+        schema:
+          description: Unique identifier for the finding
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              example:
+                policy_finding:
+                  created_at: '2021-08-17T13:28:57.801578Z'
+                  days: 3
+                  debrief:
+                    incident_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  dismissal:
+                    dismissed_at: '2021-08-17T13:28:57.801578Z'
+                    dismissed_by:
+                      alert:
+                        id: 01GW2G3V0S59R238FAHPDS1R66
+                        title: '*errors.withMessage: PG::Error failed to connect'
+                      api_key:
+                        id: 01FCNDV6P870EA6S7TK1DSYDG0
+                        name: My test API key
+                      user:
+                        email: lisa@incident.io
+                        id: 01FCNDV6P870EA6S7TK1DSYDG0
+                        name: Lisa Karlin Curtis
+                        role: owner
+                        slack_user_id: U02AYNF2XJM
+                      workflow:
+                        id: 01FCNDV6P870EA6S7TK1DSYDG0
+                        name: My little workflow
+                    reason: This incident is special.
+                  due_at: '2025-10-14T00:00:00.000000Z'
+                  follow_up:
+                    follow_up_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                    incident_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  id: 01G0J1EXE7AXZ2C93K61WBPYEH
+                  last_checked_at: '2021-08-17T13:28:57.801578Z'
+                  on_call_readiness:
+                    high_urgency:
+                    - max_delay_seconds: 300
+                      met: false
+                      method_types:
+                      - slack
+                    low_urgency:
+                    - max_delay_seconds: 300
+                      met: false
+                      method_types:
+                      - slack
+                    user_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  policy_id: 01G0J1EXE7AXZ2C93K61WBPYEH
+                  policy_type: follow_up
+                  post_mortem:
+                    incident_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  responsible_users:
+                  - email: lisa@incident.io
+                    id: 01FCNDV6P870EA6S7TK1DSYDG0
+                    name: Lisa Karlin Curtis
+                    role: owner
+                    slack_user_id: U02AYNF2XJM
+                  schedule:
+                    cause: nobody_scheduled
+                    end_at: '2021-08-17T13:28:57.801578Z'
+                    has_unscheduled_time: true
+                    impacted_users:
+                    - cause: no_on_call_seat
+                      name: Alice Green
+                      user_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                    rotation_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                    schedule_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                    start_at: '2021-08-17T13:28:57.801578Z'
+                  shift_conflict:
+                    end_at: '2021-08-17T13:28:57.801578Z'
+                    shifts:
+                    - end_at: '2021-08-17T13:28:57.801578Z'
+                      layer_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                      rotation_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                      schedule_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                      start_at: '2021-08-17T13:28:57.801578Z'
+                    start_at: '2021-08-17T13:28:57.801578Z'
+                    user_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  state: active
+                  updated_at: '2021-08-17T13:28:57.801578Z'
+                  vacation_conflict:
+                    end_at: '2021-08-17T13:28:57.801578Z'
+                    holiday_name: Joe Bloggs - Holiday
+                    rotation_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                    schedule_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                    start_at: '2021-08-17T13:28:57.801578Z'
+                    user_id: 01FCNDV6P870EA6S7TK1DSYDG0
+              schema:
+                $ref: '#/components/schemas/PolicyFindingsRestoreResultV2'
+          description: OK response.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'invalid_request_error: There was a problem with the request, like a missing header or querying a resource that doesn''t exist.'
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'authentication_error: Authentication failed.'
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'resource_forbidden: Access to this resource is forbidden for the authenticated user.'
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_found: The referenced resource could not be found.'
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'method_not_allowed: The endpoint does not support this operation for the specified resource.'
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_acceptable: Requested a media type this endpoint does not support.'
+        '408':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'request_timeout: The request took too long to process.
+
+
+            client_timeout: The request was cancelled by the client.'
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'conflict: Request conflicted with current state of the resource, likely a concurrent update.'
+        '412':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'precondition_failed: A required condition hasn''t been met.'
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'payload_too_large: The request payload is too large.'
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'validation_error: A required field was not provided, or the provided data was invalid.'
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'too_many_requests: Too many requests hit the API too quickly. We recommend an exponential backoff of your requests.
+
+
+            rate_limit_reached: The rate limit associated with this resource or API key has been exceeded. Try again later.'
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'api_error: Something went wrong and has been reported internally.'
+      summary: Restore Policy Findings V2
+      tags:
+      - Policy Findings V2
+      x-docs-display-name: Restore
+      x-docs-group-name: Policy Findings V2
+      x-docs-resource-type: PolicyFindingV2
+      x-mint:
+        content: 🔑 Requires the `policy_findings.restore` scope.
+      x-rbac-scopes:
+      - policy_findings.restore
+      x-operation-id-source: normalized
+      x-operation-id-original: Policy Findings V2#Restore
+components:
+  schemas:
+    AlertActorV2:
+      example:
+        id: 01GW2G3V0S59R238FAHPDS1R66
+        title: '*errors.withMessage: PG::Error failed to connect'
+      properties:
+        id:
+          description: The ID of this alert
+          example: 01GW2G3V0S59R238FAHPDS1R66
+          type: string
+        title:
+          description: The title of the alert, parsed from the alert payload according to the alert source configuration
+          example: '*errors.withMessage: PG::Error failed to connect'
+          type: string
+      required:
+      - id
+      - title
+      type: object
+    PolicyFindingsListResultV2:
+      example:
+        pagination_meta:
+          after: 01FCNDV6P870EA6S7TK1DSYDG0
+          page_size: 25
+        policy_findings:
+        - created_at: '2021-08-17T13:28:57.801578Z'
+          days: 3
+          debrief:
+            incident_id: 01FCNDV6P870EA6S7TK1DSYDG0
+          dismissal:
+            dismissed_at: '2021-08-17T13:28:57.801578Z'
+            dismissed_by:
+              alert:
+                id: 01GW2G3V0S59R238FAHPDS1R66
+                title: '*errors.withMessage: PG::Error failed to connect'
+              api_key:
+                id: 01FCNDV6P870EA6S7TK1DSYDG0
+                name: My test API key
+              user:
+                email: lisa@incident.io
+                id: 01FCNDV6P870EA6S7TK1DSYDG0
+                name: Lisa Karlin Curtis
+                role: owner
+                slack_user_id: U02AYNF2XJM
+              workflow:
+                id: 01FCNDV6P870EA6S7TK1DSYDG0
+                name: My little workflow
+            reason: This incident is special.
+          due_at: '2025-10-14T00:00:00.000000Z'
+          follow_up:
+            follow_up_id: 01FCNDV6P870EA6S7TK1DSYDG0
+            incident_id: 01FCNDV6P870EA6S7TK1DSYDG0
+          id: 01G0J1EXE7AXZ2C93K61WBPYEH
+          last_checked_at: '2021-08-17T13:28:57.801578Z'
+          on_call_readiness:
+            high_urgency:
+            - max_delay_seconds: 300
+              met: false
+              method_types:
+              - slack
+            low_urgency:
+            - max_delay_seconds: 300
+              met: false
+              method_types:
+              - slack
+            user_id: 01FCNDV6P870EA6S7TK1DSYDG0
+          policy_id: 01G0J1EXE7AXZ2C93K61WBPYEH
+          policy_type: follow_up
+          post_mortem:
+            incident_id: 01FCNDV6P870EA6S7TK1DSYDG0
+          responsible_users:
+          - email: lisa@incident.io
+            id: 01FCNDV6P870EA6S7TK1DSYDG0
+            name: Lisa Karlin Curtis
+            role: owner
+            slack_user_id: U02AYNF2XJM
+          schedule:
+            cause: nobody_scheduled
+            end_at: '2021-08-17T13:28:57.801578Z'
+            has_unscheduled_time: true
+            impacted_users:
+            - cause: no_on_call_seat
+              name: Alice Green
+              user_id: 01FCNDV6P870EA6S7TK1DSYDG0
+            rotation_id: 01FCNDV6P870EA6S7TK1DSYDG0
+            schedule_id: 01FCNDV6P870EA6S7TK1DSYDG0
+            start_at: '2021-08-17T13:28:57.801578Z'
+          shift_conflict:
+            end_at: '2021-08-17T13:28:57.801578Z'
+            shifts:
+            - end_at: '2021-08-17T13:28:57.801578Z'
+              layer_id: 01FCNDV6P870EA6S7TK1DSYDG0
+              rotation_id: 01FCNDV6P870EA6S7TK1DSYDG0
+              schedule_id: 01FCNDV6P870EA6S7TK1DSYDG0
+              start_at: '2021-08-17T13:28:57.801578Z'
+            start_at: '2021-08-17T13:28:57.801578Z'
+            user_id: 01FCNDV6P870EA6S7TK1DSYDG0
+          state: active
+          updated_at: '2021-08-17T13:28:57.801578Z'
+          vacation_conflict:
+            end_at: '2021-08-17T13:28:57.801578Z'
+            holiday_name: Joe Bloggs - Holiday
+            rotation_id: 01FCNDV6P870EA6S7TK1DSYDG0
+            schedule_id: 01FCNDV6P870EA6S7TK1DSYDG0
+            start_at: '2021-08-17T13:28:57.801578Z'
+            user_id: 01FCNDV6P870EA6S7TK1DSYDG0
+      properties:
+        pagination_meta:
+          $ref: '#/components/schemas/PaginationMetaResultV2'
+        policy_findings:
+          example:
+          - created_at: '2021-08-17T13:28:57.801578Z'
+            days: 3
+            debrief:
+              incident_id: 01FCNDV6P870EA6S7TK1DSYDG0
+            dismissal:
+              dismissed_at: '2021-08-17T13:28:57.801578Z'
+              dismissed_by:
+                alert:
+                  id: 01GW2G3V0S59R238FAHPDS1R66
+                  title: '*errors.withMessage: PG::Error failed to connect'
+                api_key:
+                  id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  name: My test API key
+                user:
+                  email: lisa@incident.io
+                  id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  name: Lisa Karlin Curtis
+                  role: owner
+                  slack_user_id: U02AYNF2XJM
+                workflow:
+                  id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  name: My little workflow
+              reason: This incident is special.
+            due_at: '2025-10-14T00:00:00.000000Z'
+            follow_up:
+              follow_up_id: 01FCNDV6P870EA6S7TK1DSYDG0
+              incident_id: 01FCNDV6P870EA6S7TK1DSYDG0
+            id: 01G0J1EXE7AXZ2C93K61WBPYEH
+            last_checked_at: '2021-08-17T13:28:57.801578Z'
+            on_call_readiness:
+              high_urgency:
+              - max_delay_seconds: 300
+                met: false
+                method_types:
+                - slack
+              low_urgency:
+              - max_delay_seconds: 300
+                met: false
+                method_types:
+                - slack
+              user_id: 01FCNDV6P870EA6S7TK1DSYDG0
+            policy_id: 01G0J1EXE7AXZ2C93K61WBPYEH
+            policy_type: follow_up
+            post_mortem:
+              incident_id: 01FCNDV6P870EA6S7TK1DSYDG0
+            responsible_users:
+            - email: lisa@incident.io
+              id: 01FCNDV6P870EA6S7TK1DSYDG0
+              name: Lisa Karlin Curtis
+              role: owner
+              slack_user_id: U02AYNF2XJM
+            schedule:
+              cause: nobody_scheduled
+              end_at: '2021-08-17T13:28:57.801578Z'
+              has_unscheduled_time: true
+              impacted_users:
+              - cause: no_on_call_seat
+                name: Alice Green
+                user_id: 01FCNDV6P870EA6S7TK1DSYDG0
+              rotation_id: 01FCNDV6P870EA6S7TK1DSYDG0
+              schedule_id: 01FCNDV6P870EA6S7TK1DSYDG0
+              start_at: '2021-08-17T13:28:57.801578Z'
+            shift_conflict:
+              end_at: '2021-08-17T13:28:57.801578Z'
+              shifts:
+              - end_at: '2021-08-17T13:28:57.801578Z'
+                layer_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                rotation_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                schedule_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                start_at: '2021-08-17T13:28:57.801578Z'
+              start_at: '2021-08-17T13:28:57.801578Z'
+              user_id: 01FCNDV6P870EA6S7TK1DSYDG0
+            state: active
+            updated_at: '2021-08-17T13:28:57.801578Z'
+            vacation_conflict:
+              end_at: '2021-08-17T13:28:57.801578Z'
+              holiday_name: Joe Bloggs - Holiday
+              rotation_id: 01FCNDV6P870EA6S7TK1DSYDG0
+              schedule_id: 01FCNDV6P870EA6S7TK1DSYDG0
+              start_at: '2021-08-17T13:28:57.801578Z'
+              user_id: 01FCNDV6P870EA6S7TK1DSYDG0
+          items:
+            $ref: '#/components/schemas/PolicyFindingV2'
+          type: array
+      required:
+      - policy_findings
+      - pagination_meta
+      type: object
+    WorkflowActorV2:
+      example:
+        id: 01FCNDV6P870EA6S7TK1DSYDG0
+        name: My little workflow
+      properties:
+        id:
+          description: Unique identifier for the workflow
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+        name:
+          description: Name provided by the user when creating the workflow
+          example: My little workflow
+          type: string
+      required:
+      - id
+      - name
+      type: object
+    PolicyFindingShiftConflictShiftV2:
+      example:
+        end_at: '2021-08-17T13:28:57.801578Z'
+        layer_id: 01FCNDV6P870EA6S7TK1DSYDG0
+        rotation_id: 01FCNDV6P870EA6S7TK1DSYDG0
+        schedule_id: 01FCNDV6P870EA6S7TK1DSYDG0
+        start_at: '2021-08-17T13:28:57.801578Z'
+      properties:
+        end_at:
+          description: When this shift ends, which can be after the conflict does
+          example: '2021-08-17T13:28:57.801578Z'
+          format: date-time
+          type: string
+        layer_id:
+          description: The layer this shift belongs to
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+        rotation_id:
+          description: The rotation this shift belongs to
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+        schedule_id:
+          description: The schedule this shift belongs to
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+        start_at:
+          description: When this shift starts, which can be before the conflict does
+          example: '2021-08-17T13:28:57.801578Z'
+          format: date-time
+          type: string
+      required:
+      - schedule_id
+      - start_at
+      - end_at
+      type: object
+    PolicyFindingsShowResultV2:
+      example:
+        policy_finding:
+          created_at: '2021-08-17T13:28:57.801578Z'
+          days: 3
+          debrief:
+            incident_id: 01FCNDV6P870EA6S7TK1DSYDG0
+          dismissal:
+            dismissed_at: '2021-08-17T13:28:57.801578Z'
+            dismissed_by:
+              alert:
+                id: 01GW2G3V0S59R238FAHPDS1R66
+                title: '*errors.withMessage: PG::Error failed to connect'
+              api_key:
+                id: 01FCNDV6P870EA6S7TK1DSYDG0
+                name: My test API key
+              user:
+                email: lisa@incident.io
+                id: 01FCNDV6P870EA6S7TK1DSYDG0
+                name: Lisa Karlin Curtis
+                role: owner
+                slack_user_id: U02AYNF2XJM
+              workflow:
+                id: 01FCNDV6P870EA6S7TK1DSYDG0
+                name: My little workflow
+            reason: This incident is special.
+          due_at: '2025-10-14T00:00:00.000000Z'
+          follow_up:
+            follow_up_id: 01FCNDV6P870EA6S7TK1DSYDG0
+            incident_id: 01FCNDV6P870EA6S7TK1DSYDG0
+          id: 01G0J1EXE7AXZ2C93K61WBPYEH
+          last_checked_at: '2021-08-17T13:28:57.801578Z'
+          on_call_readiness:
+            high_urgency:
+            - max_delay_seconds: 300
+              met: false
+              method_types:
+              - slack
+            low_urgency:
+            - max_delay_seconds: 300
+              met: false
+              method_types:
+              - slack
+            user_id: 01FCNDV6P870EA6S7TK1DSYDG0
+          policy_id: 01G0J1EXE7AXZ2C93K61WBPYEH
+          policy_type: follow_up
+          post_mortem:
+            incident_id: 01FCNDV6P870EA6S7TK1DSYDG0
+          responsible_users:
+          - email: lisa@incident.io
+            id: 01FCNDV6P870EA6S7TK1DSYDG0
+            name: Lisa Karlin Curtis
+            role: owner
+            slack_user_id: U02AYNF2XJM
+          schedule:
+            cause: nobody_scheduled
+            end_at: '2021-08-17T13:28:57.801578Z'
+            has_unscheduled_time: true
+            impacted_users:
+            - cause: no_on_call_seat
+              name: Alice Green
+              user_id: 01FCNDV6P870EA6S7TK1DSYDG0
+            rotation_id: 01FCNDV6P870EA6S7TK1DSYDG0
+            schedule_id: 01FCNDV6P870EA6S7TK1DSYDG0
+            start_at: '2021-08-17T13:28:57.801578Z'
+          shift_conflict:
+            end_at: '2021-08-17T13:28:57.801578Z'
+            shifts:
+            - end_at: '2021-08-17T13:28:57.801578Z'
+              layer_id: 01FCNDV6P870EA6S7TK1DSYDG0
+              rotation_id: 01FCNDV6P870EA6S7TK1DSYDG0
+              schedule_id: 01FCNDV6P870EA6S7TK1DSYDG0
+              start_at: '2021-08-17T13:28:57.801578Z'
+            start_at: '2021-08-17T13:28:57.801578Z'
+            user_id: 01FCNDV6P870EA6S7TK1DSYDG0
+          state: active
+          updated_at: '2021-08-17T13:28:57.801578Z'
+          vacation_conflict:
+            end_at: '2021-08-17T13:28:57.801578Z'
+            holiday_name: Joe Bloggs - Holiday
+            rotation_id: 01FCNDV6P870EA6S7TK1DSYDG0
+            schedule_id: 01FCNDV6P870EA6S7TK1DSYDG0
+            start_at: '2021-08-17T13:28:57.801578Z'
+            user_id: 01FCNDV6P870EA6S7TK1DSYDG0
+      properties:
+        policy_finding:
+          $ref: '#/components/schemas/PolicyFindingV2'
+      required:
+      - policy_finding
+      type: object
+    PolicyFindingScheduleV2:
+      description: Set when policy_type is schedule. Describes a gap in on-call cover.
+      example:
+        cause: nobody_scheduled
+        end_at: '2021-08-17T13:28:57.801578Z'
+        has_unscheduled_time: true
+        impacted_users:
+        - cause: no_on_call_seat
+          name: Alice Green
+          user_id: 01FCNDV6P870EA6S7TK1DSYDG0
+        rotation_id: 01FCNDV6P870EA6S7TK1DSYDG0
+        schedule_id: 01FCNDV6P870EA6S7TK1DSYDG0
+        start_at: '2021-08-17T13:28:57.801578Z'
+      properties:
+        cause:
+          description: Why the gap exists
+          enum:
+          - nobody_scheduled
+          - no_on_call_seat
+          - user_deactivated
+          - notifications_paused
+          example: nobody_scheduled
+          type: string
+        end_at:
+          description: When the gap ends
+          example: '2021-08-17T13:28:57.801578Z'
+          format: date-time
+          type: string
+        has_unscheduled_time:
+          description: Whether part of the gap has nobody scheduled at all, so impacted_users doesn't fully explain it
+          example: true
+          type: boolean
+        impacted_users:
+          description: Users scheduled across the gap whose entries don't count as cover
+          example:
+          - cause: no_on_call_seat
+            name: Alice Green
+            user_id: 01FCNDV6P870EA6S7TK1DSYDG0
+          items:
+            $ref: '#/components/schemas/PolicyFindingScheduleImpactedUserV2'
+          type: array
+        rotation_id:
+          description: The rotation with the gap, when the policy evaluates per rotation
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+        schedule_id:
+          description: The schedule with the gap
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+        start_at:
+          description: When the gap starts
+          example: '2021-08-17T13:28:57.801578Z'
+          format: date-time
+          type: string
+      required:
+      - schedule_id
+      - start_at
+      - end_at
+      type: object
+    PaginationMetaResultV2:
+      example:
+        after: 01FCNDV6P870EA6S7TK1DSYDG0
+        page_size: 25
+      properties:
+        after:
+          description: If provided, pass this as the 'after' param to load the next page
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+        page_size:
+          default: 25
+          description: What was the maximum number of results requested
+          example: 25
+          format: int64
+          maximum: 250
+          type: integer
+      required:
+      - page_size
+      type: object
+    ErrorResponse:
+      example:
+        debug:
+          message: 'Something broke: and something else: and something else'
+          stacktrace:
+          - thing.go:123
+        errors:
+        - code: trial_expired
+          message: Default incident call link must be a valid URL
+          metadata:
+            abc123: abc123
+          source:
+            field: default_call_url
+            pointer: /settings/default_call_url
+        rate_limit:
+          limit: 100
+          name: client_ip
+          remaining: 98
+          retry_after: '2020-01-01T00:00:00Z'
+        request_id: 2T1p0e3j
+        status: 408
+        type: invalid_request_error
+      properties:
+        debug:
+          $ref: '#/components/schemas/ErrorDebug'
+        errors:
+          description: List of errors that caused this request to fail
+          example:
+          - code: trial_expired
+            message: Default incident call link must be a valid URL
+            metadata:
+              abc123: abc123
+            source:
+              field: default_call_url
+              pointer: /settings/default_call_url
+          items:
+            $ref: '#/components/schemas/ErrorSingle'
+          type: array
+        rate_limit:
+          $ref: '#/components/schemas/ErrorRateLimit'
+        request_id:
+          description: Unique identifier of the request
+          example: 2T1p0e3j
+          type: string
+        status:
+          description: HTTP status of the response
+          example: 408
+          format: int64
+          type: integer
+        type:
+          description: Machine-readable identifier for the general category of error
+          enum:
+          - invalid_request_error
+          - authentication_error
+          - resource_forbidden
+          - not_found
+          - not_acceptable
+          - method_not_allowed
+          - request_timeout
+          - conflict
+          - precondition_failed
+          - payload_too_large
+          - validation_error
+          - too_many_requests
+          - api_error
+          - rate_limit_reached
+          - client_timeout
+          example: invalid_request_error
+          type: string
+      required:
+      - type
+      - status
+      - request_id
+      - errors
+      type: object
+    PolicyFindingDismissalV2:
+      example:
+        dismissed_at: '2021-08-17T13:28:57.801578Z'
+        dismissed_by:
+          alert:
+            id: 01GW2G3V0S59R238FAHPDS1R66
+            title: '*errors.withMessage: PG::Error failed to connect'
+          api_key:
+            id: 01FCNDV6P870EA6S7TK1DSYDG0
+            name: My test API key
+          user:
+            email: lisa@incident.io
+            id: 01FCNDV6P870EA6S7TK1DSYDG0
+            name: Lisa Karlin Curtis
+            role: owner
+            slack_user_id: U02AYNF2XJM
+          workflow:
+            id: 01FCNDV6P870EA6S7TK1DSYDG0
+            name: My little workflow
+        reason: This incident is special.
+      properties:
+        dismissed_at:
+          example: '2021-08-17T13:28:57.801578Z'
+          format: date-time
+          type: string
+        dismissed_by:
+          $ref: '#/components/schemas/ActorV2'
+        reason:
+          description: Why it was dismissed
+          example: This incident is special.
+          type: string
+      required:
+      - dismissed_at
+      - dismissed_by
+      - reason
+      type: object
+    PolicyFindingScheduleImpactedUserV2:
+      example:
+        cause: no_on_call_seat
+        name: Alice Green
+        user_id: 01FCNDV6P870EA6S7TK1DSYDG0
+      properties:
+        cause:
+          description: Why this user's entries don't count as cover
+          enum:
+          - no_on_call_seat
+          - user_deactivated
+          - notifications_paused
+          example: no_on_call_seat
+          type: string
+        name:
+          example: Alice Green
+          type: string
+        user_id:
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+      required:
+      - user_id
+      - name
+      - cause
+      type: object
+    ErrorSource:
+      example:
+        field: default_call_url
+        pointer: /settings/default_call_url
+      properties:
+        field:
+          description: Field name that is the source of the error
+          example: default_call_url
+          type: string
+        pointer:
+          description: JSON pointer to the request field that is the source of the error
+          example: /settings/default_call_url
+          type: string
+      required:
+      - field
+      - pointer
+      type: object
+    ErrorRateLimit:
+      example:
+        limit: 100
+        name: client_ip
+        remaining: 98
+        retry_after: '2020-01-01T00:00:00Z'
+      properties:
+        limit:
+          description: The maximum number of requests that the consumer is permitted to make per minute
+          example: 100
+          format: int64
+          type: integer
+        name:
+          description: Which rate limit was exceeded
+          example: client_ip
+          type: string
+        remaining:
+          description: The number of requests remaining in the current rate limit window
+          example: 98
+          format: int64
+          type: integer
+        retry_after:
+          description: When the client can retry, as an RFC3339 timestamp in UTC. Prefer the Retry-After response header, which carries the same instant as a number of seconds
+          example: '2020-01-01T00:00:00Z'
+          type: string
+      required:
+      - name
+      - limit
+      - remaining
+      - retry_after
+      type: object
+    PolicyFindingsDismissPayloadV2:
+      example:
+        reason: This incident is special.
+      properties:
+        reason:
+          description: Why this finding is being dismissed
+          example: This incident is special.
+          maxLength: 1000
+          type: string
+      required:
+      - reason
+      type: object
+    ErrorDebug:
+      example:
+        message: 'Something broke: and something else: and something else'
+        stacktrace:
+        - thing.go:123
+      properties:
+        message:
+          description: Original internal error message
+          example: 'Something broke: and something else: and something else'
+          type: string
+        stacktrace:
+          description: Stacktrace of the error, if applicable
+          example:
+          - thing.go:123
+          items:
+            example: thing.go:123
+            type: string
+          type: array
+      required:
+      - message
+      - stacktrace
+      type: object
+    PolicyFindingReadinessRuleV2:
+      example:
+        max_delay_seconds: 300
+        met: false
+        method_types:
+        - slack
+      properties:
+        max_delay_seconds:
+          description: How quickly the method must fire to count
+          example: 300
+          format: int64
+          type: integer
+        met:
+          description: Whether the user's notification rules satisfy this one
+          example: false
+          type: boolean
+        method_types:
+          example:
+          - slack
+          items:
+            enum:
+            - slack
+            - email
+            - app
+            - sms
+            - phone
+            - live_call
+            - slack_channel
+            - microsoft_teams
+            - microsoft_teams_channel
+            - whatsapp_message
+            example: slack
+            type: string
+          type: array
+      required:
+      - method_types
+      - met
+      type: object
+    PolicyFindingPostMortemV2:
+      description: Set when policy_type is post_mortem.
+      example:
+        incident_id: 01FCNDV6P870EA6S7TK1DSYDG0
+      properties:
+        incident_id:
+          description: The incident whose post-mortem fell short of the policy
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+      required:
+      - incident_id
+      type: object
+    PolicyFindingDebriefV2:
+      description: Set when policy_type is debrief.
+      example:
+        incident_id: 01FCNDV6P870EA6S7TK1DSYDG0
+      properties:
+        incident_id:
+          description: The incident the debrief belongs to
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+      required:
+      - incident_id
+      type: object
+    PolicyFindingFollowUpV2:
+      description: Set when policy_type is follow_up.
+      example:
+        follow_up_id: 01FCNDV6P870EA6S7TK1DSYDG0
+        incident_id: 01FCNDV6P870EA6S7TK1DSYDG0
+      properties:
+        follow_up_id:
+          description: The follow-up that fell short of the policy
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+        incident_id:
+          description: The incident the follow-up belongs to
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+      required:
+      - incident_id
+      - follow_up_id
+      type: object
+    PolicyFindingShiftConflictV2:
+      description: Set when policy_type is shift_conflict. Someone is on call in two or more places at once.
+      example:
+        end_at: '2021-08-17T13:28:57.801578Z'
+        shifts:
+        - end_at: '2021-08-17T13:28:57.801578Z'
+          layer_id: 01FCNDV6P870EA6S7TK1DSYDG0
+          rotation_id: 01FCNDV6P870EA6S7TK1DSYDG0
+          schedule_id: 01FCNDV6P870EA6S7TK1DSYDG0
+          start_at: '2021-08-17T13:28:57.801578Z'
+        start_at: '2021-08-17T13:28:57.801578Z'
+        user_id: 01FCNDV6P870EA6S7TK1DSYDG0
+      properties:
+        end_at:
+          description: When the conflict ends
+          example: '2021-08-17T13:28:57.801578Z'
+          format: date-time
+          type: string
+        shifts:
+          description: Every shift that overlaps the conflict
+          example:
+          - end_at: '2021-08-17T13:28:57.801578Z'
+            layer_id: 01FCNDV6P870EA6S7TK1DSYDG0
+            rotation_id: 01FCNDV6P870EA6S7TK1DSYDG0
+            schedule_id: 01FCNDV6P870EA6S7TK1DSYDG0
+            start_at: '2021-08-17T13:28:57.801578Z'
+          items:
+            $ref: '#/components/schemas/PolicyFindingShiftConflictShiftV2'
+          type: array
+        start_at:
+          description: When the conflict starts
+          example: '2021-08-17T13:28:57.801578Z'
+          format: date-time
+          type: string
+        user_id:
+          description: The user with overlapping shifts
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+      required:
+      - user_id
+      - start_at
+      - end_at
+      - shifts
+      type: object
+    ActorV2:
+      example:
+        alert:
+          id: 01GW2G3V0S59R238FAHPDS1R66
+          title: '*errors.withMessage: PG::Error failed to connect'
+        api_key:
+          id: 01FCNDV6P870EA6S7TK1DSYDG0
+          name: My test API key
+        user:
+          email: lisa@incident.io
+          id: 01FCNDV6P870EA6S7TK1DSYDG0
+          name: Lisa Karlin Curtis
+          role: owner
+          slack_user_id: U02AYNF2XJM
+        workflow:
+          id: 01FCNDV6P870EA6S7TK1DSYDG0
+          name: My little workflow
+      properties:
+        alert:
+          $ref: '#/components/schemas/AlertActorV2'
+        api_key:
+          $ref: '#/components/schemas/APIKeyActorV2'
+        user:
+          $ref: '#/components/schemas/UserV2'
+        workflow:
+          $ref: '#/components/schemas/WorkflowActorV2'
+      type: object
+    PolicyFindingsDismissResultV2:
+      example:
+        policy_finding:
+          created_at: '2021-08-17T13:28:57.801578Z'
+          days: 3
+          debrief:
+            incident_id: 01FCNDV6P870EA6S7TK1DSYDG0
+          dismissal:
+            dismissed_at: '2021-08-17T13:28:57.801578Z'
+            dismissed_by:
+              alert:
+                id: 01GW2G3V0S59R238FAHPDS1R66
+                title: '*errors.withMessage: PG::Error failed to connect'
+              api_key:
+                id: 01FCNDV6P870EA6S7TK1DSYDG0
+                name: My test API key
+              user:
+                email: lisa@incident.io
+                id: 01FCNDV6P870EA6S7TK1DSYDG0
+                name: Lisa Karlin Curtis
+                role: owner
+                slack_user_id: U02AYNF2XJM
+              workflow:
+                id: 01FCNDV6P870EA6S7TK1DSYDG0
+                name: My little workflow
+            reason: This incident is special.
+          due_at: '2025-10-14T00:00:00.000000Z'
+          follow_up:
+            follow_up_id: 01FCNDV6P870EA6S7TK1DSYDG0
+            incident_id: 01FCNDV6P870EA6S7TK1DSYDG0
+          id: 01G0J1EXE7AXZ2C93K61WBPYEH
+          last_checked_at: '2021-08-17T13:28:57.801578Z'
+          on_call_readiness:
+            high_urgency:
+            - max_delay_seconds: 300
+              met: false
+              method_types:
+              - slack
+            low_urgency:
+            - max_delay_seconds: 300
+              met: false
+              method_types:
+              - slack
+            user_id: 01FCNDV6P870EA6S7TK1DSYDG0
+          policy_id: 01G0J1EXE7AXZ2C93K61WBPYEH
+          policy_type: follow_up
+          post_mortem:
+            incident_id: 01FCNDV6P870EA6S7TK1DSYDG0
+          responsible_users:
+          - email: lisa@incident.io
+            id: 01FCNDV6P870EA6S7TK1DSYDG0
+            name: Lisa Karlin Curtis
+            role: owner
+            slack_user_id: U02AYNF2XJM
+          schedule:
+            cause: nobody_scheduled
+            end_at: '2021-08-17T13:28:57.801578Z'
+            has_unscheduled_time: true
+            impacted_users:
+            - cause: no_on_call_seat
+              name: Alice Green
+              user_id: 01FCNDV6P870EA6S7TK1DSYDG0
+            rotation_id: 01FCNDV6P870EA6S7TK1DSYDG0
+            schedule_id: 01FCNDV6P870EA6S7TK1DSYDG0
+            start_at: '2021-08-17T13:28:57.801578Z'
+          shift_conflict:
+            end_at: '2021-08-17T13:28:57.801578Z'
+            shifts:
+            - end_at: '2021-08-17T13:28:57.801578Z'
+              layer_id: 01FCNDV6P870EA6S7TK1DSYDG0
+              rotation_id: 01FCNDV6P870EA6S7TK1DSYDG0
+              schedule_id: 01FCNDV6P870EA6S7TK1DSYDG0
+              start_at: '2021-08-17T13:28:57.801578Z'
+            start_at: '2021-08-17T13:28:57.801578Z'
+            user_id: 01FCNDV6P870EA6S7TK1DSYDG0
+          state: active
+          updated_at: '2021-08-17T13:28:57.801578Z'
+          vacation_conflict:
+            end_at: '2021-08-17T13:28:57.801578Z'
+            holiday_name: Joe Bloggs - Holiday
+            rotation_id: 01FCNDV6P870EA6S7TK1DSYDG0
+            schedule_id: 01FCNDV6P870EA6S7TK1DSYDG0
+            start_at: '2021-08-17T13:28:57.801578Z'
+            user_id: 01FCNDV6P870EA6S7TK1DSYDG0
+      properties:
+        policy_finding:
+          $ref: '#/components/schemas/PolicyFindingV2'
+      required:
+      - policy_finding
+      type: object
+    PolicyFindingVacationConflictV2:
+      description: Set when policy_type is vacation_conflict. Someone is on call while on holiday.
+      example:
+        end_at: '2021-08-17T13:28:57.801578Z'
+        holiday_name: Joe Bloggs - Holiday
+        rotation_id: 01FCNDV6P870EA6S7TK1DSYDG0
+        schedule_id: 01FCNDV6P870EA6S7TK1DSYDG0
+        start_at: '2021-08-17T13:28:57.801578Z'
+        user_id: 01FCNDV6P870EA6S7TK1DSYDG0
+      properties:
+        end_at:
+          description: When the conflict ends
+          example: '2021-08-17T13:28:57.801578Z'
+          format: date-time
+          type: string
+        holiday_name:
+          description: What the holiday is called in the external system
+          example: Joe Bloggs - Holiday
+          type: string
+        rotation_id:
+          description: The rotation the holiday conflicts with
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+        schedule_id:
+          description: The schedule the holiday conflicts with
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+        start_at:
+          description: When the conflict starts
+          example: '2021-08-17T13:28:57.801578Z'
+          format: date-time
+          type: string
+        user_id:
+          description: The user on holiday
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+      required:
+      - user_id
+      - schedule_id
+      - start_at
+      - end_at
+      type: object
+    PolicyFindingV2:
+      example:
+        created_at: '2021-08-17T13:28:57.801578Z'
+        days: 3
+        debrief:
+          incident_id: 01FCNDV6P870EA6S7TK1DSYDG0
+        dismissal:
+          dismissed_at: '2021-08-17T13:28:57.801578Z'
+          dismissed_by:
+            alert:
+              id: 01GW2G3V0S59R238FAHPDS1R66
+              title: '*errors.withMessage: PG::Error failed to connect'
+            api_key:
+              id: 01FCNDV6P870EA6S7TK1DSYDG0
+              name: My test API key
+            user:
+              email: lisa@incident.io
+              id: 01FCNDV6P870EA6S7TK1DSYDG0
+              name: Lisa Karlin Curtis
+              role: owner
+              slack_user_id: U02AYNF2XJM
+            workflow:
+              id: 01FCNDV6P870EA6S7TK1DSYDG0
+              name: My little workflow
+          reason: This incident is special.
+        due_at: '2025-10-14T00:00:00.000000Z'
+        follow_up:
+          follow_up_id: 01FCNDV6P870EA6S7TK1DSYDG0
+          incident_id: 01FCNDV6P870EA6S7TK1DSYDG0
+        id: 01G0J1EXE7AXZ2C93K61WBPYEH
+        last_checked_at: '2021-08-17T13:28:57.801578Z'
+        on_call_readiness:
+          high_urgency:
+          - max_delay_seconds: 300
+            met: false
+            method_types:
+            - slack
+          low_urgency:
+          - max_delay_seconds: 300
+            met: false
+            method_types:
+            - slack
+          user_id: 01FCNDV6P870EA6S7TK1DSYDG0
+        policy_id: 01G0J1EXE7AXZ2C93K61WBPYEH
+        policy_type: follow_up
+        post_mortem:
+          incident_id: 01FCNDV6P870EA6S7TK1DSYDG0
+        responsible_users:
+        - email: lisa@incident.io
+          id: 01FCNDV6P870EA6S7TK1DSYDG0
+          name: Lisa Karlin Curtis
+          role: owner
+          slack_user_id: U02AYNF2XJM
+        schedule:
+          cause: nobody_scheduled
+          end_at: '2021-08-17T13:28:57.801578Z'
+          has_unscheduled_time: true
+          impacted_users:
+          - cause: no_on_call_seat
+            name: Alice Green
+            user_id: 01FCNDV6P870EA6S7TK1DSYDG0
+          rotation_id: 01FCNDV6P870EA6S7TK1DSYDG0
+          schedule_id: 01FCNDV6P870EA6S7TK1DSYDG0
+          start_at: '2021-08-17T13:28:57.801578Z'
+        shift_conflict:
+          end_at: '2021-08-17T13:28:57.801578Z'
+          shifts:
+          - end_at: '2021-08-17T13:28:57.801578Z'
+            layer_id: 01FCNDV6P870EA6S7TK1DSYDG0
+            rotation_id: 01FCNDV6P870EA6S7TK1DSYDG0
+            schedule_id: 01FCNDV6P870EA6S7TK1DSYDG0
+            start_at: '2021-08-17T13:28:57.801578Z'
+          start_at: '2021-08-17T13:28:57.801578Z'
+          user_id: 01FCNDV6P870EA6S7TK1DSYDG0
+        state: active
+        updated_at: '2021-08-17T13:28:57.801578Z'
+        vacation_conflict:
+          end_at: '2021-08-17T13:28:57.801578Z'
+          holiday_name: Joe Bloggs - Holiday
+          rotation_id: 01FCNDV6P870EA6S7TK1DSYDG0
+          schedule_id: 01FCNDV6P870EA6S7TK1DSYDG0
+          start_at: '2021-08-17T13:28:57.801578Z'
+          user_id: 01FCNDV6P870EA6S7TK1DSYDG0
+      properties:
+        created_at:
+          example: '2021-08-17T13:28:57.801578Z'
+          format: date-time
+          type: string
+        days:
+          description: Days outside the policy's due date
+          example: 3
+          format: int64
+          type: integer
+        debrief:
+          $ref: '#/components/schemas/PolicyFindingDebriefV2'
+        dismissal:
+          $ref: '#/components/schemas/PolicyFindingDismissalV2'
+        due_at:
+          description: When this finding becomes overdue
+          example: '2025-10-14T00:00:00.000000Z'
+          format: date-time
+          type: string
+        follow_up:
+          $ref: '#/components/schemas/PolicyFindingFollowUpV2'
+        id:
+          description: Unique ID of the finding
+          example: 01G0J1EXE7AXZ2C93K61WBPYEH
+          type: string
+        last_checked_at:
+          description: When this finding was last re-evaluated
+          example: '2021-08-17T13:28:57.801578Z'
+          format: date-time
+          type: string
+        on_call_readiness:
+          $ref: '#/components/schemas/PolicyFindingOnCallReadinessV2'
+        policy_id:
+          description: The policy this finding was raised against
+          example: 01G0J1EXE7AXZ2C93K61WBPYEH
+          type: string
+        policy_type:
+          description: Type of the policy this finding was raised against
+          enum:
+          - debrief
+          - follow_up
+          - on_call_readiness
+          - post_mortem
+          - schedule
+          - shift_conflict
+          - vacation_conflict
+          example: follow_up
+          type: string
+        post_mortem:
+          $ref: '#/components/schemas/PolicyFindingPostMortemV2'
+        responsible_users:
+          description: Who is expected to resolve this finding
+          example:
+          - email: lisa@incident.io
+            id: 01FCNDV6P870EA6S7TK1DSYDG0
+            name: Lisa Karlin Curtis
+            role: owner
+            slack_user_id: U02AYNF2XJM
+          items:
+            $ref: '#/components/schemas/UserV2'
+          type: array
+        schedule:
+          $ref: '#/components/schemas/PolicyFindingScheduleV2'
+        shift_conflict:
+          $ref: '#/components/schemas/PolicyFindingShiftConflictV2'
+        state:
+          description: Where this finding is in its lifecycle
+          enum:
+          - pending
+          - active
+          - resolved
+          - cancelled
+          - dismissed
+          example: active
+          type: string
+        updated_at:
+          example: '2021-08-17T13:28:57.801578Z'
+          format: date-time
+          type: string
+        vacation_conflict:
+          $ref: '#/components/schemas/PolicyFindingVacationConflictV2'
+      required:
+      - id
+      - policy_id
+      - policy_type
+      - state
+      - responsible_users
+      - last_checked_at
+      - created_at
+      - updated_at
+      type: object
+    PolicyFindingsRestoreResultV2:
+      example:
+        policy_finding:
+          created_at: '2021-08-17T13:28:57.801578Z'
+          days: 3
+          debrief:
+            incident_id: 01FCNDV6P870EA6S7TK1DSYDG0
+          dismissal:
+            dismissed_at: '2021-08-17T13:28:57.801578Z'
+            dismissed_by:
+              alert:
+                id: 01GW2G3V0S59R238FAHPDS1R66
+                title: '*errors.withMessage: PG::Error failed to connect'
+              api_key:
+                id: 01FCNDV6P870EA6S7TK1DSYDG0
+                name: My test API key
+              user:
+                email: lisa@incident.io
+                id: 01FCNDV6P870EA6S7TK1DSYDG0
+                name: Lisa Karlin Curtis
+                role: owner
+                slack_user_id: U02AYNF2XJM
+              workflow:
+                id: 01FCNDV6P870EA6S7TK1DSYDG0
+                name: My little workflow
+            reason: This incident is special.
+          due_at: '2025-10-14T00:00:00.000000Z'
+          follow_up:
+            follow_up_id: 01FCNDV6P870EA6S7TK1DSYDG0
+            incident_id: 01FCNDV6P870EA6S7TK1DSYDG0
+          id: 01G0J1EXE7AXZ2C93K61WBPYEH
+          last_checked_at: '2021-08-17T13:28:57.801578Z'
+          on_call_readiness:
+            high_urgency:
+            - max_delay_seconds: 300
+              met: false
+              method_types:
+              - slack
+            low_urgency:
+            - max_delay_seconds: 300
+              met: false
+              method_types:
+              - slack
+            user_id: 01FCNDV6P870EA6S7TK1DSYDG0
+          policy_id: 01G0J1EXE7AXZ2C93K61WBPYEH
+          policy_type: follow_up
+          post_mortem:
+            incident_id: 01FCNDV6P870EA6S7TK1DSYDG0
+          responsible_users:
+          - email: lisa@incident.io
+            id: 01FCNDV6P870EA6S7TK1DSYDG0
+            name: Lisa Karlin Curtis
+            role: owner
+            slack_user_id: U02AYNF2XJM
+          schedule:
+            cause: nobody_scheduled
+            end_at: '2021-08-17T13:28:57.801578Z'
+            has_unscheduled_time: true
+            impacted_users:
+            - cause: no_on_call_seat
+              name: Alice Green
+              user_id: 01FCNDV6P870EA6S7TK1DSYDG0
+            rotation_id: 01FCNDV6P870EA6S7TK1DSYDG0
+            schedule_id: 01FCNDV6P870EA6S7TK1DSYDG0
+            start_at: '2021-08-17T13:28:57.801578Z'
+          shift_conflict:
+            end_at: '2021-08-17T13:28:57.801578Z'
+            shifts:
+            - end_at: '2021-08-17T13:28:57.801578Z'
+              layer_id: 01FCNDV6P870EA6S7TK1DSYDG0
+              rotation_id: 01FCNDV6P870EA6S7TK1DSYDG0
+              schedule_id: 01FCNDV6P870EA6S7TK1DSYDG0
+              start_at: '2021-08-17T13:28:57.801578Z'
+            start_at: '2021-08-17T13:28:57.801578Z'
+            user_id: 01FCNDV6P870EA6S7TK1DSYDG0
+          state: active
+          updated_at: '2021-08-17T13:28:57.801578Z'
+          vacation_conflict:
+            end_at: '2021-08-17T13:28:57.801578Z'
+            holiday_name: Joe Bloggs - Holiday
+            rotation_id: 01FCNDV6P870EA6S7TK1DSYDG0
+            schedule_id: 01FCNDV6P870EA6S7TK1DSYDG0
+            start_at: '2021-08-17T13:28:57.801578Z'
+            user_id: 01FCNDV6P870EA6S7TK1DSYDG0
+      properties:
+        policy_finding:
+          $ref: '#/components/schemas/PolicyFindingV2'
+      required:
+      - policy_finding
+      type: object
+    PolicyFindingOnCallReadinessV2:
+      description: Set when policy_type is on_call_readiness. The user is always the one the finding is about.
+      example:
+        high_urgency:
+        - max_delay_seconds: 300
+          met: false
+          method_types:
+          - slack
+        low_urgency:
+        - max_delay_seconds: 300
+          met: false
+          method_types:
+          - slack
+        user_id: 01FCNDV6P870EA6S7TK1DSYDG0
+      properties:
+        high_urgency:
+          description: The high urgency rules the policy requires, and whether each was met
+          example:
+          - max_delay_seconds: 300
+            met: false
+            method_types:
+            - slack
+          items:
+            $ref: '#/components/schemas/PolicyFindingReadinessRuleV2'
+          type: array
+        low_urgency:
+          description: The low urgency rules the policy requires, and whether each was met
+          example:
+          - max_delay_seconds: 300
+            met: false
+            method_types:
+            - slack
+          items:
+            $ref: '#/components/schemas/PolicyFindingReadinessRuleV2'
+          type: array
+        user_id:
+          description: The user whose notification rules fell short
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+      required:
+      - user_id
+      - high_urgency
+      - low_urgency
+      type: object
+    UserV2:
+      example:
+        email: lisa@incident.io
+        id: 01FCNDV6P870EA6S7TK1DSYDG0
+        name: Lisa Karlin Curtis
+        role: owner
+        slack_user_id: U02AYNF2XJM
+      properties:
+        email:
+          description: Email address of the user.
+          example: lisa@incident.io
+          type: string
+        id:
+          description: Unique identifier of the user
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+        name:
+          description: Name of the user
+          example: Lisa Karlin Curtis
+          type: string
+        role:
+          description: 'DEPRECATED: Role of the user as of March 9th 2023, this value is no longer updated.'
+          enum:
+          - viewer
+          - responder
+          - administrator
+          - owner
+          - unset
+          example: owner
+          type: string
+        slack_user_id:
+          description: Slack ID of the user
+          example: U02AYNF2XJM
+          type: string
+      required:
+      - role
+      - id
+      - name
+      type: object
+    APIKeyActorV2:
+      example:
+        id: 01FCNDV6P870EA6S7TK1DSYDG0
+        name: My test API key
+      properties:
+        id:
+          description: Unique identifier for this API key
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+        name:
+          description: The name of the API key, for the user's reference
+          example: My test API key
+          type: string
+      required:
+      - id
+      - name
+      type: object
+    ErrorSingle:
+      example:
+        code: trial_expired
+        message: Default incident call link must be a valid URL
+        metadata:
+          abc123: abc123
+        source:
+          field: default_call_url
+          pointer: /settings/default_call_url
+      properties:
+        code:
+          description: Machine-readable identifier for this specific error
+          example: trial_expired
+          type: string
+        message:
+          description: Human readable description of the error
+          example: Default incident call link must be a valid URL
+          type: string
+        metadata:
+          additionalProperties:
+            example: abc123
+            type: string
+          description: Additional metadata about the error, keyed by a string identifier
+          example:
+            abc123: abc123
+          type: object
+        source:
+          $ref: '#/components/schemas/ErrorSource'
+      required:
+      - code
+      - message
+      type: object
+  securitySchemes:
+    BearerAuth:
+      description: API key from your incident.io dashboard (Settings > API keys)
+      scheme: bearer
+      type: http
+externalDocs:
+  description: View our API docs at api-docs.incident.io
+  url: https://api-docs.incident.io/

@@ -1,0 +1,1510 @@
+openapi: 3.2.0
+info:
+  description: 'This is the API reference for incident.io. It documents available API endpoints, provides examples of how to use it, and
+
+    instructions around things like authentication and error handling. The API is hosted at:
+
+
+    - https://api.incident.io/
+
+
+    And you will need to create an API key via your incident.io
+
+    dashboard to make requests. # Making requests
+
+
+    Here are the key concepts required to make requests to the incident.io API. ## Authentication
+
+
+    For all requests made to the incident.io API, you''ll need an API key. To create an API key, head to the incident dashboard and visit API
+
+    keys. When you create the key, you''ll be able to choose what actions it
+
+    can take for your account: choose carefully, as those roles can only be set
+
+    when you first create the key. We''ll only show you the token once, so make sure
+
+    you store it somewhere safe. API keys are global to your incident.io account, and can be managed by anyone
+
+    who has the right permissions. We display the user that created the API key,
+
+    and the API key will remain valid if that user becomes deactivated. Once you have the key, you should make requests to the API that set the
+
+    `Authorization` request header using a "Bearer" authentication scheme:
+
+
+    ```
+
+    Authorization: Bearer
+
+    ```
+
+
+    ## Rate Limits
+
+
+    The incident.io API enforces rate limits to ensure consistent performance for all users. The default rate limit is 1200 requests/minute per API key. This limit applies to most endpoints across the API. Limits are token buckets that refill continuously rather than resetting on a fixed window boundary. The default
+
+    bucket holds 1200 requests and refills at 20 per second, so you can burst up to the full bucket and then sustain
+
+    20 requests/second indefinitely. There is no boundary at which your quota resets to full in one step. Some endpoints have lower rate limits, particularly those that interact with external third-party systems that impose
+
+    their own limitations. These specific limits vary by endpoint. ### Rate limit headers
+
+
+    Responses to requests authenticated with an API key carry your current allowance, so you can pace yourself rather
+
+    than waiting to be throttled:
+
+
+    ```
+
+    X-RateLimit-Limit: 60, 1200;window=60, 60;window=60
+
+    X-RateLimit-Remaining: 59
+
+    X-RateLimit-Used: 1
+
+    X-RateLimit-Reset: 1785173199
+
+    ```
+
+
+    | Header | Meaning |
+
+    | --- | --- |
+
+    | `X-RateLimit-Limit` | The quota that binds this request, followed by every limit that applied and the window it applies over |
+
+    | `X-RateLimit-Remaining` | Requests you can make right now against the binding limit |
+
+    | `X-RateLimit-Used` | Requests you have spent against it |
+
+    | `X-RateLimit-Reset` | Unix timestamp (seconds) at which that limit will be back to full |
+
+
+    More than one limit can apply to a request: your API key''s overall limit, and for some endpoints a lower limit of
+
+    their own. `X-RateLimit-Limit` lists all of them, each with its window, so `1200;window=60` means 1200 requests per
+
+    minute. Because our limits refill continuously rather than resetting on a boundary, that window is what tells you
+
+    the rate you can sustain: 1200 per 60 seconds is 20 requests/second indefinitely. `Remaining`, `Used` and `Reset` describe whichever limit has the least allowance left, since that is the one you
+
+    will hit first. `X-RateLimit-Remaining` may lag by a small number of requests under high concurrency, and can move by more than the
+
+    requests you made, because limits scoped to your whole organisation are shared with your other API keys. Headers are omitted rather than guessed if we cannot determine your allowance for a request. ### Exceeding a rate limit
+
+
+    When you exceed a rate limit the API responds with `429 Too Many Requests` and a `Retry-After` header giving the
+
+    number of seconds to wait:
+
+
+    ```
+
+    X-RateLimit-Limit: 1200, 1200;window=60
+
+    X-RateLimit-Remaining: 0
+
+    X-RateLimit-Used: 1200
+
+    X-RateLimit-Reset: 1785173199
+
+    Retry-After: 1
+
+    ```
+
+
+    Prefer `Retry-After` over `X-RateLimit-Reset` when deciding how long to back off.'
+  title: incident.io PostmortemDocuments V1 API
+  version: 1.0.0
+servers:
+- url: https://api.incident.io
+security:
+- BearerAuth: []
+tags:
+- description: 'Manage post-mortem documents.
+
+
+    Post-mortem documents capture the learnings from an incident, and are associated with a specific
+
+    incident. Use this API to list and retrieve post-mortem documents, update their status, and fetch
+
+    the full document''s content.'
+  name: PostmortemDocuments V1
+paths:
+  /v1/postmortem_documents:
+    get:
+      description: 'List post-mortem documents for the organisation.
+
+
+        Results can be filtered by incident and sorted by creation date. This endpoint returns document
+
+        metadata only. If you want to fetch the content of the post-mortem, use the ShowContent endpoint.'
+      operationId: PostmortemDocumentsV1#List
+      parameters:
+      - allowEmptyValue: true
+        description: Integer number of records to return
+        example: 25
+        in: query
+        name: page_size
+        schema:
+          default: 25
+          description: Integer number of records to return
+          example: 25
+          format: int64
+          maximum: 250
+          minimum: 1
+          type: integer
+      - allowEmptyValue: true
+        description: A post-mortem document's ID. This endpoint will return a list of post-mortem documents after this ID.
+        examples:
+          default:
+            summary: default
+            value: 01G0J1EXE7AXZ2C93K61WBPYEH
+        in: query
+        name: after
+        schema:
+          description: A post-mortem document's ID. This endpoint will return a list of post-mortem documents after this ID.
+          example: 01G0J1EXE7AXZ2C93K61WBPYEH
+          type: string
+      - allowEmptyValue: true
+        description: Filter to only return post-mortem documents for the given incident
+        example: 01GBA8J19SMXQWPJMX3P2ESCVG
+        in: query
+        name: incident_id
+        schema:
+          description: Filter to only return post-mortem documents for the given incident
+          example: 01GBA8J19SMXQWPJMX3P2ESCVG
+          type: string
+      - allowEmptyValue: true
+        description: Controls the order that results are returned in
+        example: created_at_oldest_first
+        in: query
+        name: sort_by
+        schema:
+          default: created_at_newest_first
+          description: Controls the order that results are returned in
+          enum:
+          - created_at_newest_first
+          - created_at_oldest_first
+          example: created_at_oldest_first
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              example:
+                pagination_meta:
+                  after: 01FCNDV6P870EA6S7TK1DSYDG0
+                  page_size: 25
+                postmortem_documents:
+                - created_at: '2021-08-17T13:28:57.801578Z'
+                  document_url: https://app.incident.io/my-org/incidents/123/post-mortems/01GDZEW57FDA1K4S63MGMQ5DS9
+                  editors:
+                  - email: lisa@incident.io
+                    id: 01FCNDV6P870EA6S7TK1DSYDG0
+                    name: Lisa Karlin Curtis
+                    role: viewer
+                    slack_user_id: U02AYNF2XJM
+                  exported_urls:
+                  - https://www.notion.so/INC-123-sad-database
+                  - https://docs.google.com/document/d/1234
+                  id: 01GDZEW57FDA1K4S63MGMQ5DS9
+                  incident_id: 01GBA8J19SMXQWPJMX3P2ESCVG
+                  status: in_progress
+                  title: 'INC-123: Database is sad'
+                  type: in_app
+                  updated_at: abc123
+              schema:
+                $ref: '#/components/schemas/PostmortemDocumentsListResultV1'
+          description: OK response.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'invalid_request_error: There was a problem with the request, like a missing header or querying a resource that doesn''t exist.'
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'authentication_error: Authentication failed.'
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'resource_forbidden: Access to this resource is forbidden for the authenticated user.'
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_found: The referenced resource could not be found.'
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'method_not_allowed: The endpoint does not support this operation for the specified resource.'
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_acceptable: Requested a media type this endpoint does not support.'
+        '408':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'request_timeout: The request took too long to process.
+
+
+            client_timeout: The request was cancelled by the client.'
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'conflict: Request conflicted with current state of the resource, likely a concurrent update.'
+        '412':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'precondition_failed: A required condition hasn''t been met.'
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'payload_too_large: The request payload is too large.'
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'validation_error: A required field was not provided, or the provided data was invalid.'
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'too_many_requests: Too many requests hit the API too quickly. We recommend an exponential backoff of your requests.
+
+
+            rate_limit_reached: The rate limit associated with this resource or API key has been exceeded. Try again later.'
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'api_error: Something went wrong and has been reported internally.'
+      summary: List PostmortemDocuments V1
+      tags:
+      - PostmortemDocuments V1
+      x-docs-display-name: List
+      x-docs-group-name: PostmortemDocuments V1
+      x-docs-resource-type: PostmortemDocumentV1
+      x-mint:
+        content: 🔑 Requires the `incidents.view` scope.
+      x-rbac-scopes:
+      - incidents.view
+      x-operation-id-source: normalized
+      x-operation-id-original: PostmortemDocuments V1#List
+  /v1/postmortem_documents/actions/attach:
+    post:
+      description: 'Link an externally-hosted post-mortem document to an incident.
+
+
+        Use this to attach a retrospective document you''ve created in your own provider (for example
+
+        Confluence, Notion, or Google Docs) to an existing incident. This is the API equivalent of
+
+        pasting a document link into the incident.io dashboard, and is useful for automating your
+
+        retrospective workflow - for example, creating a document in the right space with the right
+
+        permissions when an incident is opened, then linking it back to the incident.
+
+
+        Only one external post-mortem can be attached to an incident, and you cannot attach an external
+
+        document to an incident that already has an in-app post-mortem. Re-attaching the same incident
+
+        with a new permalink updates the existing link.'
+      operationId: PostmortemDocumentsV1#Attach
+      requestBody:
+        content:
+          application/json:
+            example:
+              document_provider: notion
+              incident_id: 01FCNDV6P870EA6S7TK1DSYD5H
+              permalink: https://www.notion.so/INC-123-database-is-sad
+            schema:
+              $ref: '#/components/schemas/PostmortemDocumentsAttachPayloadV1'
+        required: true
+      responses:
+        '201':
+          content:
+            application/json:
+              example:
+                postmortem_document:
+                  created_at: '2021-08-17T13:28:57.801578Z'
+                  document_url: https://app.incident.io/my-org/incidents/123/post-mortems/01GDZEW57FDA1K4S63MGMQ5DS9
+                  editors:
+                  - email: lisa@incident.io
+                    id: 01FCNDV6P870EA6S7TK1DSYDG0
+                    name: Lisa Karlin Curtis
+                    role: viewer
+                    slack_user_id: U02AYNF2XJM
+                  exported_urls:
+                  - https://www.notion.so/INC-123-sad-database
+                  - https://docs.google.com/document/d/1234
+                  id: 01GDZEW57FDA1K4S63MGMQ5DS9
+                  incident_id: 01GBA8J19SMXQWPJMX3P2ESCVG
+                  status: in_progress
+                  title: 'INC-123: Database is sad'
+                  type: in_app
+                  updated_at: abc123
+              schema:
+                $ref: '#/components/schemas/PostmortemDocumentsAttachResultV1'
+          description: Created response.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'invalid_request_error: There was a problem with the request, like a missing header or querying a resource that doesn''t exist.'
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'authentication_error: Authentication failed.'
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'resource_forbidden: Access to this resource is forbidden for the authenticated user.'
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_found: The referenced resource could not be found.'
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'method_not_allowed: The endpoint does not support this operation for the specified resource.'
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_acceptable: Requested a media type this endpoint does not support.'
+        '408':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'request_timeout: The request took too long to process.
+
+
+            client_timeout: The request was cancelled by the client.'
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'conflict: Request conflicted with current state of the resource, likely a concurrent update.'
+        '412':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'precondition_failed: A required condition hasn''t been met.'
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'payload_too_large: The request payload is too large.'
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'validation_error: A required field was not provided, or the provided data was invalid.'
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'too_many_requests: Too many requests hit the API too quickly. We recommend an exponential backoff of your requests.
+
+
+            rate_limit_reached: The rate limit associated with this resource or API key has been exceeded. Try again later.'
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'api_error: Something went wrong and has been reported internally.'
+      summary: Attach PostmortemDocuments V1
+      tags:
+      - PostmortemDocuments V1
+      x-docs-display-name: Attach
+      x-docs-group-name: PostmortemDocuments V1
+      x-docs-resource-type: PostmortemDocumentV1
+      x-mint:
+        content: 🔑 Requires the `external_postmortems.create` scope.
+      x-rbac-scopes:
+      - external_postmortems.create
+      x-operation-id-source: normalized
+      x-operation-id-original: PostmortemDocuments V1#Attach
+  /v1/postmortem_documents/{id}:
+    get:
+      description: 'Get a single post-mortem document by ID.
+
+
+        This returns the document''s metadata. To retrieve the content of the post-mortem, use the ShowContent endpoint.'
+      operationId: PostmortemDocumentsV1#Show
+      parameters:
+      - description: Unique identifier for the post-mortem document
+        example: 01GDZEW57FDA1K4S63MGMQ5DS9
+        in: path
+        name: id
+        required: true
+        schema:
+          example: 01FCNDV6P870EA6S7TK1DSYD5H
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              example:
+                postmortem_document:
+                  created_at: '2021-08-17T13:28:57.801578Z'
+                  document_url: https://app.incident.io/my-org/incidents/123/post-mortems/01GDZEW57FDA1K4S63MGMQ5DS9
+                  editors:
+                  - email: lisa@incident.io
+                    id: 01FCNDV6P870EA6S7TK1DSYDG0
+                    name: Lisa Karlin Curtis
+                    role: viewer
+                    slack_user_id: U02AYNF2XJM
+                  exported_urls:
+                  - https://www.notion.so/INC-123-sad-database
+                  - https://docs.google.com/document/d/1234
+                  id: 01GDZEW57FDA1K4S63MGMQ5DS9
+                  incident_id: 01GBA8J19SMXQWPJMX3P2ESCVG
+                  status: in_progress
+                  title: 'INC-123: Database is sad'
+                  type: in_app
+                  updated_at: abc123
+              schema:
+                $ref: '#/components/schemas/PostmortemDocumentsShowResultV1'
+          description: OK response.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'invalid_request_error: There was a problem with the request, like a missing header or querying a resource that doesn''t exist.'
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'authentication_error: Authentication failed.'
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'resource_forbidden: Access to this resource is forbidden for the authenticated user.'
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_found: The referenced resource could not be found.'
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'method_not_allowed: The endpoint does not support this operation for the specified resource.'
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_acceptable: Requested a media type this endpoint does not support.'
+        '408':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'request_timeout: The request took too long to process.
+
+
+            client_timeout: The request was cancelled by the client.'
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'conflict: Request conflicted with current state of the resource, likely a concurrent update.'
+        '412':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'precondition_failed: A required condition hasn''t been met.'
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'payload_too_large: The request payload is too large.'
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'validation_error: A required field was not provided, or the provided data was invalid.'
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'too_many_requests: Too many requests hit the API too quickly. We recommend an exponential backoff of your requests.
+
+
+            rate_limit_reached: The rate limit associated with this resource or API key has been exceeded. Try again later.'
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'api_error: Something went wrong and has been reported internally.'
+      summary: Show PostmortemDocuments V1
+      tags:
+      - PostmortemDocuments V1
+      x-docs-display-name: Show
+      x-docs-group-name: PostmortemDocuments V1
+      x-docs-resource-type: PostmortemDocumentV1
+      x-mint:
+        content: 🔑 Requires the `incidents.view` scope.
+      x-rbac-scopes:
+      - incidents.view
+      x-operation-id-source: normalized
+      x-operation-id-original: PostmortemDocuments V1#Show
+    put:
+      description: Update the status of a post-mortem document.
+      operationId: PostmortemDocumentsV1#UpdateStatus
+      parameters:
+      - description: Unique identifier for the post-mortem document
+        example: 01GDZEW57FDA1K4S63MGMQ5DS9
+        in: path
+        name: id
+        required: true
+        schema:
+          example: 01FCNDV6P870EA6S7TK1DSYD5H
+          type: string
+      requestBody:
+        content:
+          application/json:
+            example:
+              status: completed
+            schema:
+              $ref: '#/components/schemas/PostmortemDocumentsUpdateStatusPayloadV1'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              example:
+                postmortem_document:
+                  created_at: '2021-08-17T13:28:57.801578Z'
+                  document_url: https://app.incident.io/my-org/incidents/123/post-mortems/01GDZEW57FDA1K4S63MGMQ5DS9
+                  editors:
+                  - email: lisa@incident.io
+                    id: 01FCNDV6P870EA6S7TK1DSYDG0
+                    name: Lisa Karlin Curtis
+                    role: viewer
+                    slack_user_id: U02AYNF2XJM
+                  exported_urls:
+                  - https://www.notion.so/INC-123-sad-database
+                  - https://docs.google.com/document/d/1234
+                  id: 01GDZEW57FDA1K4S63MGMQ5DS9
+                  incident_id: 01GBA8J19SMXQWPJMX3P2ESCVG
+                  status: in_progress
+                  title: 'INC-123: Database is sad'
+                  type: in_app
+                  updated_at: abc123
+              schema:
+                $ref: '#/components/schemas/PostmortemDocumentsUpdateStatusResultV1'
+          description: OK response.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'invalid_request_error: There was a problem with the request, like a missing header or querying a resource that doesn''t exist.'
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'authentication_error: Authentication failed.'
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'resource_forbidden: Access to this resource is forbidden for the authenticated user.'
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_found: The referenced resource could not be found.'
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'method_not_allowed: The endpoint does not support this operation for the specified resource.'
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_acceptable: Requested a media type this endpoint does not support.'
+        '408':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'request_timeout: The request took too long to process.
+
+
+            client_timeout: The request was cancelled by the client.'
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'conflict: Request conflicted with current state of the resource, likely a concurrent update.'
+        '412':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'precondition_failed: A required condition hasn''t been met.'
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'payload_too_large: The request payload is too large.'
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'validation_error: A required field was not provided, or the provided data was invalid.'
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'too_many_requests: Too many requests hit the API too quickly. We recommend an exponential backoff of your requests.
+
+
+            rate_limit_reached: The rate limit associated with this resource or API key has been exceeded. Try again later.'
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'api_error: Something went wrong and has been reported internally.'
+      summary: UpdateStatus PostmortemDocuments V1
+      tags:
+      - PostmortemDocuments V1
+      x-docs-display-name: Update
+      x-docs-group-name: PostmortemDocuments V1
+      x-docs-resource-type: PostmortemDocumentV1
+      x-mint:
+        content: 🔑 Requires the `in_app_postmortems.update_status` scope.
+      x-rbac-scopes:
+      - in_app_postmortems.update_status
+      x-operation-id-source: normalized
+      x-operation-id-original: PostmortemDocuments V1#UpdateStatus
+  /v1/postmortem_documents/{id}/content:
+    get:
+      description: 'Fetch the content of a post-mortem document, rendered as markdown.
+
+
+        The response contains the full document content as a single markdown string. The markdown
+
+        follows standard formatting and is structured to mirror the post-mortem as it appears in
+
+        the incident.io dashboard:
+
+
+        - **Headings** (`#`, `##`, `###`) for document title and sections
+
+        - **Bold** and *italic* text formatting
+
+        - Bullet lists and numbered lists
+
+        - Links to external resources, Slack threads, and pull requests
+
+        - Mentions of users, incidents, and catalog entries resolved to their display names
+
+        - Custom field values rendered as labelled bullet lists
+
+        - Timeline entries grouped by date with timestamps
+
+        - Follow-ups with assignees and descriptions
+
+
+        To preview what this markdown will look like for a given post-mortem, open the document
+
+        in the incident.io dashboard and use the "Copy to clipboard" button. The copied content
+
+        uses the same rendering pipeline as this endpoint.
+
+
+        If you only need document metadata, use the Show or List endpoints instead.'
+      operationId: PostmortemDocumentsV1#ShowContent
+      parameters:
+      - description: Unique identifier for the post-mortem document
+        example: 01GDZEW57FDA1K4S63MGMQ5DS9
+        in: path
+        name: id
+        required: true
+        schema:
+          example: 01FCNDV6P870EA6S7TK1DSYD5H
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              example:
+                markdown: '# Incident Postmortem
+
+
+                  ## Summary
+
+
+                  This incident was investigated by Alice Smith and affected the API Gateway service.
+
+
+                  ## Timeline
+
+
+                  ### 2024-06-15 (UTC)
+
+
+                  * [10:30] **Alert fired**
+
+
+                  * [10:35] **Incident declared**
+
+
+                  ## Follow-ups
+
+
+                  * **Add monitoring** - Assignee: Alice Smith
+
+                  '
+              schema:
+                $ref: '#/components/schemas/PostmortemDocumentsShowContentResultV1'
+          description: OK response.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'invalid_request_error: There was a problem with the request, like a missing header or querying a resource that doesn''t exist.'
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'authentication_error: Authentication failed.'
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'resource_forbidden: Access to this resource is forbidden for the authenticated user.'
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_found: The referenced resource could not be found.'
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'method_not_allowed: The endpoint does not support this operation for the specified resource.'
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_acceptable: Requested a media type this endpoint does not support.'
+        '408':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'request_timeout: The request took too long to process.
+
+
+            client_timeout: The request was cancelled by the client.'
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'conflict: Request conflicted with current state of the resource, likely a concurrent update.'
+        '412':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'precondition_failed: A required condition hasn''t been met.'
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'payload_too_large: The request payload is too large.'
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'validation_error: A required field was not provided, or the provided data was invalid.'
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'too_many_requests: Too many requests hit the API too quickly. We recommend an exponential backoff of your requests.
+
+
+            rate_limit_reached: The rate limit associated with this resource or API key has been exceeded. Try again later.'
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'api_error: Something went wrong and has been reported internally.'
+      summary: ShowContent PostmortemDocuments V1
+      tags:
+      - PostmortemDocuments V1
+      x-docs-display-name: Show Content
+      x-docs-group-name: PostmortemDocuments V1
+      x-docs-resource-type: PostmortemDocumentV1
+      x-mint:
+        content: 🔑 Requires the `in_app_postmortems.copy_as_markdown` scope.
+      x-rbac-scopes:
+      - in_app_postmortems.copy_as_markdown
+      x-operation-id-source: normalized
+      x-operation-id-original: PostmortemDocuments V1#ShowContent
+components:
+  schemas:
+    PostmortemDocumentsAttachResultV1:
+      example:
+        postmortem_document:
+          created_at: '2021-08-17T13:28:57.801578Z'
+          document_url: https://app.incident.io/my-org/incidents/123/post-mortems/01GDZEW57FDA1K4S63MGMQ5DS9
+          editors:
+          - email: lisa@incident.io
+            id: 01FCNDV6P870EA6S7TK1DSYDG0
+            name: Lisa Karlin Curtis
+            role: viewer
+            slack_user_id: U02AYNF2XJM
+          exported_urls:
+          - https://www.notion.so/INC-123-sad-database
+          - https://docs.google.com/document/d/1234
+          id: 01GDZEW57FDA1K4S63MGMQ5DS9
+          incident_id: 01GBA8J19SMXQWPJMX3P2ESCVG
+          status: in_progress
+          title: 'INC-123: Database is sad'
+          type: in_app
+          updated_at: abc123
+      properties:
+        postmortem_document:
+          $ref: '#/components/schemas/PostmortemDocumentV1'
+      required:
+      - postmortem_document
+      type: object
+    ErrorRateLimit:
+      example:
+        limit: 100
+        name: client_ip
+        remaining: 98
+        retry_after: '2020-01-01T00:00:00Z'
+      properties:
+        limit:
+          description: The maximum number of requests that the consumer is permitted to make per minute
+          example: 100
+          format: int64
+          type: integer
+        name:
+          description: Which rate limit was exceeded
+          example: client_ip
+          type: string
+        remaining:
+          description: The number of requests remaining in the current rate limit window
+          example: 98
+          format: int64
+          type: integer
+        retry_after:
+          description: When the client can retry, as an RFC3339 timestamp in UTC. Prefer the Retry-After response header, which carries the same instant as a number of seconds
+          example: '2020-01-01T00:00:00Z'
+          type: string
+      required:
+      - name
+      - limit
+      - remaining
+      - retry_after
+      type: object
+    PostmortemDocumentV1:
+      example:
+        created_at: '2021-08-17T13:28:57.801578Z'
+        document_url: https://app.incident.io/my-org/incidents/123/post-mortems/01GDZEW57FDA1K4S63MGMQ5DS9
+        editors:
+        - email: lisa@incident.io
+          id: 01FCNDV6P870EA6S7TK1DSYDG0
+          name: Lisa Karlin Curtis
+          role: viewer
+          slack_user_id: U02AYNF2XJM
+        exported_urls:
+        - https://www.notion.so/INC-123-sad-database
+        - https://docs.google.com/document/d/1234
+        id: 01GDZEW57FDA1K4S63MGMQ5DS9
+        incident_id: 01GBA8J19SMXQWPJMX3P2ESCVG
+        status: in_progress
+        title: 'INC-123: Database is sad'
+        type: in_app
+        updated_at: abc123
+      properties:
+        created_at:
+          description: Timestamp for when the document was created
+          example: '2021-08-17T13:28:57.801578Z'
+          format: date-time
+          type: string
+        document_url:
+          description: A URL to view the post-mortem document in the incident.io dashboard
+          example: https://app.incident.io/my-org/incidents/123/post-mortems/01GDZEW57FDA1K4S63MGMQ5DS9
+          type: string
+        editors:
+          description: The list of users who have edited this post-mortem document
+          example:
+          - email: lisa@incident.io
+            id: 01FCNDV6P870EA6S7TK1DSYDG0
+            name: Lisa Karlin Curtis
+            role: viewer
+            slack_user_id: U02AYNF2XJM
+          items:
+            $ref: '#/components/schemas/UserV1'
+          type: array
+        exported_urls:
+          description: URLs of any external locations this document has been exported to
+          example:
+          - https://www.notion.so/INC-123-sad-database
+          - https://docs.google.com/document/d/1234
+          items:
+            example: abc123
+            type: string
+          type: array
+        id:
+          description: Unique identifier for the post-mortem document
+          example: 01GDZEW57FDA1K4S63MGMQ5DS9
+          type: string
+        incident_id:
+          description: The unique identifier of the incident that this post-mortem document belongs to
+          example: 01GBA8J19SMXQWPJMX3P2ESCVG
+          type: string
+        status:
+          description: The current status of this post-mortem document
+          enum:
+          - in_progress
+          - in_review
+          - completed
+          example: in_progress
+          type: string
+        title:
+          description: The display title of the post-mortem document
+          example: 'INC-123: Database is sad'
+          type: string
+        type:
+          description: Whether this is a native incident.io post-mortem or one hosted in an external provider
+          enum:
+          - in_app
+          - external
+          example: in_app
+          type: string
+        updated_at:
+          description: Timestamp for when the document was last updated
+          example: abc123
+          type: string
+      required:
+      - id
+      - incident_id
+      - title
+      - status
+      - created_at
+      - updated_at
+      - document_url
+      - exported_urls
+      - editors
+      - type
+      type: object
+    PostmortemDocumentsUpdateStatusPayloadV1:
+      example:
+        status: completed
+      properties:
+        status:
+          description: The new status to set the post-mortem document to
+          enum:
+          - in_progress
+          - in_review
+          - completed
+          example: completed
+          type: string
+      required:
+      - status
+      type: object
+    PostmortemDocumentsShowResultV1:
+      example:
+        postmortem_document:
+          created_at: '2021-08-17T13:28:57.801578Z'
+          document_url: https://app.incident.io/my-org/incidents/123/post-mortems/01GDZEW57FDA1K4S63MGMQ5DS9
+          editors:
+          - email: lisa@incident.io
+            id: 01FCNDV6P870EA6S7TK1DSYDG0
+            name: Lisa Karlin Curtis
+            role: viewer
+            slack_user_id: U02AYNF2XJM
+          exported_urls:
+          - https://www.notion.so/INC-123-sad-database
+          - https://docs.google.com/document/d/1234
+          id: 01GDZEW57FDA1K4S63MGMQ5DS9
+          incident_id: 01GBA8J19SMXQWPJMX3P2ESCVG
+          status: in_progress
+          title: 'INC-123: Database is sad'
+          type: in_app
+          updated_at: abc123
+      properties:
+        postmortem_document:
+          $ref: '#/components/schemas/PostmortemDocumentV1'
+      required:
+      - postmortem_document
+      type: object
+    ErrorResponse:
+      example:
+        debug:
+          message: 'Something broke: and something else: and something else'
+          stacktrace:
+          - thing.go:123
+        errors:
+        - code: trial_expired
+          message: Default incident call link must be a valid URL
+          metadata:
+            abc123: abc123
+          source:
+            field: default_call_url
+            pointer: /settings/default_call_url
+        rate_limit:
+          limit: 100
+          name: client_ip
+          remaining: 98
+          retry_after: '2020-01-01T00:00:00Z'
+        request_id: 2T1p0e3j
+        status: 408
+        type: invalid_request_error
+      properties:
+        debug:
+          $ref: '#/components/schemas/ErrorDebug'
+        errors:
+          description: List of errors that caused this request to fail
+          example:
+          - code: trial_expired
+            message: Default incident call link must be a valid URL
+            metadata:
+              abc123: abc123
+            source:
+              field: default_call_url
+              pointer: /settings/default_call_url
+          items:
+            $ref: '#/components/schemas/ErrorSingle'
+          type: array
+        rate_limit:
+          $ref: '#/components/schemas/ErrorRateLimit'
+        request_id:
+          description: Unique identifier of the request
+          example: 2T1p0e3j
+          type: string
+        status:
+          description: HTTP status of the response
+          example: 408
+          format: int64
+          type: integer
+        type:
+          description: Machine-readable identifier for the general category of error
+          enum:
+          - invalid_request_error
+          - authentication_error
+          - resource_forbidden
+          - not_found
+          - not_acceptable
+          - method_not_allowed
+          - request_timeout
+          - conflict
+          - precondition_failed
+          - payload_too_large
+          - validation_error
+          - too_many_requests
+          - api_error
+          - rate_limit_reached
+          - client_timeout
+          example: invalid_request_error
+          type: string
+      required:
+      - type
+      - status
+      - request_id
+      - errors
+      type: object
+    ErrorDebug:
+      example:
+        message: 'Something broke: and something else: and something else'
+        stacktrace:
+        - thing.go:123
+      properties:
+        message:
+          description: Original internal error message
+          example: 'Something broke: and something else: and something else'
+          type: string
+        stacktrace:
+          description: Stacktrace of the error, if applicable
+          example:
+          - thing.go:123
+          items:
+            example: thing.go:123
+            type: string
+          type: array
+      required:
+      - message
+      - stacktrace
+      type: object
+    PostmortemDocumentsAttachPayloadV1:
+      example:
+        document_provider: notion
+        incident_id: 01FCNDV6P870EA6S7TK1DSYD5H
+        permalink: https://www.notion.so/INC-123-database-is-sad
+      properties:
+        document_provider:
+          description: 'The provider hosting the document. This is informational only: the document is always stored as a link to the permalink.'
+          enum:
+          - ''
+          - confluence
+          - google_docs
+          - notion
+          - sharepoint
+          - incident_io
+          - copy_paste_basecamp
+          - copy_paste_confluence
+          - copy_paste_github_wiki
+          - copy_paste_google_docs
+          - copy_paste_notion
+          - copy_paste_quip
+          example: notion
+          type: string
+        incident_id:
+          description: The unique identifier of the incident to attach the post-mortem document to
+          example: 01FCNDV6P870EA6S7TK1DSYD5H
+          type: string
+        permalink:
+          description: A URL pointing to the externally-hosted post-mortem document
+          example: https://www.notion.so/INC-123-database-is-sad
+          type: string
+      required:
+      - incident_id
+      - permalink
+      type: object
+    PostmortemDocumentsUpdateStatusResultV1:
+      example:
+        postmortem_document:
+          created_at: '2021-08-17T13:28:57.801578Z'
+          document_url: https://app.incident.io/my-org/incidents/123/post-mortems/01GDZEW57FDA1K4S63MGMQ5DS9
+          editors:
+          - email: lisa@incident.io
+            id: 01FCNDV6P870EA6S7TK1DSYDG0
+            name: Lisa Karlin Curtis
+            role: viewer
+            slack_user_id: U02AYNF2XJM
+          exported_urls:
+          - https://www.notion.so/INC-123-sad-database
+          - https://docs.google.com/document/d/1234
+          id: 01GDZEW57FDA1K4S63MGMQ5DS9
+          incident_id: 01GBA8J19SMXQWPJMX3P2ESCVG
+          status: in_progress
+          title: 'INC-123: Database is sad'
+          type: in_app
+          updated_at: abc123
+      properties:
+        postmortem_document:
+          $ref: '#/components/schemas/PostmortemDocumentV1'
+      required:
+      - postmortem_document
+      type: object
+    ErrorSource:
+      example:
+        field: default_call_url
+        pointer: /settings/default_call_url
+      properties:
+        field:
+          description: Field name that is the source of the error
+          example: default_call_url
+          type: string
+        pointer:
+          description: JSON pointer to the request field that is the source of the error
+          example: /settings/default_call_url
+          type: string
+      required:
+      - field
+      - pointer
+      type: object
+    PostmortemDocumentsListResultV1:
+      example:
+        pagination_meta:
+          after: 01FCNDV6P870EA6S7TK1DSYDG0
+          page_size: 25
+        postmortem_documents:
+        - created_at: '2021-08-17T13:28:57.801578Z'
+          document_url: https://app.incident.io/my-org/incidents/123/post-mortems/01GDZEW57FDA1K4S63MGMQ5DS9
+          editors:
+          - email: lisa@incident.io
+            id: 01FCNDV6P870EA6S7TK1DSYDG0
+            name: Lisa Karlin Curtis
+            role: viewer
+            slack_user_id: U02AYNF2XJM
+          exported_urls:
+          - https://www.notion.so/INC-123-sad-database
+          - https://docs.google.com/document/d/1234
+          id: 01GDZEW57FDA1K4S63MGMQ5DS9
+          incident_id: 01GBA8J19SMXQWPJMX3P2ESCVG
+          status: in_progress
+          title: 'INC-123: Database is sad'
+          type: in_app
+          updated_at: abc123
+      properties:
+        pagination_meta:
+          $ref: '#/components/schemas/PaginationMetaResultV1'
+        postmortem_documents:
+          example:
+          - created_at: '2021-08-17T13:28:57.801578Z'
+            document_url: https://app.incident.io/my-org/incidents/123/post-mortems/01GDZEW57FDA1K4S63MGMQ5DS9
+            editors:
+            - email: lisa@incident.io
+              id: 01FCNDV6P870EA6S7TK1DSYDG0
+              name: Lisa Karlin Curtis
+              role: viewer
+              slack_user_id: U02AYNF2XJM
+            exported_urls:
+            - https://www.notion.so/INC-123-sad-database
+            - https://docs.google.com/document/d/1234
+            id: 01GDZEW57FDA1K4S63MGMQ5DS9
+            incident_id: 01GBA8J19SMXQWPJMX3P2ESCVG
+            status: in_progress
+            title: 'INC-123: Database is sad'
+            type: in_app
+            updated_at: abc123
+          items:
+            $ref: '#/components/schemas/PostmortemDocumentV1'
+          type: array
+      required:
+      - postmortem_documents
+      - pagination_meta
+      type: object
+    PostmortemDocumentsShowContentResultV1:
+      example:
+        markdown: '# Incident Postmortem
+
+
+          ## Summary
+
+
+          This incident was investigated by Alice Smith and affected the API Gateway service.
+
+
+          ## Timeline
+
+
+          ### 2024-06-15 (UTC)
+
+
+          * [10:30] **Alert fired**
+
+
+          * [10:35] **Incident declared**
+
+
+          ## Follow-ups
+
+
+          * **Add monitoring** - Assignee: Alice Smith
+
+          '
+      properties:
+        markdown:
+          description: The full content of the post-mortem document, rendered as markdown. Includes all sections, resolved mentions, timeline, follow-ups, and custom fields.
+          example: '# Incident Postmortem
+
+
+            ## Summary
+
+
+            This incident was investigated by Alice Smith and affected the API Gateway service.
+
+
+            ## Timeline
+
+
+            ### 2024-06-15 (UTC)
+
+
+            * [10:30] **Alert fired**
+
+
+            * [10:35] **Incident declared**
+
+
+            ## Follow-ups
+
+
+            * **Add monitoring** - Assignee: Alice Smith
+
+            '
+          type: string
+      required:
+      - markdown
+      type: object
+    UserV1:
+      example:
+        email: lisa@incident.io
+        id: 01FCNDV6P870EA6S7TK1DSYDG0
+        name: Lisa Karlin Curtis
+        role: viewer
+        slack_user_id: U02AYNF2XJM
+      properties:
+        email:
+          description: Email address of the user.
+          example: lisa@incident.io
+          type: string
+        id:
+          description: Unique identifier of the user
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+        name:
+          description: Name of the user
+          example: Lisa Karlin Curtis
+          type: string
+        role:
+          description: 'DEPRECATED: Role of the user as of March 9th 2023, this value is no longer updated.'
+          enum:
+          - viewer
+          - responder
+          - administrator
+          - owner
+          - unset
+          example: viewer
+          type: string
+        slack_user_id:
+          description: Slack ID of the user
+          example: U02AYNF2XJM
+          type: string
+      required:
+      - role
+      - id
+      - name
+      type: object
+    PaginationMetaResultV1:
+      example:
+        after: 01FCNDV6P870EA6S7TK1DSYDG0
+        page_size: 25
+      properties:
+        after:
+          description: If provided, pass this as the 'after' param to load the next page
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+        page_size:
+          default: 25
+          description: What was the maximum number of results requested
+          example: 25
+          format: int64
+          maximum: 250
+          type: integer
+      required:
+      - page_size
+      type: object
+    ErrorSingle:
+      example:
+        code: trial_expired
+        message: Default incident call link must be a valid URL
+        metadata:
+          abc123: abc123
+        source:
+          field: default_call_url
+          pointer: /settings/default_call_url
+      properties:
+        code:
+          description: Machine-readable identifier for this specific error
+          example: trial_expired
+          type: string
+        message:
+          description: Human readable description of the error
+          example: Default incident call link must be a valid URL
+          type: string
+        metadata:
+          additionalProperties:
+            example: abc123
+            type: string
+          description: Additional metadata about the error, keyed by a string identifier
+          example:
+            abc123: abc123
+          type: object
+        source:
+          $ref: '#/components/schemas/ErrorSource'
+      required:
+      - code
+      - message
+      type: object
+  securitySchemes:
+    BearerAuth:
+      description: API key from your incident.io dashboard (Settings > API keys)
+      scheme: bearer
+      type: http
+externalDocs:
+  description: View our API docs at api-docs.incident.io
+  url: https://api-docs.incident.io/

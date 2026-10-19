@@ -326,6 +326,1509 @@ apis:
     url: openapi/incident-io-workflows-api-openapi.yml
   - type: Documentation
     url: https://api-docs.incident.io
+- aid: incident-io:incident-io-actions-v1-api
+  name: Incident.io Actions V1 API
+  description: "Manage incident actions.\n\nThese endpoints have been deprecated in favour of Actions\
+    \ V2 and Follow-ups V2, as these\nconcepts have become increasingly separate.\n\nIncidents have two\
+    \ types of actions associated to them:\n\n- Actions, used during an incident response as ephemeral\
+    \ todo lists\n- Follow-ups, actions which are for after the incident and can be exported to external\n\
+    \tissue trackers\n\nYou can manage actions in the incident Slack channel with <code>/incident actions</code>,\
+    \ or on\nthe incident homepage.\n\nExporting follow-ups to external issue trackers can be done in\
+    \ the incident homepage."
+  humanURL: https://incident.io
+  tags:
+  - Actions V1
+  properties:
+  - type: OpenAPI
+    url: openapi/incident-io-actions-v1-api-openapi.yml
+- aid: incident-io:incident-io-actions-v2-api
+  name: Incident.io Actions V2 API
+  description: >-
+    Manage incident actions.
+
+
+    These endpoints have been deprecated in favour of Actions V3, which returns the same
+
+    action payload, and will be removed on 31 December 2026. The V3 List endpoint is paginated
+
+    and supports filtering by created_at and updated_at, so use it instead of re-fetching the
+
+    full list.
+
+
+    Incident actions are used during an incident, to track work such as 'restart the database' or 'contact
+    the customer'.
+
+
+    You can manage actions in the incident Slack channel with <code>/incident actions</code>, or on
+
+    the incident homepage.
+  humanURL: https://incident.io
+  tags:
+  - Actions V2
+  properties:
+  - type: OpenAPI
+    url: openapi/incident-io-actions-v2-api-openapi.yml
+- aid: incident-io:incident-io-actions-v3-api
+  name: Incident.io Actions V3 API
+  description: >-
+    Manage incident actions.
+
+
+    Incident actions are used during an incident, to track work such as 'restart the database' or 'contact
+    the customer'.
+
+
+    You can manage actions in the incident Slack channel with <code>/incident actions</code>, or on
+
+    the incident homepage.
+  humanURL: https://incident.io
+  tags:
+  - Actions V3
+  properties:
+  - type: OpenAPI
+    url: openapi/incident-io-actions-v3-api-openapi.yml
+- aid: incident-io:incident-io-alert-attributes-v2-api
+  name: Incident.io Alert Attributes V2 API
+  description: >-
+    View and manage alert attributes.
+
+
+    Alert attributes are used to parse structured data from alerts coming in via alert sources.
+  humanURL: https://incident.io
+  tags:
+  - Alert Attributes V2
+  properties:
+  - type: OpenAPI
+    url: openapi/incident-io-alert-attributes-v2-api-openapi.yml
+- aid: incident-io:incident-io-alert-events-v2-api
+  name: Incident.io Alert Events V2 API
+  description: >-
+    Create alerts within incident.io.
+
+
+    The alerts API allows you to create alerts within incident.io by posting alert events. You
+
+    can use alerts to automatically trigger incidents.
+
+
+    To create an alert, you must first configure an alert source in the incident.io dashboard.
+  humanURL: https://incident.io
+  tags:
+  - Alert Events V2
+  properties:
+  - type: OpenAPI
+    url: openapi/incident-io-alert-events-v2-api-openapi.yml
+- aid: incident-io:incident-io-alert-notes-v1-api
+  name: Incident.io Alert Notes V1 API
+  description: >-
+    Manage notes attached to alerts.
+
+
+    Notes let your team capture context, decisions, and investigation findings against
+
+    an individual alert without needing to declare an incident.
+
+
+    Note content is stored and returned as Markdown. The following formatting is
+
+    supported:
+
+
+    - **Headings** (`#`, `##`, `###`)
+
+    - **Bold** and *italic* text formatting
+
+    - ~~Strikethrough~~ text
+
+    - Inline `code` and fenced code blocks
+
+    - Bullet lists and numbered lists
+
+    - Blockquotes
+
+    - [Links](url) using Markdown link syntax — bare URLs are not auto-linked
+
+    - Tables (GitHub-flavoured Markdown)
+
+    - Horizontal rules (`---`)
+
+
+    Raw HTML, image syntax (`![alt](url)`), task lists, and footnotes are not
+
+    supported, and will be stripped or rendered as plain text.
+  humanURL: https://incident.io
+  tags:
+  - Alert Notes V1
+  properties:
+  - type: OpenAPI
+    url: openapi/incident-io-alert-notes-v1-api-openapi.yml
+- aid: incident-io:incident-io-alert-routes-v2-api
+  name: Incident.io Alert Routes V2 API
+  description: >-
+    Configure your alert routes in incident.io.
+
+
+    Alert routes define how alerts from different sources are processed, grouped, and routed to the right
+    teams and people.
+  humanURL: https://incident.io
+  tags:
+  - Alert Routes V2
+  properties:
+  - type: OpenAPI
+    url: openapi/incident-io-alert-routes-v2-api-openapi.yml
+- aid: incident-io:incident-io-alert-routes-v3-api
+  name: Incident.io Alert Routes V3 API
+  description: >-
+    Configure your alert routes in incident.io.
+
+
+    Alert routes define how alerts from different sources are processed, grouped, and routed to the right
+    teams and people.
+  humanURL: https://incident.io
+  tags:
+  - Alert Routes V3
+  properties:
+  - type: OpenAPI
+    url: openapi/incident-io-alert-routes-v3-api-openapi.yml
+- aid: incident-io:incident-io-alert-sources-v2-api
+  name: Incident.io Alert Sources V2 API
+  description: >-
+    Configure your alert sources in incident.io.
+
+
+    Alert sources are the systems that send alerts to incident.io, which can then be routed to the right
+    people and teams.
+  humanURL: https://incident.io
+  tags:
+  - Alert Sources V2
+  properties:
+  - type: OpenAPI
+    url: openapi/incident-io-alert-sources-v2-api-openapi.yml
+- aid: incident-io:incident-io-alerts-v2-api
+  name: Incident.io Alerts V2 API
+  description: "Read your alerts in incident.io.\n\nAlerts are events ingested from third parties by alert\
+    \ sources. They can trigger incidents and escalations, as configured in alert routes.\nTo view your\
+    \ alerts, you can list all alerts, or show a single alert. \nIf you'd like to view only alerts that\
+    \ are currently firing, you can filter by status. \nTo view the alert that was created for an event\
+    \ in your external system, filter by deduplication key. \n\nIf you'd like to view alerts connected\
+    \ to a particular incident, you can list incident alerts. You can filter by incident_id to find all\
+    \ alerts attached to a particular incident, or by alert_id to find the incident that a particular\
+    \ alert triggered."
+  humanURL: https://incident.io
+  tags:
+  - Alerts V2
+  properties:
+  - type: OpenAPI
+    url: openapi/incident-io-alerts-v2-api-openapi.yml
+- aid: incident-io:incident-io-announcement-rules-v2-api
+  name: Incident.io Announcement Rules V2 API
+  description: >-
+    Create and manage announcement rules.
+
+
+    An announcement rule posts an announcement of each incident that matches its conditions
+
+    into the channels it lists, rendered with an announcement template.
+  humanURL: https://incident.io
+  tags:
+  - Announcement Rules V2
+  properties:
+  - type: OpenAPI
+    url: openapi/incident-io-announcement-rules-v2-api-openapi.yml
+- aid: incident-io:incident-io-announcement-templates-v2-api
+  name: Incident.io Announcement Templates V2 API
+  description: >-
+    Create and manage announcement templates.
+
+
+    An announcement template controls which fields and actions appear on an announcement post.
+
+    Each announcement rule renders its posts with one template.
+  humanURL: https://incident.io
+  tags:
+  - Announcement Templates V2
+  properties:
+  - type: OpenAPI
+    url: openapi/incident-io-announcement-templates-v2-api-openapi.yml
+- aid: incident-io:incident-io-api-keys-v1-api
+  name: Incident.io API Keys V1 API
+  description: >-
+    Manage API keys for your organization.
+
+
+    This API lets you view, create, update, delete, and rotate API keys programmatically, including configuring
+    account-level roles and roles scoped to specific teams.
+
+
+    Common use cases include:
+
+    - **API key rotation**: You can issue a new access token for any API key using the `Rotate` endpoint.
+
+    - **Managing keys at scale**: use the `Show`, `List`, `Create`, `Update`, and `Delete` endpoints to
+    automate API key lifecycle management.
+
+
+    ## Permissions model
+
+
+    To use these endpoints, your API key must have the `api_keys_manage` role granted at either the account
+    level or for specific teams.
+
+
+    In addition, the following rules apply, when a "caller" API key is managing a "target" API key:
+
+
+    - A caller key can only assign roles whose scopes are a subset of its own scopes. For example, a key
+    with `viewer` and `incident_creator` can assign those roles to a target key, but cannot assign the
+    `incident_editor` role, since it has additional scopes.
+
+    - The same applies at the team level: A caller key with `schedules_editor` at the account level can
+    create a target key with that role for a specific team, but a key with `schedules_editor` only for
+    one team (Team A, say) cannot assign it at the account level or for another team, Team B.
+
+    - The `api_keys_manage` role cannot be assigned via the API. To create a key with that role, you must
+    go to Settings → API keys in the dashboard, and click "Add new", creating a key with the "View, create,
+    edit, delete or rotate API keys" role (`api_keys_manage`).
+
+    - The `Delete` endpoint does not check whether the calling API key holds the scopes of the key being
+    deleted. However, a team-scoped key can only delete keys belonging to its teams.
+
+    - To rotate the token of an API key, use the Rotate endpoint or by clicking "Rotate token" on any
+    API key listed in the dashboard. The same permissions limitations apply as when creating or updating
+    an API key.
+
+
+    ## Finding role names and team IDs
+
+
+    To find valid values for `role_names`, `team_ids`, and `team_role_names`, go to Settings → API keys
+    in the dashboard. Click to either edit an existing key or create a new one, select the desired roles
+    and teams, and then use the copy button to get hold of the role and team identifiers as JSON.
+  humanURL: https://incident.io
+  tags:
+  - API Keys V1
+  properties:
+  - type: OpenAPI
+    url: openapi/incident-io-api-keys-v1-api-openapi.yml
+- aid: incident-io:incident-io-audit-logs-api
+  name: Incident.io Audit logs API
+  description: >-
+    To give you visibility over the changes that are made within your incident.io account, we use an audit
+    log. Our audit log is powered by <a href="https://workos.com" target="_blank">WorkOS</a>. The log
+    is available for customers on our [Enterprise plan](https://incident.io/pricing).
+
+
+    The audit log contains information about any configuration changes, as well as changes to a user's
+    permissions (e.g. being given a new role, or access to a private incident).
+
+
+    Each entry will have an actor (the person or system that made the change) and one or more targets
+    (a thing that was modified by this change). It will also include the Location and User Agent of the
+    actor, where applicable.
+
+
+    Each entry will conform to a schema, which is documented here. Each entry also has a version, so that
+    if our schema changes over time you’ll still be able to parse old events.
+
+
+    We’ll retain these entries for one year.
+
+
+    Audit log entries start from 18 April, 2023 (there are no entries available from before that date)
+    and are retained in WorkOS for 365 days.
+
+
+    ## Viewing your audit log
+
+
+    You can view your audit log via our [security settings](https://app.incident.io/settings/security)
+    page.
+
+
+    From there, you'll be able to:
+
+
+    - View the entries via a web interface (filterable by target, event type, actor and date)
+
+    - Export the entries for a given time period to a CSV
+
+    - Set up a log stream to a provider of your choice (e.g. Splunk or an Amazon S3 bucket)
+
+
+    ## Understanding actors
+
+
+    Each entry will have an actor associated with it, which is one of 6 types:
+
+
+    ### Users
+
+
+    This is for changes triggered by the actions of a particular user in your account.
+
+
+    As an example:
+
+
+    ```
+
+    "actor": {
+        "type": "user",
+        "id": "01G0J1EXE7AXZ2C93K61WBPYEH",
+        "name": "Kelsey Mills",
+        "metadata": {
+          "user_base_role_slug": "admin",
+          "user_custom_role_slugs": "engineering,security"
+        }
+      }
+    ```
+
+
+    ### API Keys
+
+
+    This is for changes triggered by an API key.
+
+
+    As an example:
+
+
+    ```
+
+    "actor": {
+        "type": "api_key",
+        "id": "01G0J1EXE7AXZ2C93K61WBPYEH",
+        "name": "Lisa's development key",
+        "metadata": {
+          "api_key_roles": "incident_creator,global_access"
+        }
+      }
+    ```
+
+
+    ### Integrations
+
+
+    This is for changes triggered by a system. Sometimes that will be a third party system (e.g. a user
+    might be created
+
+    via Slack) or sometimes it might be something triggered from inside incident.io (e.g. a severity created
+    as part of setup).
+
+
+    As an example:
+
+
+    ```
+
+    "actor": {
+        "type": "system",
+        "id": "incident_setup",
+        "name": "incident.io (setup)",
+        "metadata": {}
+      }
+    ```
+
+
+    ### Workflows
+
+
+    This is for changes triggered by a workflow: for example, a workflow that invites users to a private
+    incident.
+
+
+    As an example:
+
+
+    ```
+
+    "actor": {
+        "type": "workflow",
+        "id": "01G0J1EXE7AXZ2C93K61WBPYEH",
+        "name": "Auto-invite security team to private incidents",
+        "metadata": {}
+      }
+    ```
+
+
+    ### External resources
+
+
+    This is for changes triggered by a specific [external resource](https://api-docs.incident.io/tag/Incident-Attachments-V1)
+    (also known as an attachment).
+
+
+    As an example:
+
+
+    ```
+
+    "actor": {
+        "type": "external_resource",
+        "id": "01G0J1EXE7AXZ2C93K61WBPYEH",
+        "name": "#1234 Increased API latency",
+        "metadata": {
+          "external_resource_type": "pager_duty_incident",
+          "external_resource_external_id": "q1234"
+        }
+      }
+    ```
+
+
+    ### Alerts
+
+
+    This is for changes triggered by a specific alert (e.g. from Datadog or Grafana).
+
+
+    As an example:
+
+
+    ```
+
+    "actor": {
+        "type": "alert",
+        "id": "01G0J1EXE7AXZ2C93K61WBPYEH",
+        "name": "Staging: pod CPU high",
+        "metadata": {
+          "alert_source_id": "01HB0ZG3B0HM04RCXNSPV1EDYG"
+        }
+      }
+    ```
+  humanURL: https://incident.io
+  tags:
+  - Audit logs
+  properties:
+  - type: OpenAPI
+    url: openapi/incident-io-audit-logs-api-openapi.yml
+- aid: incident-io:incident-io-call-routes-v2-api
+  name: Incident.io Call Routes V2 API
+  description: >-
+    View and manage call routes: phone numbers your customers can call to
+
+    reach whoever is on call.
+
+
+    Use these endpoints to read how a route is configured, and to change who it
+
+    pages, the language it speaks to callers, and which number responders see when
+
+    it calls them.
+
+
+    List and edit call routes here. Create and delete them in the dashboard.
+  humanURL: https://incident.io
+  tags:
+  - Call Routes V2
+  properties:
+  - type: OpenAPI
+    url: openapi/incident-io-call-routes-v2-api-openapi.yml
+- aid: incident-io:incident-io-call-sessions-v2-api
+  name: Incident.io Call Sessions V2 API
+  description: >-
+    List Scribe call sessions.
+
+
+    Call sessions are the individual meetings Scribe attended: several can accumulate
+
+    over time. Use this endpoint together with Call Transcript Entries to export what
+
+    Scribe transcribed during each session.
+  humanURL: https://incident.io
+  tags:
+  - Call Sessions V2
+  properties:
+  - type: OpenAPI
+    url: openapi/incident-io-call-sessions-v2-api-openapi.yml
+- aid: incident-io:incident-io-call-transcript-entries-v2-api
+  name: Incident.io Call Transcript Entries V2 API
+  description: >-
+    List the transcript entries Scribe captured during a call session.
+
+
+    Entries are returned oldest first, ordered by when each participant started
+
+    speaking. To export a full transcript, page through with 'page_size' and 'after'
+
+    until the response no longer includes a 'pagination_meta.after' value.
+  humanURL: https://incident.io
+  tags:
+  - Call Transcript Entries V2
+  properties:
+  - type: OpenAPI
+    url: openapi/incident-io-call-transcript-entries-v2-api-openapi.yml
+- aid: incident-io:incident-io-catalog-v2-api
+  name: Incident.io Catalog V2 API
+  description: "Manage and browse catalog resources.\n\nThese endpoints have been deprecated in favour\
+    \ of CatalogV3. The only breaking change is\nthat the 'manual' attribute mode is now split into 'api'\
+    \ and 'dashboard'. We also removed\nthe usage of some types that were deprecated in the V2 API. \n\
+    \nUse the incident.io catalog to track services, teams, product features and anything\nelse that helps\
+    \ build a map of your organisation. These different categories of thing\nbecome catalog types, and\
+    \ each instance (like a particular service or team) is a\ncatalog entry.\n\nEach type is made up of\
+    \ a series of attributes, and each attribute has a type. Types\ncan even have attributes that refer\
+    \ to other catalog types.\n\nWe automatically create catalog types when you connect an integration,\
+    \ such as GitHub\nrepositories or PagerDuty services and teams. You can use this API to create custom\n\
+    types, that are specifically tailored to your organisation.\n\nExamples might be a 'Service' type\
+    \ with an 'Alert channel' which you can point at a\nSlack channel, or 'Team' which specifies its 'Manager'\
+    \ and 'Technical Lead' as Slack\nusers. You can then use these types to create powerful new workflows.\n\
+    \nConsider using our official [catalog importer](https://github.com/incident-io/catalog-importer).\n\
+    It can be used to sync catalog data from sources like local files or GitHub and push\nthem into the\
+    \ incident.io catalog without having to directly interact with our public API."
+  humanURL: https://incident.io
+  tags:
+  - Catalog V2
+  properties:
+  - type: OpenAPI
+    url: openapi/incident-io-catalog-v2-api-openapi.yml
+- aid: incident-io:incident-io-catalog-v3-api
+  name: Incident.io Catalog V3 API
+  description: >-
+    Manage and browse catalog resources.
+
+
+    Use the incident.io catalog to track services, teams, product features and anything
+
+    else that helps build a map of your organisation. These different categories of thing
+
+    become catalog types, and each instance (like a particular service or team) is a
+
+    catalog entry.
+
+
+    Each type is made up of a series of attributes, and each attribute has a type. Types
+
+    can even have attributes that refer to other catalog types.
+
+
+    We automatically create catalog types when you connect an integration, such as GitHub
+
+    repositories or PagerDuty services and teams. You can use this API to create custom
+
+    types, that are specifically tailored to your organisation.
+
+
+    Examples might be a 'Service' type with an 'Alert channel' which you can point at a
+
+    Slack channel, or 'Team' which specifies its 'Manager' and 'Technical Lead' as Slack
+
+    users. You can then use these types to create powerful new workflows.
+
+
+    Consider using our official [catalog importer](https://github.com/incident-io/catalog-importer).
+
+    It can be used to sync catalog data from sources like local files or GitHub and push
+
+    them into the incident.io catalog without having to directly interact with our public API.
+  humanURL: https://incident.io
+  tags:
+  - Catalog V3
+  properties:
+  - type: OpenAPI
+    url: openapi/incident-io-catalog-v3-api-openapi.yml
+- aid: incident-io:incident-io-custom-field-options-v1-api
+  name: Incident.io Custom Field Options V1 API
+  description: >-
+    Manage custom field options.
+
+
+    Single- and multi-select custom fields have a list of all available options,
+
+    which have a value, and a sort key. The value must be unique to the custom
+
+    field. For example, you might have an Incident Type custom field, with options
+
+    "Data breach", "Performance degradation", "API downtime", etc.
+  humanURL: https://incident.io
+  tags:
+  - Custom Field Options V1
+  properties:
+  - type: OpenAPI
+    url: openapi/incident-io-custom-field-options-v1-api-openapi.yml
+- aid: incident-io:incident-io-custom-fields-v1-api
+  name: Incident.io Custom Fields V1 API
+  description: >-
+    Manage custom fields.
+
+
+    Custom fields are used to attach metadata to incidents, which you can use when searching
+
+    for incidents in the dashboard, triggering workflows, building announcement rules or for
+
+    your own data needs.
+
+
+    Each field has a type:
+
+
+    - Single-select, single value selected from a predefined list of options (e.g. Detection Method)
+
+    - Multi-select, as above but you can pick more than one option (e.g. Affected Teams)
+
+    - Text, freeform text field (e.g. Customer ID)
+
+    - Link, link URL that is synced to Slack bookmarks on the incident channel (e.g. External Status Page)
+
+    - Number, integer or fractional numbers (e.g. # Customers Affected)
+
+
+    We may add more custom field types in the future - we'd love to hear any other types you'd like to
+    use!
+  humanURL: https://incident.io
+  tags:
+  - Custom Fields V1
+  properties:
+  - type: OpenAPI
+    url: openapi/incident-io-custom-fields-v1-api-openapi.yml
+- aid: incident-io:incident-io-custom-fields-v2-api
+  name: Incident.io Custom Fields V2 API
+  description: >-
+    Manage custom fields.
+
+
+    Custom fields are used to attach metadata to incidents, which you can use when searching
+
+    for incidents in the dashboard, triggering workflows, building announcement rules or for
+
+    your own data needs.
+
+
+    Each field has a type:
+
+
+    - Single-select, single value selected from a predefined list of options (e.g. Detection Method)
+
+    - Multi-select, as above but you can pick more than one option (e.g. Affected Teams)
+
+    - Text, freeform text field (e.g. Customer ID)
+
+    - Link, link URL that is synced to Slack bookmarks on the incident channel (e.g. External Status Page)
+
+    - Number, integer or fractional numbers (e.g. # Customers Affected)
+
+
+    We may add more custom field types in the future - we'd love to hear any other types you'd like to
+    use!
+  humanURL: https://incident.io
+  tags:
+  - Custom Fields V2
+  properties:
+  - type: OpenAPI
+    url: openapi/incident-io-custom-fields-v2-api-openapi.yml
+- aid: incident-io:incident-io-escalation-path-templates-v2-api
+  name: Incident.io Escalation Path Templates V2 API
+  description: >-
+    Create and manage reusable, parameterised escalation path templates.
+
+
+    An escalation path template declares parameters and a binding-aware path. Escalation
+
+    paths built from a template bind those parameters to concrete values.
+  humanURL: https://incident.io
+  tags:
+  - Escalation Path Templates V2
+  properties:
+  - type: OpenAPI
+    url: openapi/incident-io-escalation-path-templates-v2-api-openapi.yml
+- aid: incident-io:incident-io-escalations-v2-api
+  name: Incident.io Escalations V2 API
+  description: >-
+    Create and manage escalation paths, and create, list, filter and respond to escalations.
+
+
+    With incident.io On-call you can create escalation paths that describe how a page should
+
+    be escalated to people and schedules.
+  humanURL: https://incident.io
+  tags:
+  - Escalations V2
+  properties:
+  - type: OpenAPI
+    url: openapi/incident-io-escalations-v2-api-openapi.yml
+- aid: incident-io:incident-io-follow-ups-v2-api
+  name: Incident.io Follow-ups V2 API
+  description: >-
+    Manage incident follow-ups.
+
+
+    These endpoints have been deprecated in favour of Follow-ups V3, which returns the same
+
+    follow-up payload, and will be removed on 31 December 2026. The V3 List endpoint is
+
+    paginated and supports filtering by created_at and updated_at, so use it instead of
+
+    re-fetching the full list.
+
+
+    Incidents can have follow-ups associated with them, which track work that should be done
+
+    after an incident (e.g. improving some documentation, or upgrading a dependency). They can
+
+    also be exported to external issue trackers.
+
+
+    You can manage follow-ups in the incident Slack channel with <code>/incident follow-ups</code>, or
+    on
+
+    the incident homepage.
+  humanURL: https://incident.io
+  tags:
+  - Follow-ups V2
+  properties:
+  - type: OpenAPI
+    url: openapi/incident-io-follow-ups-v2-api-openapi.yml
+- aid: incident-io:incident-io-follow-ups-v3-api
+  name: Incident.io Follow-ups V3 API
+  description: >-
+    Manage incident follow-ups.
+
+
+    Incidents can have follow-ups associated with them, which track work that should be done
+
+    after an incident (e.g. improving some documentation, or upgrading a dependency). They can
+
+    also be exported to external issue trackers.
+
+
+    You can manage follow-ups in the incident Slack channel with <code>/incident follow-ups</code>, or
+    on
+
+    the incident homepage.
+  humanURL: https://incident.io
+  tags:
+  - Follow-ups V3
+  properties:
+  - type: OpenAPI
+    url: openapi/incident-io-follow-ups-v3-api-openapi.yml
+- aid: incident-io:incident-io-heartbeat-v2-api
+  name: Incident.io Heartbeat V2 API
+  description: >-
+    Send heartbeat pings for dead man's switch monitoring.
+
+
+    Heartbeat alert sources expect periodic pings. If pings stop arriving, alerts
+
+    fire automatically. Use the ping endpoints to signal that your job or service
+
+    is still healthy.
+  humanURL: https://incident.io
+  tags:
+  - Heartbeat V2
+  properties:
+  - type: OpenAPI
+    url: openapi/incident-io-heartbeat-v2-api-openapi.yml
+- aid: incident-io:incident-io-incident-activity-log-entries-v2-api
+  name: Incident.io Incident Activity Log Entries V2 API
+  description: >-
+    Read everything that happened on an incident.
+
+
+    The activity log is the full record: every status change, role handover, escalation, field
+
+    edit and update, in the order they happened. Some of it gets promoted onto the incident's
+
+    timeline, which also carries items written by hand that never appear here.
+
+
+    Use this to pull an incident's history into your own systems - a retrospective, a report, an
+
+    audit of how a response ran.
+  humanURL: https://incident.io
+  tags:
+  - Incident Activity Log Entries V2
+  properties:
+  - type: OpenAPI
+    url: openapi/incident-io-incident-activity-log-entries-v2-api-openapi.yml
+- aid: incident-io:incident-io-incident-attachments-v1-api
+  name: Incident.io Incident Attachments V1 API
+  description: >-
+    Create, list and delete incident attachments.
+
+
+    Incident Attachments allows you to connect resources from external systems into incidents.
+
+    Examples include: PagerDuty incidents and GitHub pull requests.
+  humanURL: https://incident.io
+  tags:
+  - Incident Attachments V1
+  properties:
+  - type: OpenAPI
+    url: openapi/incident-io-incident-attachments-v1-api-openapi.yml
+- aid: incident-io:incident-io-incident-forms-v3-api
+  name: Incident.io Incident Forms V3 API
+  description: >-
+    Configure the forms used to declare, accept, update, and resolve incidents.
+
+
+    Each form carries its elements and the expressions those elements can reference.
+
+    Escalate forms are not part of this API.
+  humanURL: https://incident.io
+  tags:
+  - Incident Forms V3
+  properties:
+  - type: OpenAPI
+    url: openapi/incident-io-incident-forms-v3-api-openapi.yml
+- aid: incident-io:incident-io-incident-memberships-v1-api
+  name: Incident.io Incident Memberships V1 API
+  description: Manage private incident memberships
+  humanURL: https://incident.io
+  tags:
+  - Incident Memberships V1
+  properties:
+  - type: OpenAPI
+    url: openapi/incident-io-incident-memberships-v1-api-openapi.yml
+- aid: incident-io:incident-io-incident-relationships-v1-api
+  name: Incident.io Incident Relationships V1 API
+  description: View related incidents for an incident
+  humanURL: https://incident.io
+  tags:
+  - Incident Relationships V1
+  properties:
+  - type: OpenAPI
+    url: openapi/incident-io-incident-relationships-v1-api-openapi.yml
+- aid: incident-io:incident-io-incident-roles-v1-api
+  name: Incident.io Incident Roles V1 API
+  description: >-
+    Manage incident roles.
+
+
+    During an incident, you can assign responders to one of the incident roles that are
+
+    configured in your organisation settings.
+
+
+    Every organisation will have a special 'lead' role, which signifies the incident lead or
+
+    commander. This role cannot be deleted, but can be renamed in the incident.io dashboard.
+  humanURL: https://incident.io
+  tags:
+  - Incident Roles V1
+  properties:
+  - type: OpenAPI
+    url: openapi/incident-io-incident-roles-v1-api-openapi.yml
+- aid: incident-io:incident-io-incident-roles-v2-api
+  name: Incident.io Incident Roles V2 API
+  description: >-
+    Manage incident roles.
+
+
+    During an incident, you can assign responders to one of the incident roles that are
+
+    configured in your organisation settings.
+
+
+    Every organisation will have a special 'lead' role, which signifies the incident lead or
+
+    commander. This role cannot be deleted, but can be renamed in the incident.io dashboard.
+  humanURL: https://incident.io
+  tags:
+  - Incident Roles V2
+  properties:
+  - type: OpenAPI
+    url: openapi/incident-io-incident-roles-v2-api-openapi.yml
+- aid: incident-io:incident-io-incident-statuses-v1-api
+  name: Incident.io Incident Statuses V1 API
+  description: >-
+    Manage incident statuses.
+
+
+    Each incident has a status, picked from one of the statuses configured in your
+
+    organisations settings.
+
+
+    Statuses help communicate where an incident is in its lifecycle. You can use
+
+    statuses when filtering incidents in the dashboard, and in workflows and announcement
+
+    rules.
+  humanURL: https://incident.io
+  tags:
+  - Incident Statuses V1
+  properties:
+  - type: OpenAPI
+    url: openapi/incident-io-incident-statuses-v1-api-openapi.yml
+- aid: incident-io:incident-io-incident-team-memberships-v1-api
+  name: Incident.io Incident Team Memberships V1 API
+  description: Manage team access to private incidents
+  humanURL: https://incident.io
+  tags:
+  - Incident Team Memberships V1
+  properties:
+  - type: OpenAPI
+    url: openapi/incident-io-incident-team-memberships-v1-api-openapi.yml
+- aid: incident-io:incident-io-incident-templates-v1-api
+  name: Incident.io Incident Templates V1 API
+  description: >-
+    Manage incident templates: reusable sets of values applied to incidents created from alerts.
+  humanURL: https://incident.io
+  tags:
+  - Incident Templates V1
+  properties:
+  - type: OpenAPI
+    url: openapi/incident-io-incident-templates-v1-api-openapi.yml
+- aid: incident-io:incident-io-incident-timeline-items-v2-api
+  name: Incident.io Incident Timeline Items V2 API
+  description: >-
+    Read and write the items on an incident's timeline.
+
+
+    The timeline is the curated narrative of an incident: the handful of moments that explain what
+
+    happened, rather than the activity log, which records everything that did. Items are either
+
+    promoted or custom. Promoted items are activity lifted onto the timeline - a pinned message,
+
+    an escalation, an incident update, an event added by a workflow - and carry the ID of the
+
+    activity log entry they came from. Custom items are written by hand, in the dashboard or
+
+    through this API, and have no activity_log_id.
+
+
+    Use this to pull an incident's narrative into your own systems - a retrospective template, a
+
+    report, a record you keep outside incident.io - and to put the things you know about back on
+
+    it, like a deploy, a config change or a load test you halted.
+  humanURL: https://incident.io
+  tags:
+  - Incident Timeline Items V2
+  properties:
+  - type: OpenAPI
+    url: openapi/incident-io-incident-timeline-items-v2-api-openapi.yml
+- aid: incident-io:incident-io-incident-timestamps-v2-api
+  name: Incident.io Incident Timestamps V2 API
+  description: >-
+    View incident timestamps.
+
+
+    Each incident has a number of timestamps; some being defaults that we set on
+
+    each incident for you, and other being configured for your organisation within
+
+    settings.
+
+
+    Timestamps help to communicate when a given action was taken for a specific
+
+    incident, for example when it was reported, closed or fixed.
+  humanURL: https://incident.io
+  tags:
+  - Incident Timestamps V2
+  properties:
+  - type: OpenAPI
+    url: openapi/incident-io-incident-timestamps-v2-api-openapi.yml
+- aid: incident-io:incident-io-incident-types-v1-api
+  name: Incident.io Incident Types V1 API
+  description: >-
+    View incident types.
+
+
+    With incident types enabled, you can tailor your process to the situation you're
+
+    responding to with different custom fields and roles for each incident type.
+  humanURL: https://incident.io
+  tags:
+  - Incident Types V1
+  properties:
+  - type: OpenAPI
+    url: openapi/incident-io-incident-types-v1-api-openapi.yml
+- aid: incident-io:incident-io-incident-updates-v2-api
+  name: Incident.io Incident Updates V2 API
+  description: >-
+    List and create incident updates.
+
+
+    Incident Updates allows you to see all the updates that have been shared against a
+
+    particular incident. This will include any time that the Severity or Status of
+
+    an incident changed, alongside any additional updates that were provided.
+  humanURL: https://incident.io
+  tags:
+  - Incident Updates V2
+  properties:
+  - type: OpenAPI
+    url: openapi/incident-io-incident-updates-v2-api-openapi.yml
+- aid: incident-io:incident-io-incidentparticipants-v2-api
+  name: Incident.io IncidentParticipants V2 API
+  description: Read who participated in an incident and the role they took.
+  humanURL: https://incident.io
+  tags:
+  - IncidentParticipants V2
+  properties:
+  - type: OpenAPI
+    url: openapi/incident-io-incidentparticipants-v2-api-openapi.yml
+- aid: incident-io:incident-io-incidentparticipantworkloads-v2-api
+  name: Incident.io IncidentParticipantWorkloads V2 API
+  description: Read how much time each participant has spent working on an incident.
+  humanURL: https://incident.io
+  tags:
+  - IncidentParticipantWorkloads V2
+  properties:
+  - type: OpenAPI
+    url: openapi/incident-io-incidentparticipantworkloads-v2-api-openapi.yml
+- aid: incident-io:incident-io-incidents-v1-api
+  name: Incident.io Incidents V1 API
+  description: >-
+    Create and read incidents.
+
+
+    Incidents are a core resource, on which many other resources (actions, etc) are created.
+
+
+    Care should be taken around these endpoints, as automation that creates duplicate
+
+    incidents can be distracting, and impact reporting.
+
+
+    The maximum page size that can be requested is 250.
+  humanURL: https://incident.io
+  tags:
+  - Incidents V1
+  properties:
+  - type: OpenAPI
+    url: openapi/incident-io-incidents-v1-api-openapi.yml
+- aid: incident-io:incident-io-incidents-v2-api
+  name: Incident.io Incidents V2 API
+  description: >-
+    Create and read incidents.
+
+
+    Incidents are a core resource, on which many other resources (actions, etc) are created.
+
+
+    Care should be taken around these endpoints, as automation that creates duplicate
+
+    incidents can be distracting, and impact reporting.
+  humanURL: https://incident.io
+  tags:
+  - Incidents V2
+  properties:
+  - type: OpenAPI
+    url: openapi/incident-io-incidents-v2-api-openapi.yml
+- aid: incident-io:incident-io-ipallowlists-v1-api
+  name: Incident.io IPAllowlists V1 API
+  description: >-
+    Manage the IP allowlist.
+
+
+    When enabled, the IP allowlist restricts authenticated traffic from the dashboard, public API and
+    mobile app.
+  humanURL: https://incident.io
+  tags:
+  - IPAllowlists V1
+  properties:
+  - type: OpenAPI
+    url: openapi/incident-io-ipallowlists-v1-api-openapi.yml
+- aid: incident-io:incident-io-maintenancewindows-v1-api
+  name: Incident.io MaintenanceWindows V1 API
+  description: >-
+    Manage maintenance windows for temporarily overriding alert routing during planned maintenance.
+
+
+    Maintenance windows allow you to suppress or redirect alerts during scheduled maintenance periods,
+    preventing unnecessary escalations and noise.
+  humanURL: https://incident.io
+  tags:
+  - MaintenanceWindows V1
+  properties:
+  - type: OpenAPI
+    url: openapi/incident-io-maintenancewindows-v1-api-openapi.yml
+- aid: incident-io:incident-io-on-call-notification-pauses-v2-api
+  name: Incident.io On-call Notification Pauses V2 API
+  description: >-
+    View on-call notification pauses: windows in which a user's on-call notifications are paused, so escalations
+    skip them instead of paging them.
+  humanURL: https://incident.io
+  tags:
+  - On-call Notification Pauses V2
+  properties:
+  - type: OpenAPI
+    url: openapi/incident-io-on-call-notification-pauses-v2-api-openapi.yml
+- aid: incident-io:incident-io-pay-configs-v2-api
+  name: Incident.io Pay Configs V2 API
+  description: 'Manage on-call pay configs: the rates that pay reports price on-call shifts against.'
+  humanURL: https://incident.io
+  tags:
+  - Pay Configs V2
+  properties:
+  - type: OpenAPI
+    url: openapi/incident-io-pay-configs-v2-api-openapi.yml
+- aid: incident-io:incident-io-pay-reports-v2-api
+  name: Incident.io Pay Reports V2 API
+  description: >-
+    View and manage on-call pay reports, which value the time users spent on-call over a date window.
+  humanURL: https://incident.io
+  tags:
+  - Pay Reports V2
+  properties:
+  - type: OpenAPI
+    url: openapi/incident-io-pay-reports-v2-api-openapi.yml
+- aid: incident-io:incident-io-policies-v2-api
+  name: Incident.io Policies V2 API
+  description: >-
+    Manage the policies that encode how your organisation should handle incidents.
+
+
+    A policy scopes itself to a set of resources with conditions, states the requirements
+
+    those resources must meet, and describes who to chase when they don't.
+
+
+    Every policy has a <code>policy_type</code>, which selects exactly one matching
+
+    configuration block: a <code>follow_up</code> policy carries <code>follow_up</code>
+
+    config, a <code>schedule</code> policy carries <code>schedule</code> config, and so
+
+    on. Sending a block that doesn't match the policy type is rejected.
+  humanURL: https://incident.io
+  tags:
+  - Policies V2
+  properties:
+  - type: OpenAPI
+    url: openapi/incident-io-policies-v2-api-openapi.yml
+- aid: incident-io:incident-io-policy-findings-v2-api
+  name: Incident.io Policy Findings V2 API
+  description: >-
+    View and manage the findings your policies raise.
+
+
+    A finding records that a resource fell short of a policy: a follow-up that was
+
+    never exported, a schedule with a gap in cover, a user without the notification
+
+    rules their on-call policy requires.
+
+
+    Findings are materialised by a job that runs hourly, so every finding carries a
+
+    <code>last_checked_at</code> telling you how fresh it is.
+  humanURL: https://incident.io
+  tags:
+  - Policy Findings V2
+  properties:
+  - type: OpenAPI
+    url: openapi/incident-io-policy-findings-v2-api-openapi.yml
+- aid: incident-io:incident-io-postmortemdocuments-v1-api
+  name: Incident.io PostmortemDocuments V1 API
+  description: >-
+    Manage post-mortem documents.
+
+
+    Post-mortem documents capture the learnings from an incident, and are associated with a specific
+
+    incident. Use this API to list and retrieve post-mortem documents, update their status, and fetch
+
+    the full document's content.
+  humanURL: https://incident.io
+  tags:
+  - PostmortemDocuments V1
+  properties:
+  - type: OpenAPI
+    url: openapi/incident-io-postmortemdocuments-v1-api-openapi.yml
+- aid: incident-io:incident-io-schedule-sync-targets-v2-api
+  name: Incident.io Schedule Sync Targets V2 API
+  description: Manage schedule sync targets (Slack user groups that schedules can sync to).
+  humanURL: https://incident.io
+  tags:
+  - Schedule Sync Targets V2
+  properties:
+  - type: OpenAPI
+    url: openapi/incident-io-schedule-sync-targets-v2-api-openapi.yml
+- aid: incident-io:incident-io-schedules-v2-api
+  name: Incident.io Schedules V2 API
+  description: >-
+    View and manage schedules.
+
+    Manage your full schedule of on-call rotations, including the users and rotation configuration.
+  humanURL: https://incident.io
+  tags:
+  - Schedules V2
+  properties:
+  - type: OpenAPI
+    url: openapi/incident-io-schedules-v2-api-openapi.yml
+- aid: incident-io:incident-io-secrets-v2-api
+  name: Incident.io Secrets V2 API
+  description: >-
+    Manage secrets: named credentials that workflows can reference. A secret's value can be set and rotated
+    but is never returned by the API.
+  humanURL: https://incident.io
+  tags:
+  - Secrets V2
+  properties:
+  - type: OpenAPI
+    url: openapi/incident-io-secrets-v2-api-openapi.yml
+- aid: incident-io:incident-io-severities-v1-api
+  name: Incident.io Severities V1 API
+  description: >-
+    Manage incident severities.
+
+
+    Each incident has a severity, picked from one of the severities configured in your
+
+    organisations settings.
+
+
+    Severities help categorise incidents, and communicate urgency/impact. You can use
+
+    severities when filtering incidents in the dashboard, and in workflows and announcement
+
+    rules.
+  humanURL: https://incident.io
+  tags:
+  - Severities V1
+  properties:
+  - type: OpenAPI
+    url: openapi/incident-io-severities-v1-api-openapi.yml
+- aid: incident-io:incident-io-status-page-components-v2-api
+  name: Incident.io Status Page Components V2 API
+  description: >-
+    Manage status page components.
+
+
+    Components are organisation-scoped and can appear on multiple status pages via
+
+    each page's structure. Use these endpoints to create and maintain components;
+
+    use status page structure endpoints to place them on pages.
+  humanURL: https://incident.io
+  tags:
+  - Status Page Components V2
+  properties:
+  - type: OpenAPI
+    url: openapi/incident-io-status-page-components-v2-api-openapi.yml
+- aid: incident-io:incident-io-status-pages-v1-api
+  name: Incident.io Status Pages V1 API
+  description: >-
+    This API currently only allows linked Response incidents for a status page incident to be listed.
+  humanURL: https://incident.io
+  tags:
+  - Status Pages V1
+  properties:
+  - type: OpenAPI
+    url: openapi/incident-io-status-pages-v1-api-openapi.yml
+- aid: incident-io:incident-io-status-pages-v2-api
+  name: Incident.io Status Pages V2 API
+  description: >-
+    Manage and publish to status pages.
+
+
+    Before using these endpoints, you must create a status page in the incident.io dashboard (find Status
+    Pages in the left navigation bar). You can then use the ListStatusPages endpoint to find your status
+    page IDs, and the ShowStatusPageStructure endpoint to find component IDs and group IDs for your status
+    page.
+
+
+    For read-only access (listing status pages, viewing structure, incidents, maintenance windows, and
+    component availability), any valid API key will work. For write requests (creating incidents, maintenance
+    windows, and publishing updates), you will need an API key with the "Create status page incidents,
+    status page maintenance windows, and publish status page updates" scope.
+  humanURL: https://incident.io
+  tags:
+  - Status Pages V2
+  properties:
+  - type: OpenAPI
+    url: openapi/incident-io-status-pages-v2-api-openapi.yml
+- aid: incident-io:incident-io-teams-v3-api
+  name: Incident.io Teams V3 API
+  description: >-
+    Manage teams.
+
+
+    Teams are groups of users that can be associated with incidents, escalation paths, and other
+
+    resources. Teams are built on top of catalog entries, allowing you to enrich them with
+
+    custom attributes.
+  humanURL: https://incident.io
+  tags:
+  - Teams V3
+  properties:
+  - type: OpenAPI
+    url: openapi/incident-io-teams-v3-api-openapi.yml
+- aid: incident-io:incident-io-telemetry-v2-api
+  name: Incident.io Telemetry V2 API
+  description: Manage telemetry data source integrations.
+  humanURL: https://incident.io
+  tags:
+  - Telemetry V2
+  properties:
+  - type: OpenAPI
+    url: openapi/incident-io-telemetry-v2-api-openapi.yml
+- aid: incident-io:incident-io-users-v2-api
+  name: Incident.io Users V2 API
+  description: >-
+    View users.
+
+
+    Users all have a single base role, and can be assigned multiple custom roles. They can be managed
+    via your Slack workspace or SAML provider.
+  humanURL: https://incident.io
+  tags:
+  - Users V2
+  properties:
+  - type: OpenAPI
+    url: openapi/incident-io-users-v2-api-openapi.yml
+- aid: incident-io:incident-io-utilities-v1-api
+  name: Incident.io Utilities V1 API
+  description: >-
+    Miscelaneous utility endpoints.
+
+
+    Collection of utility functions that can help build integrations against this API.
+  humanURL: https://incident.io
+  tags:
+  - Utilities V1
+  properties:
+  - type: OpenAPI
+    url: openapi/incident-io-utilities-v1-api-openapi.yml
+- aid: incident-io:incident-io-webhooks-api
+  name: Incident.io Webhooks API
+  description: >-
+    Webhooks can be used to receive notifications when certain events occur in incident.io. This might
+    be useful for annotating graphs in a monitoring tool with incidents, or keeping track of follow-ups
+    in another system. Our webhooks are powered by <a href="https://svix.com" target="_blank">Svix</a>.
+
+
+    ## Getting started with webhooks
+
+
+    To start using webhooks, you’ll need to create a webhook endpoint. You can do this in the same way
+    that you’d create any other endpoint in your application. If you’d like to play around with our webhooks,
+    we’d recommend using <a href="https://www.svix.com/play/" target="_blank">Svix play</a> which allows
+    you to set up an endpoint and inspect the payloads via their web interface. There are also other services
+    (e.g. <a href="https://ngrok.com/" target="_blank">ngrok</a>) which have great debugging tools to
+    help getting started with webhooks.
+
+
+    Once you have a webhook endpoint set up, you can head to <a href="https://app.incident.io/settings/webhooks"
+    target="_blank">Settings > Webhooks</a> to configure your endpoint. In here you'll be able to choose
+    which types of events you'd like to recieve, send test events, see recent event deliveries, and retry
+    any failed events.
+
+
+    ## Status codes, errors and retries
+
+
+    When processing webhooks, please return a 2xx status code (e.g. `200 OK` or `204 No Content`). If
+    the endpoint returns a non-2xx status code, we’ll try to resend the event with a backoff over the
+    next 24 hours. If attempts to a specific endpoint repeatedly fail over a 5 day period, we’ll mark
+    the endpoint as disabled and notify you via email. If you do miss some messages (e.g. due to unexpected
+    downtime), Svix offer a number of options for [replaying messages](https://docs.svix.com/receiving/using-app-portal/replaying-messages)
+    which you can access via <a href="https://app.incident.io/settings/webhooks" target="_blank">Settings
+    > Webhooks</a>.
+
+
+    ## Verifying webhooks
+
+
+    It’s important to know whether a webhook has come from incident.io, or a third party that might be
+    trying to exploit a vulnerability. To avoid this, we send a `signature` in the header of our webhooks,
+    which you can verify using the `Signing secret` from the webhook endpoint settings page. The webhooks
+    we send will have three headers that you’ll want to look at:
+
+
+    ```json
+
+    {
+      "webhook-id": "123",
+      "webhook-timestamp": 1676033031,
+      "webhook-signature": "v1,g0hM9SsE+OTPJTGt/tmIKtSyZlE3uFJELVlNIOLJ1OE="
+    }
+
+    ```
+
+
+    These are signed using a HMAC signature in the following format:
+
+
+    ```
+
+    $WEBHOOK_ID.$WEBHOOK_TIMESTAMP.$REQUEST_BODY
+
+    ```
+
+
+    You can verify the signature either using the <a href="https://docs.svix.com/receiving/verifying-payloads/how"
+    target="_blank">Svix client libraries</a>, or manually by following <a href="https://docs.svix.com/receiving/verifying-payloads/how-manual"
+    target="_blank">these instructions</a>.
+
+
+    ## Keeping another system in-line with incident.io
+
+
+    A common use-case for webhooks is to keep another system up-to-date with everything that’s happening
+    in incident.io. As we deliver webhooks individually over HTTPS, we cannot guarantee that they’ll be
+    delivered in the correct order. That means that, to keep the other system up-to-date, we’d recommend
+    that you build an application which:
+
+
+    - Receives a webhook about INC-123
+
+    - Makes a request to our public API to get the latest state of INC-123
+
+    - Save that state to your system
+
+
+    This means you aren’t relying on the order in which you receive webhooks to make sure your system
+    remains up-to-date.
+
+
+    ## Webhooks on private incidents
+
+
+    In general, we try to send webhooks with all the relevant information in the payload (e.g. the name,
+    summary, status etc.). However, private incidents are the exception. For private incidents, we only
+    send the ID of the resource that’s been changed. If your integration needs to access the full data,
+    you’ll need to <a href="https://docs.incident.io/integrations/api-overview" target="_blank">create
+    an API Key</a> that can view private incidents. You can then use that key to get the details about
+    the specific incident or follow-up. This is to make sure we don’t leak information about private incidents
+    to a system that shouldn’t have access to them.
+  humanURL: https://incident.io
+  tags:
+  - Webhooks
+  properties:
+  - type: OpenAPI
+    url: openapi/incident-io-webhooks-api-openapi.yml
+- aid: incident-io:incident-io-workflowruns-v2-api
+  name: Incident.io WorkflowRuns V2 API
+  description: >-
+    Read the history of your workflow runs.
+
+
+    A workflow run is one execution of a workflow, carrying the progress of every step it ran. Where
+
+    a step sent a webhook, that progress also carries the delivery: its outcome, the status code, and
+
+    how long the request took. Fetch a single run to additionally see the request and response
+
+    headers and bodies.
+
+
+    Runs on private incidents are returned only to an API key with global incident access.
+  humanURL: https://incident.io
+  tags:
+  - WorkflowRuns V2
+  properties:
+  - type: OpenAPI
+    url: openapi/incident-io-workflowruns-v2-api-openapi.yml
+- aid: incident-io:incident-io-workflows-v2-api
+  name: Incident.io Workflows V2 API
+  description: >-
+    Manage workflows.
+
+
+    Workflows allow you to automate certain actions and behaviors based on specific triggers.
+  humanURL: https://incident.io
+  tags:
+  - Workflows V2
+  properties:
+  - type: OpenAPI
+    url: openapi/incident-io-workflows-v2-api-openapi.yml
 common:
 - type: Plans
   url: plans/incident-io-plans-pricing.yml

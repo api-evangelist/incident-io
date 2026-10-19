@@ -1,0 +1,845 @@
+openapi: 3.2.0
+info:
+  description: 'This is the API reference for incident.io. It documents available API endpoints, provides examples of how to use it, and
+
+    instructions around things like authentication and error handling. The API is hosted at:
+
+
+    - https://api.incident.io/
+
+
+    And you will need to create an API key via your incident.io
+
+    dashboard to make requests. # Making requests
+
+
+    Here are the key concepts required to make requests to the incident.io API. ## Authentication
+
+
+    For all requests made to the incident.io API, you''ll need an API key. To create an API key, head to the incident dashboard and visit API
+
+    keys. When you create the key, you''ll be able to choose what actions it
+
+    can take for your account: choose carefully, as those roles can only be set
+
+    when you first create the key. We''ll only show you the token once, so make sure
+
+    you store it somewhere safe. API keys are global to your incident.io account, and can be managed by anyone
+
+    who has the right permissions. We display the user that created the API key,
+
+    and the API key will remain valid if that user becomes deactivated. Once you have the key, you should make requests to the API that set the
+
+    `Authorization` request header using a "Bearer" authentication scheme:
+
+
+    ```
+
+    Authorization: Bearer
+
+    ```
+
+
+    ## Rate Limits
+
+
+    The incident.io API enforces rate limits to ensure consistent performance for all users. The default rate limit is 1200 requests/minute per API key. This limit applies to most endpoints across the API. Limits are token buckets that refill continuously rather than resetting on a fixed window boundary. The default
+
+    bucket holds 1200 requests and refills at 20 per second, so you can burst up to the full bucket and then sustain
+
+    20 requests/second indefinitely. There is no boundary at which your quota resets to full in one step. Some endpoints have lower rate limits, particularly those that interact with external third-party systems that impose
+
+    their own limitations. These specific limits vary by endpoint. ### Rate limit headers
+
+
+    Responses to requests authenticated with an API key carry your current allowance, so you can pace yourself rather
+
+    than waiting to be throttled:
+
+
+    ```
+
+    X-RateLimit-Limit: 60, 1200;window=60, 60;window=60
+
+    X-RateLimit-Remaining: 59
+
+    X-RateLimit-Used: 1
+
+    X-RateLimit-Reset: 1785173199
+
+    ```
+
+
+    | Header | Meaning |
+
+    | --- | --- |
+
+    | `X-RateLimit-Limit` | The quota that binds this request, followed by every limit that applied and the window it applies over |
+
+    | `X-RateLimit-Remaining` | Requests you can make right now against the binding limit |
+
+    | `X-RateLimit-Used` | Requests you have spent against it |
+
+    | `X-RateLimit-Reset` | Unix timestamp (seconds) at which that limit will be back to full |
+
+
+    More than one limit can apply to a request: your API key''s overall limit, and for some endpoints a lower limit of
+
+    their own. `X-RateLimit-Limit` lists all of them, each with its window, so `1200;window=60` means 1200 requests per
+
+    minute. Because our limits refill continuously rather than resetting on a boundary, that window is what tells you
+
+    the rate you can sustain: 1200 per 60 seconds is 20 requests/second indefinitely. `Remaining`, `Used` and `Reset` describe whichever limit has the least allowance left, since that is the one you
+
+    will hit first. `X-RateLimit-Remaining` may lag by a small number of requests under high concurrency, and can move by more than the
+
+    requests you made, because limits scoped to your whole organisation are shared with your other API keys. Headers are omitted rather than guessed if we cannot determine your allowance for a request. ### Exceeding a rate limit
+
+
+    When you exceed a rate limit the API responds with `429 Too Many Requests` and a `Retry-After` header giving the
+
+    number of seconds to wait:
+
+
+    ```
+
+    X-RateLimit-Limit: 1200, 1200;window=60
+
+    X-RateLimit-Remaining: 0
+
+    X-RateLimit-Used: 1200
+
+    X-RateLimit-Reset: 1785173199
+
+    Retry-After: 1
+
+    ```
+
+
+    Prefer `Retry-After` over `X-RateLimit-Reset` when deciding how long to back off.'
+  title: incident.io Utilities V1 API
+  version: 1.0.0
+servers:
+- url: https://api.incident.io
+security:
+- BearerAuth: []
+tags:
+- description: 'Miscelaneous utility endpoints.
+
+
+    Collection of utility functions that can help build integrations against this API.'
+  name: Utilities V1
+paths:
+  /v1/identity:
+    get:
+      description: Test if your API key is valid, and which roles it has.
+      operationId: UtilitiesV1#Identity
+      responses:
+        '200':
+          content:
+            application/json:
+              example:
+                identity:
+                  dashboard_url: https://app.incident.io/my-org
+                  name: Alertmanager token
+                  roles:
+                  - viewer
+                  team_roles:
+                  - catalog_editor
+                  teams:
+                  - id: 01G0J1EXE7AXZ2C93K61WBPYEH
+                    name: Platform
+              schema:
+                $ref: '#/components/schemas/UtilitiesIdentityResultV1'
+          description: OK response.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'invalid_request_error: There was a problem with the request, like a missing header or querying a resource that doesn''t exist.'
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'authentication_error: Authentication failed.'
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'resource_forbidden: Access to this resource is forbidden for the authenticated user.'
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_found: The referenced resource could not be found.'
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'method_not_allowed: The endpoint does not support this operation for the specified resource.'
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_acceptable: Requested a media type this endpoint does not support.'
+        '408':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'request_timeout: The request took too long to process.
+
+
+            client_timeout: The request was cancelled by the client.'
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'conflict: Request conflicted with current state of the resource, likely a concurrent update.'
+        '412':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'precondition_failed: A required condition hasn''t been met.'
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'payload_too_large: The request payload is too large.'
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'validation_error: A required field was not provided, or the provided data was invalid.'
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'too_many_requests: Too many requests hit the API too quickly. We recommend an exponential backoff of your requests.
+
+
+            rate_limit_reached: The rate limit associated with this resource or API key has been exceeded. Try again later.'
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'api_error: Something went wrong and has been reported internally.'
+      summary: Identity Utilities V1
+      tags:
+      - Utilities V1
+      x-docs-display-name: Show Identity
+      x-docs-group-name: Utilities V1
+      x-operation-id-source: normalized
+      x-operation-id-original: Utilities V1#Identity
+  /v1/ip_ranges:
+    get:
+      description: 'List the IP addresses our requests to your systems come from.
+
+
+        Use this to keep a firewall allowlist up to date without watching our documentation. Poll
+
+        it rather than copying the list once. We give at least two weeks'' notice before our own
+
+        addresses change. Webhook deliveries come from our provider''s addresses, so we cannot
+
+        promise notice on those.
+
+
+        These are the addresses we send from. Do not allowlist them for inbound access: our API is
+
+        served on different addresses, and those change without notice.'
+      operationId: UtilitiesV1#IPRanges
+      responses:
+        '200':
+          content:
+            application/json:
+              example:
+                ip_ranges:
+                - cidr: 34.91.219.113/32
+                  description: Requests to your systems from integrations and from workflow "Send a webhook" steps
+              schema:
+                $ref: '#/components/schemas/UtilitiesIPRangesResultV1'
+          description: OK response.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'invalid_request_error: There was a problem with the request, like a missing header or querying a resource that doesn''t exist.'
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'authentication_error: Authentication failed.'
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'resource_forbidden: Access to this resource is forbidden for the authenticated user.'
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_found: The referenced resource could not be found.'
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'method_not_allowed: The endpoint does not support this operation for the specified resource.'
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_acceptable: Requested a media type this endpoint does not support.'
+        '408':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'request_timeout: The request took too long to process.
+
+
+            client_timeout: The request was cancelled by the client.'
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'conflict: Request conflicted with current state of the resource, likely a concurrent update.'
+        '412':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'precondition_failed: A required condition hasn''t been met.'
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'payload_too_large: The request payload is too large.'
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'validation_error: A required field was not provided, or the provided data was invalid.'
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'too_many_requests: Too many requests hit the API too quickly. We recommend an exponential backoff of your requests.
+
+
+            rate_limit_reached: The rate limit associated with this resource or API key has been exceeded. Try again later.'
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'api_error: Something went wrong and has been reported internally.'
+      security: []
+      summary: IPRanges Utilities V1
+      tags:
+      - Utilities V1
+      x-docs-display-name: List IP Ranges
+      x-docs-group-name: Utilities V1
+      x-docs-resource-type: IPRangeV1
+      x-operation-id-source: normalized
+      x-operation-id-original: Utilities V1#IPRanges
+  /v1/openapiV3.json:
+    get:
+      description: Get the OpenAPI (v3) definition.
+      operationId: UtilitiesV1#OpenAPIV3
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                format: binary
+                type: string
+          description: OK response.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'invalid_request_error: There was a problem with the request, like a missing header or querying a resource that doesn''t exist.'
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'authentication_error: Authentication failed.'
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'resource_forbidden: Access to this resource is forbidden for the authenticated user.'
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_found: The referenced resource could not be found.'
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'method_not_allowed: The endpoint does not support this operation for the specified resource.'
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_acceptable: Requested a media type this endpoint does not support.'
+        '408':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'request_timeout: The request took too long to process.
+
+
+            client_timeout: The request was cancelled by the client.'
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'conflict: Request conflicted with current state of the resource, likely a concurrent update.'
+        '412':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'precondition_failed: A required condition hasn''t been met.'
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'payload_too_large: The request payload is too large.'
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'validation_error: A required field was not provided, or the provided data was invalid.'
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'too_many_requests: Too many requests hit the API too quickly. We recommend an exponential backoff of your requests.
+
+
+            rate_limit_reached: The rate limit associated with this resource or API key has been exceeded. Try again later.'
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'api_error: Something went wrong and has been reported internally.'
+      security: []
+      summary: OpenAPIV3 Utilities V1
+      tags:
+      - Utilities V1
+      x-docs-display-name: Show OpenAPI V3 Spec
+      x-docs-group-name: Utilities V1
+      x-operation-id-source: normalized
+      x-operation-id-original: Utilities V1#OpenAPIV3
+components:
+  schemas:
+    ErrorRateLimit:
+      example:
+        limit: 100
+        name: client_ip
+        remaining: 98
+        retry_after: '2020-01-01T00:00:00Z'
+      properties:
+        limit:
+          description: The maximum number of requests that the consumer is permitted to make per minute
+          example: 100
+          format: int64
+          type: integer
+        name:
+          description: Which rate limit was exceeded
+          example: client_ip
+          type: string
+        remaining:
+          description: The number of requests remaining in the current rate limit window
+          example: 98
+          format: int64
+          type: integer
+        retry_after:
+          description: When the client can retry, as an RFC3339 timestamp in UTC. Prefer the Retry-After response header, which carries the same instant as a number of seconds
+          example: '2020-01-01T00:00:00Z'
+          type: string
+      required:
+      - name
+      - limit
+      - remaining
+      - retry_after
+      type: object
+    UtilitiesIPRangesResultV1:
+      example:
+        ip_ranges:
+        - cidr: 34.91.219.113/32
+          description: Requests to your systems from integrations and from workflow "Send a webhook" steps
+      properties:
+        ip_ranges:
+          description: Every address our traffic to you may originate from
+          example:
+          - cidr: 34.91.219.113/32
+            description: Requests to your systems from integrations and from workflow "Send a webhook" steps
+          items:
+            $ref: '#/components/schemas/IPRangeV1'
+          type: array
+      required:
+      - ip_ranges
+      type: object
+    ErrorResponse:
+      example:
+        debug:
+          message: 'Something broke: and something else: and something else'
+          stacktrace:
+          - thing.go:123
+        errors:
+        - code: trial_expired
+          message: Default incident call link must be a valid URL
+          metadata:
+            abc123: abc123
+          source:
+            field: default_call_url
+            pointer: /settings/default_call_url
+        rate_limit:
+          limit: 100
+          name: client_ip
+          remaining: 98
+          retry_after: '2020-01-01T00:00:00Z'
+        request_id: 2T1p0e3j
+        status: 408
+        type: invalid_request_error
+      properties:
+        debug:
+          $ref: '#/components/schemas/ErrorDebug'
+        errors:
+          description: List of errors that caused this request to fail
+          example:
+          - code: trial_expired
+            message: Default incident call link must be a valid URL
+            metadata:
+              abc123: abc123
+            source:
+              field: default_call_url
+              pointer: /settings/default_call_url
+          items:
+            $ref: '#/components/schemas/ErrorSingle'
+          type: array
+        rate_limit:
+          $ref: '#/components/schemas/ErrorRateLimit'
+        request_id:
+          description: Unique identifier of the request
+          example: 2T1p0e3j
+          type: string
+        status:
+          description: HTTP status of the response
+          example: 408
+          format: int64
+          type: integer
+        type:
+          description: Machine-readable identifier for the general category of error
+          enum:
+          - invalid_request_error
+          - authentication_error
+          - resource_forbidden
+          - not_found
+          - not_acceptable
+          - method_not_allowed
+          - request_timeout
+          - conflict
+          - precondition_failed
+          - payload_too_large
+          - validation_error
+          - too_many_requests
+          - api_error
+          - rate_limit_reached
+          - client_timeout
+          example: invalid_request_error
+          type: string
+      required:
+      - type
+      - status
+      - request_id
+      - errors
+      type: object
+    IdentityV1:
+      example:
+        dashboard_url: https://app.incident.io/my-org
+        name: Alertmanager token
+        roles:
+        - viewer
+        team_roles:
+        - catalog_editor
+        teams:
+        - id: 01G0J1EXE7AXZ2C93K61WBPYEH
+          name: Platform
+      properties:
+        dashboard_url:
+          description: The dashboard URL for this organisation
+          example: https://app.incident.io/my-org
+          type: string
+        name:
+          description: The name assigned to the current API Key
+          example: Alertmanager token
+          type: string
+        roles:
+          description: Which roles have been enabled for this key
+          example:
+          - viewer
+          items:
+            description: API key roles
+            enum:
+            - viewer
+            - incident_creator
+            - incident_editor
+            - manage_settings
+            - global_access
+            - catalog_viewer
+            - catalog_editor
+            - incident_memberships_editor
+            - schedules_editor
+            - schedules_reader
+            - schedule_overrides_editor
+            - workflows_editor
+            - workflows_viewer
+            - private_workflows_editor
+            - private_escalation_workflows_editor
+            - on_call_editor
+            - on_call_viewer
+            - escalation_creator
+            - post_incident_flow_opt_out
+            - security_settings_editor
+            - investigation_download
+            - team_memberships_manage
+            - status_page_publisher
+            - status_page_viewer
+            - postmortems_manage
+            - api_keys_manage
+            - notification_methods_manage
+            - notification_methods_unredacted_viewer
+            - incident_workload_viewer
+            - incident_workload_private_viewer
+            - act_on_behalf_of_users
+            - secrets_manage
+            - secrets_use
+            - call_transcripts_viewer
+            - heartbeats_ping
+            - telemetry_query_restricted
+            - telemetry_data_source_update
+            - policies_viewer
+            - policy_findings_manage
+            - pay_reports_viewer
+            - pay_reports_editor
+            - pay_configs_viewer
+            - pay_configs_editor
+            - investigations_editor
+            - telemetry_viewer
+            - documents_viewer
+            example: viewer
+            type: string
+            x-public-api-version: v1
+          type: array
+        team_roles:
+          description: If set, these roles apply to requests that operate on resources owned by any of the teams in the 'teams' array. These are in addition to any 'roles' which are applied on all requests.
+          example:
+          - catalog_editor
+          items:
+            description: API key team roles
+            enum:
+            - catalog_editor
+            - schedules_editor
+            - schedules_reader
+            - schedule_overrides_editor
+            - on_call_editor
+            - escalation_creator
+            - api_keys_manage
+            - workflows_editor
+            - private_workflows_editor
+            - secrets_manage
+            - secrets_use
+            - heartbeats_ping
+            - telemetry_query_restricted
+            - telemetry_data_source_update
+            example: catalog_editor
+            type: string
+            x-public-api-version: v1
+          type: array
+        teams:
+          description: Teams that this API key is scoped to. If this is not empty, the current API key has additional roles within these teams (see team_roles).
+          example:
+          - id: 01G0J1EXE7AXZ2C93K61WBPYEH
+            name: Platform
+          items:
+            $ref: '#/components/schemas/IdentityTeamV1'
+          type: array
+      required:
+      - name
+      - roles
+      - dashboard_url
+      - team_roles
+      - teams
+      type: object
+    ErrorDebug:
+      example:
+        message: 'Something broke: and something else: and something else'
+        stacktrace:
+        - thing.go:123
+      properties:
+        message:
+          description: Original internal error message
+          example: 'Something broke: and something else: and something else'
+          type: string
+        stacktrace:
+          description: Stacktrace of the error, if applicable
+          example:
+          - thing.go:123
+          items:
+            example: thing.go:123
+            type: string
+          type: array
+      required:
+      - message
+      - stacktrace
+      type: object
+    IPRangeV1:
+      description: One address our requests to your systems come from.
+      example:
+        cidr: 34.91.219.113/32
+        description: Requests to your systems from integrations and from workflow "Send a webhook" steps
+      properties:
+        cidr:
+          description: The address in CIDR notation. Single addresses are given as a /32.
+          example: 34.91.219.113/32
+          type: string
+        description:
+          description: Which of our traffic reaches you from this address
+          example: Requests to your systems from integrations and from workflow "Send a webhook" steps
+          type: string
+      required:
+      - cidr
+      - description
+      type: object
+    ErrorSource:
+      example:
+        field: default_call_url
+        pointer: /settings/default_call_url
+      properties:
+        field:
+          description: Field name that is the source of the error
+          example: default_call_url
+          type: string
+        pointer:
+          description: JSON pointer to the request field that is the source of the error
+          example: /settings/default_call_url
+          type: string
+      required:
+      - field
+      - pointer
+      type: object
+    UtilitiesIdentityResultV1:
+      example:
+        identity:
+          dashboard_url: https://app.incident.io/my-org
+          name: Alertmanager token
+          roles:
+          - viewer
+          team_roles:
+          - catalog_editor
+          teams:
+          - id: 01G0J1EXE7AXZ2C93K61WBPYEH
+            name: Platform
+      properties:
+        identity:
+          $ref: '#/components/schemas/IdentityV1'
+      required:
+      - identity
+      type: object
+    IdentityTeamV1:
+      example:
+        id: 01G0J1EXE7AXZ2C93K61WBPYEH
+        name: Platform
+      properties:
+        id:
+          description: Unique identifier for the team
+          example: 01G0J1EXE7AXZ2C93K61WBPYEH
+          type: string
+        name:
+          description: Human readable name of the team
+          example: Platform
+          type: string
+      required:
+      - id
+      - name
+      type: object
+    ErrorSingle:
+      example:
+        code: trial_expired
+        message: Default incident call link must be a valid URL
+        metadata:
+          abc123: abc123
+        source:
+          field: default_call_url
+          pointer: /settings/default_call_url
+      properties:
+        code:
+          description: Machine-readable identifier for this specific error
+          example: trial_expired
+          type: string
+        message:
+          description: Human readable description of the error
+          example: Default incident call link must be a valid URL
+          type: string
+        metadata:
+          additionalProperties:
+            example: abc123
+            type: string
+          description: Additional metadata about the error, keyed by a string identifier
+          example:
+            abc123: abc123
+          type: object
+        source:
+          $ref: '#/components/schemas/ErrorSource'
+      required:
+      - code
+      - message
+      type: object
+  securitySchemes:
+    BearerAuth:
+      description: API key from your incident.io dashboard (Settings > API keys)
+      scheme: bearer
+      type: http
+externalDocs:
+  description: View our API docs at api-docs.incident.io
+  url: https://api-docs.incident.io/

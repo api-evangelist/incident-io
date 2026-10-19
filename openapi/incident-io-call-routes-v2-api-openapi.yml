@@ -1,0 +1,3323 @@
+openapi: 3.2.0
+info:
+  description: 'This is the API reference for incident.io. It documents available API endpoints, provides examples of how to use it, and
+
+    instructions around things like authentication and error handling. The API is hosted at:
+
+
+    - https://api.incident.io/
+
+
+    And you will need to create an API key via your incident.io
+
+    dashboard to make requests. # Making requests
+
+
+    Here are the key concepts required to make requests to the incident.io API. ## Authentication
+
+
+    For all requests made to the incident.io API, you''ll need an API key. To create an API key, head to the incident dashboard and visit API
+
+    keys. When you create the key, you''ll be able to choose what actions it
+
+    can take for your account: choose carefully, as those roles can only be set
+
+    when you first create the key. We''ll only show you the token once, so make sure
+
+    you store it somewhere safe. API keys are global to your incident.io account, and can be managed by anyone
+
+    who has the right permissions. We display the user that created the API key,
+
+    and the API key will remain valid if that user becomes deactivated. Once you have the key, you should make requests to the API that set the
+
+    `Authorization` request header using a "Bearer" authentication scheme:
+
+
+    ```
+
+    Authorization: Bearer
+
+    ```
+
+
+    ## Rate Limits
+
+
+    The incident.io API enforces rate limits to ensure consistent performance for all users. The default rate limit is 1200 requests/minute per API key. This limit applies to most endpoints across the API. Limits are token buckets that refill continuously rather than resetting on a fixed window boundary. The default
+
+    bucket holds 1200 requests and refills at 20 per second, so you can burst up to the full bucket and then sustain
+
+    20 requests/second indefinitely. There is no boundary at which your quota resets to full in one step. Some endpoints have lower rate limits, particularly those that interact with external third-party systems that impose
+
+    their own limitations. These specific limits vary by endpoint. ### Rate limit headers
+
+
+    Responses to requests authenticated with an API key carry your current allowance, so you can pace yourself rather
+
+    than waiting to be throttled:
+
+
+    ```
+
+    X-RateLimit-Limit: 60, 1200;window=60, 60;window=60
+
+    X-RateLimit-Remaining: 59
+
+    X-RateLimit-Used: 1
+
+    X-RateLimit-Reset: 1785173199
+
+    ```
+
+
+    | Header | Meaning |
+
+    | --- | --- |
+
+    | `X-RateLimit-Limit` | The quota that binds this request, followed by every limit that applied and the window it applies over |
+
+    | `X-RateLimit-Remaining` | Requests you can make right now against the binding limit |
+
+    | `X-RateLimit-Used` | Requests you have spent against it |
+
+    | `X-RateLimit-Reset` | Unix timestamp (seconds) at which that limit will be back to full |
+
+
+    More than one limit can apply to a request: your API key''s overall limit, and for some endpoints a lower limit of
+
+    their own. `X-RateLimit-Limit` lists all of them, each with its window, so `1200;window=60` means 1200 requests per
+
+    minute. Because our limits refill continuously rather than resetting on a boundary, that window is what tells you
+
+    the rate you can sustain: 1200 per 60 seconds is 20 requests/second indefinitely. `Remaining`, `Used` and `Reset` describe whichever limit has the least allowance left, since that is the one you
+
+    will hit first. `X-RateLimit-Remaining` may lag by a small number of requests under high concurrency, and can move by more than the
+
+    requests you made, because limits scoped to your whole organisation are shared with your other API keys. Headers are omitted rather than guessed if we cannot determine your allowance for a request. ### Exceeding a rate limit
+
+
+    When you exceed a rate limit the API responds with `429 Too Many Requests` and a `Retry-After` header giving the
+
+    number of seconds to wait:
+
+
+    ```
+
+    X-RateLimit-Limit: 1200, 1200;window=60
+
+    X-RateLimit-Remaining: 0
+
+    X-RateLimit-Used: 1200
+
+    X-RateLimit-Reset: 1785173199
+
+    Retry-After: 1
+
+    ```
+
+
+    Prefer `Retry-After` over `X-RateLimit-Reset` when deciding how long to back off.'
+  title: incident.io Call Routes V2 API
+  version: 1.0.0
+servers:
+- url: https://api.incident.io
+security:
+- BearerAuth: []
+tags:
+- description: 'View and manage call routes: phone numbers your customers can call to
+
+    reach whoever is on call.
+
+
+    Use these endpoints to read how a route is configured, and to change who it
+
+    pages, the language it speaks to callers, and which number responders see when
+
+    it calls them.
+
+
+    List and edit call routes here. Create and delete them in the dashboard.'
+  name: Call Routes V2
+paths:
+  /v2/call_routes:
+    get:
+      description: List all call routes for this organisation.
+      operationId: CallRoutesV2#List
+      parameters:
+      - allowEmptyValue: true
+        description: Integer number of records to return
+        example: 25
+        in: query
+        name: page_size
+        schema:
+          default: 25
+          description: Integer number of records to return
+          example: 25
+          format: int64
+          maximum: 250
+          minimum: 1
+          type: integer
+      - allowEmptyValue: true
+        description: A call route's ID. This endpoint will return a list of call routes after this ID in relation to the API response order.
+        examples:
+          default:
+            summary: default
+            value: 01FCNDV6P870EA6S7TK1DSYDG0
+        in: query
+        name: after
+        schema:
+          description: A call route's ID. This endpoint will return a list of call routes after this ID in relation to the API response order.
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              example:
+                call_routes:
+                - allowed_callers:
+                  - id: 01FCNDV6P870EA6S7TK1DSYDG0
+                    name: Regulator duty desk
+                    phone_number: '+15551234567'
+                  country_code: US
+                  created_at: '2021-08-17T13:28:57.801578Z'
+                  current_state: active
+                  custom_language: en-US
+                  id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  name: Regulator urgent request
+                  options:
+                  - digit: '1'
+                    id: 01FCNDV6P870EA6S7TK1DSYDG0
+                    path:
+                    - id: 01FCNDV6P870EA6S7TK1DSYDG0
+                      level:
+                        targets:
+                        - id: lawrencejones
+                          schedule_mode: currently_on_call
+                          selected_rota_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                          type: schedule
+                          urgency: high
+                      type: level
+                      voicemail:
+                        greeting_text: Sorry, no one is available to take your call. Please leave a message after the tone. This call will be recorded.
+                    prompt: For an urgent production outage, press 1
+                  path:
+                  - id: 01FCNDV6P870EA6S7TK1DSYDG0
+                    level:
+                      targets:
+                      - id: lawrencejones
+                        schedule_mode: currently_on_call
+                        selected_rota_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                        type: schedule
+                        urgency: high
+                    type: level
+                    voicemail:
+                      greeting_text: Sorry, no one is available to take your call. Please leave a message after the tone. This call will be recorded.
+                  phone_number: '+15551234567'
+                  phone_number_type: toll_free
+                  responder_caller_id: route_number
+                  updated_at: '2021-08-17T13:28:57.801578Z'
+                  use_caller_allowlist: true
+                pagination_meta:
+                  after: 01FCNDV6P870EA6S7TK1DSYDG0
+                  page_size: 25
+              schema:
+                $ref: '#/components/schemas/CallRoutesListResultV2'
+          description: OK response.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'invalid_request_error: There was a problem with the request, like a missing header or querying a resource that doesn''t exist.'
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'authentication_error: Authentication failed.'
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'resource_forbidden: Access to this resource is forbidden for the authenticated user.'
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_found: The referenced resource could not be found.'
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'method_not_allowed: The endpoint does not support this operation for the specified resource.'
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_acceptable: Requested a media type this endpoint does not support.'
+        '408':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'request_timeout: The request took too long to process.
+
+
+            client_timeout: The request was cancelled by the client.'
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'conflict: Request conflicted with current state of the resource, likely a concurrent update.'
+        '412':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'precondition_failed: A required condition hasn''t been met.'
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'payload_too_large: The request payload is too large.'
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'validation_error: A required field was not provided, or the provided data was invalid.'
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'too_many_requests: Too many requests hit the API too quickly. We recommend an exponential backoff of your requests.
+
+
+            rate_limit_reached: The rate limit associated with this resource or API key has been exceeded. Try again later.'
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'api_error: Something went wrong and has been reported internally.'
+      summary: List Call Routes V2
+      tags:
+      - Call Routes V2
+      x-docs-display-name: List
+      x-docs-group-name: Call Routes V2
+      x-docs-resource-type: CallRouteV2
+      x-mint:
+        content: 🔑 Requires the `call_routes.view` scope.
+      x-rbac-scopes:
+      - call_routes.view
+      x-operation-id-source: normalized
+      x-operation-id-original: Call Routes V2#List
+  /v2/call_routes/{call_route_id}/allowed_callers:
+    get:
+      description: List the numbers allowed to call a route.
+      operationId: CallRoutesV2#ListAllowedCallers
+      parameters:
+      - description: The call route's ID
+        example: 01FCNDV6P870EA6S7TK1DSYDG0
+        in: path
+        name: call_route_id
+        required: true
+        schema:
+          description: The call route's ID
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              example:
+                allowed_callers:
+                - id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  name: Regulator duty desk
+                  phone_number: '+15551234567'
+              schema:
+                $ref: '#/components/schemas/CallRoutesListAllowedCallersResultV2'
+          description: OK response.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'invalid_request_error: There was a problem with the request, like a missing header or querying a resource that doesn''t exist.'
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'authentication_error: Authentication failed.'
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'resource_forbidden: Access to this resource is forbidden for the authenticated user.'
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_found: The referenced resource could not be found.'
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'method_not_allowed: The endpoint does not support this operation for the specified resource.'
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_acceptable: Requested a media type this endpoint does not support.'
+        '408':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'request_timeout: The request took too long to process.
+
+
+            client_timeout: The request was cancelled by the client.'
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'conflict: Request conflicted with current state of the resource, likely a concurrent update.'
+        '412':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'precondition_failed: A required condition hasn''t been met.'
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'payload_too_large: The request payload is too large.'
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'validation_error: A required field was not provided, or the provided data was invalid.'
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'too_many_requests: Too many requests hit the API too quickly. We recommend an exponential backoff of your requests.
+
+
+            rate_limit_reached: The rate limit associated with this resource or API key has been exceeded. Try again later.'
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'api_error: Something went wrong and has been reported internally.'
+      summary: ListAllowedCallers Call Routes V2
+      tags:
+      - Call Routes V2
+      x-docs-display-name: List
+      x-docs-group-name: Call Route Allowed Callers V2
+      x-docs-resource-type: CallRouteAllowedCallerV2
+      x-mint:
+        content: 🔑 Requires the `call_routes.view` scope.
+      x-rbac-scopes:
+      - call_routes.view
+      x-operation-id-source: normalized
+      x-operation-id-original: Call Routes V2#ListAllowedCallers
+    post:
+      description: Allow a number to call this route.
+      operationId: CallRoutesV2#CreateAllowedCaller
+      parameters:
+      - description: The call route to allow this number to call
+        example: 01FCNDV6P870EA6S7TK1DSYDG0
+        in: path
+        name: call_route_id
+        required: true
+        schema:
+          description: The call route to allow this number to call
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+      requestBody:
+        content:
+          application/json:
+            example:
+              name: Regulator duty desk
+              phone_number: '+15551234567'
+            schema:
+              $ref: '#/components/schemas/CallRoutesCreateAllowedCallerPayloadV2'
+        required: true
+      responses:
+        '201':
+          content:
+            application/json:
+              example:
+                allowed_caller:
+                  id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  name: Regulator duty desk
+                  phone_number: '+15551234567'
+              schema:
+                $ref: '#/components/schemas/CallRoutesCreateAllowedCallerResultV2'
+          description: Created response.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'invalid_request_error: There was a problem with the request, like a missing header or querying a resource that doesn''t exist.'
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'authentication_error: Authentication failed.'
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'resource_forbidden: Access to this resource is forbidden for the authenticated user.'
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_found: The referenced resource could not be found.'
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'method_not_allowed: The endpoint does not support this operation for the specified resource.'
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_acceptable: Requested a media type this endpoint does not support.'
+        '408':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'request_timeout: The request took too long to process.
+
+
+            client_timeout: The request was cancelled by the client.'
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'conflict: Request conflicted with current state of the resource, likely a concurrent update.'
+        '412':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'precondition_failed: A required condition hasn''t been met.'
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'payload_too_large: The request payload is too large.'
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'validation_error: A required field was not provided, or the provided data was invalid.'
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'too_many_requests: Too many requests hit the API too quickly. We recommend an exponential backoff of your requests.
+
+
+            rate_limit_reached: The rate limit associated with this resource or API key has been exceeded. Try again later.'
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'api_error: Something went wrong and has been reported internally.'
+      summary: CreateAllowedCaller Call Routes V2
+      tags:
+      - Call Routes V2
+      x-docs-display-name: Create
+      x-docs-group-name: Call Route Allowed Callers V2
+      x-docs-resource-type: CallRouteAllowedCallerV2
+      x-mint:
+        content: 🔑 Requires the `call_routes.update` scope.
+      x-rbac-scopes:
+      - call_routes.update
+      x-operation-id-source: normalized
+      x-operation-id-original: Call Routes V2#CreateAllowedCaller
+  /v2/call_routes/{call_route_id}/allowed_callers/{id}:
+    delete:
+      description: 'Stop allowing a number to call this route.
+
+
+        A route that only answers its allowed callers must keep at least one, so turn
+
+        use_caller_allowlist off before removing the last number.'
+      operationId: CallRoutesV2#DestroyAllowedCaller
+      parameters:
+      - description: The call route's ID
+        example: 01FCNDV6P870EA6S7TK1DSYDG0
+        in: path
+        name: call_route_id
+        required: true
+        schema:
+          description: The call route's ID
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+      - description: The allowed caller's ID
+        example: 01FCNDV6P870EA6S7TK1DSYDG0
+        in: path
+        name: id
+        required: true
+        schema:
+          description: The allowed caller's ID
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+      responses:
+        '204':
+          description: No Content response.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'invalid_request_error: There was a problem with the request, like a missing header or querying a resource that doesn''t exist.'
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'authentication_error: Authentication failed.'
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'resource_forbidden: Access to this resource is forbidden for the authenticated user.'
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_found: The referenced resource could not be found.'
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'method_not_allowed: The endpoint does not support this operation for the specified resource.'
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_acceptable: Requested a media type this endpoint does not support.'
+        '408':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'request_timeout: The request took too long to process.
+
+
+            client_timeout: The request was cancelled by the client.'
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'conflict: Request conflicted with current state of the resource, likely a concurrent update.'
+        '412':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'precondition_failed: A required condition hasn''t been met.'
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'payload_too_large: The request payload is too large.'
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'validation_error: A required field was not provided, or the provided data was invalid.'
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'too_many_requests: Too many requests hit the API too quickly. We recommend an exponential backoff of your requests.
+
+
+            rate_limit_reached: The rate limit associated with this resource or API key has been exceeded. Try again later.'
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'api_error: Something went wrong and has been reported internally.'
+      summary: DestroyAllowedCaller Call Routes V2
+      tags:
+      - Call Routes V2
+      x-docs-display-name: Delete
+      x-docs-group-name: Call Route Allowed Callers V2
+      x-docs-resource-type: CallRouteAllowedCallerV2
+      x-mint:
+        content: 🔑 Requires the `call_routes.update` scope.
+      x-rbac-scopes:
+      - call_routes.update
+      x-operation-id-source: normalized
+      x-operation-id-original: Call Routes V2#DestroyAllowedCaller
+    get:
+      description: Show a single allowed caller.
+      operationId: CallRoutesV2#ShowAllowedCaller
+      parameters:
+      - description: The call route's ID
+        example: 01FCNDV6P870EA6S7TK1DSYDG0
+        in: path
+        name: call_route_id
+        required: true
+        schema:
+          description: The call route's ID
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+      - description: The allowed caller's ID
+        example: 01FCNDV6P870EA6S7TK1DSYDG0
+        in: path
+        name: id
+        required: true
+        schema:
+          description: The allowed caller's ID
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              example:
+                allowed_caller:
+                  id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  name: Regulator duty desk
+                  phone_number: '+15551234567'
+              schema:
+                $ref: '#/components/schemas/CallRoutesShowAllowedCallerResultV2'
+          description: OK response.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'invalid_request_error: There was a problem with the request, like a missing header or querying a resource that doesn''t exist.'
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'authentication_error: Authentication failed.'
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'resource_forbidden: Access to this resource is forbidden for the authenticated user.'
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_found: The referenced resource could not be found.'
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'method_not_allowed: The endpoint does not support this operation for the specified resource.'
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_acceptable: Requested a media type this endpoint does not support.'
+        '408':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'request_timeout: The request took too long to process.
+
+
+            client_timeout: The request was cancelled by the client.'
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'conflict: Request conflicted with current state of the resource, likely a concurrent update.'
+        '412':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'precondition_failed: A required condition hasn''t been met.'
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'payload_too_large: The request payload is too large.'
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'validation_error: A required field was not provided, or the provided data was invalid.'
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'too_many_requests: Too many requests hit the API too quickly. We recommend an exponential backoff of your requests.
+
+
+            rate_limit_reached: The rate limit associated with this resource or API key has been exceeded. Try again later.'
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'api_error: Something went wrong and has been reported internally.'
+      summary: ShowAllowedCaller Call Routes V2
+      tags:
+      - Call Routes V2
+      x-docs-display-name: Show
+      x-docs-group-name: Call Route Allowed Callers V2
+      x-docs-resource-type: CallRouteAllowedCallerV2
+      x-mint:
+        content: 🔑 Requires the `call_routes.view` scope.
+      x-rbac-scopes:
+      - call_routes.view
+      x-operation-id-source: normalized
+      x-operation-id-original: Call Routes V2#ShowAllowedCaller
+    put:
+      description: Replace an allowed caller's number and label.
+      operationId: CallRoutesV2#UpdateAllowedCaller
+      parameters:
+      - description: The call route's ID
+        example: 01FCNDV6P870EA6S7TK1DSYDG0
+        in: path
+        name: call_route_id
+        required: true
+        schema:
+          description: The call route's ID
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+      - description: The allowed caller's ID
+        example: 01FCNDV6P870EA6S7TK1DSYDG0
+        in: path
+        name: id
+        required: true
+        schema:
+          description: The allowed caller's ID
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+      requestBody:
+        content:
+          application/json:
+            example:
+              name: Regulator duty desk
+              phone_number: '+15551234567'
+            schema:
+              $ref: '#/components/schemas/CallRoutesUpdateAllowedCallerPayloadV2'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              example:
+                allowed_caller:
+                  id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  name: Regulator duty desk
+                  phone_number: '+15551234567'
+              schema:
+                $ref: '#/components/schemas/CallRoutesUpdateAllowedCallerResultV2'
+          description: OK response.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'invalid_request_error: There was a problem with the request, like a missing header or querying a resource that doesn''t exist.'
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'authentication_error: Authentication failed.'
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'resource_forbidden: Access to this resource is forbidden for the authenticated user.'
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_found: The referenced resource could not be found.'
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'method_not_allowed: The endpoint does not support this operation for the specified resource.'
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_acceptable: Requested a media type this endpoint does not support.'
+        '408':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'request_timeout: The request took too long to process.
+
+
+            client_timeout: The request was cancelled by the client.'
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'conflict: Request conflicted with current state of the resource, likely a concurrent update.'
+        '412':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'precondition_failed: A required condition hasn''t been met.'
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'payload_too_large: The request payload is too large.'
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'validation_error: A required field was not provided, or the provided data was invalid.'
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'too_many_requests: Too many requests hit the API too quickly. We recommend an exponential backoff of your requests.
+
+
+            rate_limit_reached: The rate limit associated with this resource or API key has been exceeded. Try again later.'
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'api_error: Something went wrong and has been reported internally.'
+      summary: UpdateAllowedCaller Call Routes V2
+      tags:
+      - Call Routes V2
+      x-docs-display-name: Update
+      x-docs-group-name: Call Route Allowed Callers V2
+      x-docs-resource-type: CallRouteAllowedCallerV2
+      x-mint:
+        content: 🔑 Requires the `call_routes.update` scope.
+      x-rbac-scopes:
+      - call_routes.update
+      x-operation-id-source: normalized
+      x-operation-id-original: Call Routes V2#UpdateAllowedCaller
+  /v2/call_routes/{call_route_id}/options:
+    get:
+      description: List a call route's phone-tree options, in the order callers hear them.
+      operationId: CallRoutesV2#ListOptions
+      parameters:
+      - description: The call route's ID
+        example: 01FCNDV6P870EA6S7TK1DSYDG0
+        in: path
+        name: call_route_id
+        required: true
+        schema:
+          description: The call route's ID
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              example:
+                options:
+                - digit: '1'
+                  id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  path:
+                  - id: 01FCNDV6P870EA6S7TK1DSYDG0
+                    level:
+                      targets:
+                      - id: lawrencejones
+                        schedule_mode: currently_on_call
+                        selected_rota_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                        type: schedule
+                        urgency: high
+                    type: level
+                    voicemail:
+                      greeting_text: Sorry, no one is available to take your call. Please leave a message after the tone. This call will be recorded.
+                  prompt: For an urgent production outage, press 1
+              schema:
+                $ref: '#/components/schemas/CallRoutesListOptionsResultV2'
+          description: OK response.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'invalid_request_error: There was a problem with the request, like a missing header or querying a resource that doesn''t exist.'
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'authentication_error: Authentication failed.'
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'resource_forbidden: Access to this resource is forbidden for the authenticated user.'
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_found: The referenced resource could not be found.'
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'method_not_allowed: The endpoint does not support this operation for the specified resource.'
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_acceptable: Requested a media type this endpoint does not support.'
+        '408':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'request_timeout: The request took too long to process.
+
+
+            client_timeout: The request was cancelled by the client.'
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'conflict: Request conflicted with current state of the resource, likely a concurrent update.'
+        '412':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'precondition_failed: A required condition hasn''t been met.'
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'payload_too_large: The request payload is too large.'
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'validation_error: A required field was not provided, or the provided data was invalid.'
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'too_many_requests: Too many requests hit the API too quickly. We recommend an exponential backoff of your requests.
+
+
+            rate_limit_reached: The rate limit associated with this resource or API key has been exceeded. Try again later.'
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'api_error: Something went wrong and has been reported internally.'
+      summary: ListOptions Call Routes V2
+      tags:
+      - Call Routes V2
+      x-docs-display-name: List
+      x-docs-group-name: Call Route Options V2
+      x-docs-resource-type: CallRouteOptionV2
+      x-mint:
+        content: 🔑 Requires the `call_routes.view` scope.
+      x-rbac-scopes:
+      - call_routes.view
+      x-operation-id-source: normalized
+      x-operation-id-original: Call Routes V2#ListOptions
+    post:
+      description: 'Add an option to a call route''s phone-tree menu.
+
+
+        Callers hear the menu instead of being routed down the route''s own path, so
+
+        adding the first option clears that path. Every plan allows a single option. A
+
+        menu of two or more options is not on every plan, so get in touch if you need
+
+        one enabled.'
+      operationId: CallRoutesV2#CreateOption
+      parameters:
+      - description: The call route to add this option to
+        example: 01FCNDV6P870EA6S7TK1DSYDG0
+        in: path
+        name: call_route_id
+        required: true
+        schema:
+          description: The call route to add this option to
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+      requestBody:
+        content:
+          application/json:
+            example:
+              digit: '1'
+              path:
+              - id: 01FCNDV6P870EA6S7TK1DSYDG0
+                level:
+                  targets:
+                  - id: lawrencejones
+                    schedule_mode: currently_on_call
+                    selected_rota_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                    type: schedule
+                    urgency: high
+                type: level
+                voicemail:
+                  greeting_text: Sorry, no one is available to take your call. Please leave a message after the tone. This call will be recorded.
+              prompt: For an urgent production outage, press 1
+            schema:
+              $ref: '#/components/schemas/CallRoutesCreateOptionPayloadV2'
+        required: true
+      responses:
+        '201':
+          content:
+            application/json:
+              example:
+                option:
+                  digit: '1'
+                  id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  path:
+                  - id: 01FCNDV6P870EA6S7TK1DSYDG0
+                    level:
+                      targets:
+                      - id: lawrencejones
+                        schedule_mode: currently_on_call
+                        selected_rota_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                        type: schedule
+                        urgency: high
+                    type: level
+                    voicemail:
+                      greeting_text: Sorry, no one is available to take your call. Please leave a message after the tone. This call will be recorded.
+                  prompt: For an urgent production outage, press 1
+              schema:
+                $ref: '#/components/schemas/CallRoutesCreateOptionResultV2'
+          description: Created response.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'invalid_request_error: There was a problem with the request, like a missing header or querying a resource that doesn''t exist.'
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'authentication_error: Authentication failed.'
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'resource_forbidden: Access to this resource is forbidden for the authenticated user.'
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_found: The referenced resource could not be found.'
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'method_not_allowed: The endpoint does not support this operation for the specified resource.'
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_acceptable: Requested a media type this endpoint does not support.'
+        '408':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'request_timeout: The request took too long to process.
+
+
+            client_timeout: The request was cancelled by the client.'
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'conflict: Request conflicted with current state of the resource, likely a concurrent update.'
+        '412':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'precondition_failed: A required condition hasn''t been met.'
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'payload_too_large: The request payload is too large.'
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'validation_error: A required field was not provided, or the provided data was invalid.'
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'too_many_requests: Too many requests hit the API too quickly. We recommend an exponential backoff of your requests.
+
+
+            rate_limit_reached: The rate limit associated with this resource or API key has been exceeded. Try again later.'
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'api_error: Something went wrong and has been reported internally.'
+      summary: CreateOption Call Routes V2
+      tags:
+      - Call Routes V2
+      x-docs-display-name: Create
+      x-docs-group-name: Call Route Options V2
+      x-docs-resource-type: CallRouteOptionV2
+      x-mint:
+        content: 🔑 Requires the `call_routes.update` scope.
+      x-rbac-scopes:
+      - call_routes.update
+      x-operation-id-source: normalized
+      x-operation-id-original: Call Routes V2#CreateOption
+  /v2/call_routes/{call_route_id}/options/{id}:
+    delete:
+      description: 'Remove an option from a call route''s phone-tree menu.
+
+
+        A route has to route calls somewhere, so give it a path before removing its last
+
+        option.'
+      operationId: CallRoutesV2#DestroyOption
+      parameters:
+      - description: The call route's ID
+        example: 01FCNDV6P870EA6S7TK1DSYDG0
+        in: path
+        name: call_route_id
+        required: true
+        schema:
+          description: The call route's ID
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+      - description: The option's ID
+        example: 01FCNDV6P870EA6S7TK1DSYDG0
+        in: path
+        name: id
+        required: true
+        schema:
+          description: The option's ID
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+      responses:
+        '204':
+          description: No Content response.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'invalid_request_error: There was a problem with the request, like a missing header or querying a resource that doesn''t exist.'
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'authentication_error: Authentication failed.'
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'resource_forbidden: Access to this resource is forbidden for the authenticated user.'
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_found: The referenced resource could not be found.'
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'method_not_allowed: The endpoint does not support this operation for the specified resource.'
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_acceptable: Requested a media type this endpoint does not support.'
+        '408':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'request_timeout: The request took too long to process.
+
+
+            client_timeout: The request was cancelled by the client.'
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'conflict: Request conflicted with current state of the resource, likely a concurrent update.'
+        '412':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'precondition_failed: A required condition hasn''t been met.'
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'payload_too_large: The request payload is too large.'
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'validation_error: A required field was not provided, or the provided data was invalid.'
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'too_many_requests: Too many requests hit the API too quickly. We recommend an exponential backoff of your requests.
+
+
+            rate_limit_reached: The rate limit associated with this resource or API key has been exceeded. Try again later.'
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'api_error: Something went wrong and has been reported internally.'
+      summary: DestroyOption Call Routes V2
+      tags:
+      - Call Routes V2
+      x-docs-display-name: Delete
+      x-docs-group-name: Call Route Options V2
+      x-docs-resource-type: CallRouteOptionV2
+      x-mint:
+        content: 🔑 Requires the `call_routes.update` scope.
+      x-rbac-scopes:
+      - call_routes.update
+      x-operation-id-source: normalized
+      x-operation-id-original: Call Routes V2#DestroyOption
+    get:
+      description: Show a single phone-tree option.
+      operationId: CallRoutesV2#ShowOption
+      parameters:
+      - description: The call route's ID
+        example: 01FCNDV6P870EA6S7TK1DSYDG0
+        in: path
+        name: call_route_id
+        required: true
+        schema:
+          description: The call route's ID
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+      - description: The option's ID
+        example: 01FCNDV6P870EA6S7TK1DSYDG0
+        in: path
+        name: id
+        required: true
+        schema:
+          description: The option's ID
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              example:
+                option:
+                  digit: '1'
+                  id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  path:
+                  - id: 01FCNDV6P870EA6S7TK1DSYDG0
+                    level:
+                      targets:
+                      - id: lawrencejones
+                        schedule_mode: currently_on_call
+                        selected_rota_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                        type: schedule
+                        urgency: high
+                    type: level
+                    voicemail:
+                      greeting_text: Sorry, no one is available to take your call. Please leave a message after the tone. This call will be recorded.
+                  prompt: For an urgent production outage, press 1
+              schema:
+                $ref: '#/components/schemas/CallRoutesShowOptionResultV2'
+          description: OK response.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'invalid_request_error: There was a problem with the request, like a missing header or querying a resource that doesn''t exist.'
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'authentication_error: Authentication failed.'
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'resource_forbidden: Access to this resource is forbidden for the authenticated user.'
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_found: The referenced resource could not be found.'
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'method_not_allowed: The endpoint does not support this operation for the specified resource.'
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_acceptable: Requested a media type this endpoint does not support.'
+        '408':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'request_timeout: The request took too long to process.
+
+
+            client_timeout: The request was cancelled by the client.'
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'conflict: Request conflicted with current state of the resource, likely a concurrent update.'
+        '412':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'precondition_failed: A required condition hasn''t been met.'
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'payload_too_large: The request payload is too large.'
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'validation_error: A required field was not provided, or the provided data was invalid.'
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'too_many_requests: Too many requests hit the API too quickly. We recommend an exponential backoff of your requests.
+
+
+            rate_limit_reached: The rate limit associated with this resource or API key has been exceeded. Try again later.'
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'api_error: Something went wrong and has been reported internally.'
+      summary: ShowOption Call Routes V2
+      tags:
+      - Call Routes V2
+      x-docs-display-name: Show
+      x-docs-group-name: Call Route Options V2
+      x-docs-resource-type: CallRouteOptionV2
+      x-mint:
+        content: 🔑 Requires the `call_routes.view` scope.
+      x-rbac-scopes:
+      - call_routes.view
+      x-operation-id-source: normalized
+      x-operation-id-original: Call Routes V2#ShowOption
+    put:
+      description: 'Replace a phone-tree option.
+
+
+        Two live options can''t share a digit, so moving an option onto a digit the menu
+
+        already uses is rejected.'
+      operationId: CallRoutesV2#UpdateOption
+      parameters:
+      - description: The call route's ID
+        example: 01FCNDV6P870EA6S7TK1DSYDG0
+        in: path
+        name: call_route_id
+        required: true
+        schema:
+          description: The call route's ID
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+      - description: The option's ID
+        example: 01FCNDV6P870EA6S7TK1DSYDG0
+        in: path
+        name: id
+        required: true
+        schema:
+          description: The option's ID
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+      requestBody:
+        content:
+          application/json:
+            example:
+              digit: '1'
+              path:
+              - id: 01FCNDV6P870EA6S7TK1DSYDG0
+                level:
+                  targets:
+                  - id: lawrencejones
+                    schedule_mode: currently_on_call
+                    selected_rota_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                    type: schedule
+                    urgency: high
+                type: level
+                voicemail:
+                  greeting_text: Sorry, no one is available to take your call. Please leave a message after the tone. This call will be recorded.
+              prompt: For an urgent production outage, press 1
+            schema:
+              $ref: '#/components/schemas/CallRoutesUpdateOptionPayloadV2'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              example:
+                option:
+                  digit: '1'
+                  id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  path:
+                  - id: 01FCNDV6P870EA6S7TK1DSYDG0
+                    level:
+                      targets:
+                      - id: lawrencejones
+                        schedule_mode: currently_on_call
+                        selected_rota_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                        type: schedule
+                        urgency: high
+                    type: level
+                    voicemail:
+                      greeting_text: Sorry, no one is available to take your call. Please leave a message after the tone. This call will be recorded.
+                  prompt: For an urgent production outage, press 1
+              schema:
+                $ref: '#/components/schemas/CallRoutesUpdateOptionResultV2'
+          description: OK response.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'invalid_request_error: There was a problem with the request, like a missing header or querying a resource that doesn''t exist.'
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'authentication_error: Authentication failed.'
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'resource_forbidden: Access to this resource is forbidden for the authenticated user.'
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_found: The referenced resource could not be found.'
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'method_not_allowed: The endpoint does not support this operation for the specified resource.'
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_acceptable: Requested a media type this endpoint does not support.'
+        '408':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'request_timeout: The request took too long to process.
+
+
+            client_timeout: The request was cancelled by the client.'
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'conflict: Request conflicted with current state of the resource, likely a concurrent update.'
+        '412':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'precondition_failed: A required condition hasn''t been met.'
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'payload_too_large: The request payload is too large.'
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'validation_error: A required field was not provided, or the provided data was invalid.'
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'too_many_requests: Too many requests hit the API too quickly. We recommend an exponential backoff of your requests.
+
+
+            rate_limit_reached: The rate limit associated with this resource or API key has been exceeded. Try again later.'
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'api_error: Something went wrong and has been reported internally.'
+      summary: UpdateOption Call Routes V2
+      tags:
+      - Call Routes V2
+      x-docs-display-name: Update
+      x-docs-group-name: Call Route Options V2
+      x-docs-resource-type: CallRouteOptionV2
+      x-mint:
+        content: 🔑 Requires the `call_routes.update` scope.
+      x-rbac-scopes:
+      - call_routes.update
+      x-operation-id-source: normalized
+      x-operation-id-original: Call Routes V2#UpdateOption
+  /v2/call_routes/{id}:
+    get:
+      description: Show a single call route.
+      operationId: CallRoutesV2#Show
+      parameters:
+      - description: The call route's ID
+        example: 01FCNDV6P870EA6S7TK1DSYDG0
+        in: path
+        name: id
+        required: true
+        schema:
+          description: The call route's ID
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              example:
+                call_route:
+                  allowed_callers:
+                  - id: 01FCNDV6P870EA6S7TK1DSYDG0
+                    name: Regulator duty desk
+                    phone_number: '+15551234567'
+                  country_code: US
+                  created_at: '2021-08-17T13:28:57.801578Z'
+                  current_state: active
+                  custom_language: en-US
+                  id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  name: Regulator urgent request
+                  options:
+                  - digit: '1'
+                    id: 01FCNDV6P870EA6S7TK1DSYDG0
+                    path:
+                    - id: 01FCNDV6P870EA6S7TK1DSYDG0
+                      level:
+                        targets:
+                        - id: lawrencejones
+                          schedule_mode: currently_on_call
+                          selected_rota_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                          type: schedule
+                          urgency: high
+                      type: level
+                      voicemail:
+                        greeting_text: Sorry, no one is available to take your call. Please leave a message after the tone. This call will be recorded.
+                    prompt: For an urgent production outage, press 1
+                  path:
+                  - id: 01FCNDV6P870EA6S7TK1DSYDG0
+                    level:
+                      targets:
+                      - id: lawrencejones
+                        schedule_mode: currently_on_call
+                        selected_rota_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                        type: schedule
+                        urgency: high
+                    type: level
+                    voicemail:
+                      greeting_text: Sorry, no one is available to take your call. Please leave a message after the tone. This call will be recorded.
+                  phone_number: '+15551234567'
+                  phone_number_type: toll_free
+                  responder_caller_id: route_number
+                  updated_at: '2021-08-17T13:28:57.801578Z'
+                  use_caller_allowlist: true
+              schema:
+                $ref: '#/components/schemas/CallRoutesShowResultV2'
+          description: OK response.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'invalid_request_error: There was a problem with the request, like a missing header or querying a resource that doesn''t exist.'
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'authentication_error: Authentication failed.'
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'resource_forbidden: Access to this resource is forbidden for the authenticated user.'
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_found: The referenced resource could not be found.'
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'method_not_allowed: The endpoint does not support this operation for the specified resource.'
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_acceptable: Requested a media type this endpoint does not support.'
+        '408':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'request_timeout: The request took too long to process.
+
+
+            client_timeout: The request was cancelled by the client.'
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'conflict: Request conflicted with current state of the resource, likely a concurrent update.'
+        '412':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'precondition_failed: A required condition hasn''t been met.'
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'payload_too_large: The request payload is too large.'
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'validation_error: A required field was not provided, or the provided data was invalid.'
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'too_many_requests: Too many requests hit the API too quickly. We recommend an exponential backoff of your requests.
+
+
+            rate_limit_reached: The rate limit associated with this resource or API key has been exceeded. Try again later.'
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'api_error: Something went wrong and has been reported internally.'
+      summary: Show Call Routes V2
+      tags:
+      - Call Routes V2
+      x-docs-display-name: Show
+      x-docs-group-name: Call Routes V2
+      x-docs-resource-type: CallRouteV2
+      x-mint:
+        content: 🔑 Requires the `call_routes.view` scope.
+      x-rbac-scopes:
+      - call_routes.view
+      x-operation-id-source: normalized
+      x-operation-id-original: Call Routes V2#Show
+    put:
+      description: 'Replace a call route''s configuration.
+
+
+        Sending a path retires any phone-tree menu on the route. Send an empty path to
+
+        keep the menu.'
+      operationId: CallRoutesV2#Update
+      parameters:
+      - description: The call route's ID
+        example: 01FCNDV6P870EA6S7TK1DSYDG0
+        in: path
+        name: id
+        required: true
+        schema:
+          description: The call route's ID
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+      requestBody:
+        content:
+          application/json:
+            example:
+              custom_language: en-US
+              name: Regulator urgent request
+              path:
+              - id: 01FCNDV6P870EA6S7TK1DSYDG0
+                level:
+                  targets:
+                  - id: lawrencejones
+                    schedule_mode: currently_on_call
+                    selected_rota_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                    type: schedule
+                    urgency: high
+                type: level
+                voicemail:
+                  greeting_text: Sorry, no one is available to take your call. Please leave a message after the tone. This call will be recorded.
+              responder_caller_id: route_number
+              use_caller_allowlist: true
+            schema:
+              $ref: '#/components/schemas/CallRoutesUpdatePayloadV2'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              example:
+                call_route:
+                  allowed_callers:
+                  - id: 01FCNDV6P870EA6S7TK1DSYDG0
+                    name: Regulator duty desk
+                    phone_number: '+15551234567'
+                  country_code: US
+                  created_at: '2021-08-17T13:28:57.801578Z'
+                  current_state: active
+                  custom_language: en-US
+                  id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  name: Regulator urgent request
+                  options:
+                  - digit: '1'
+                    id: 01FCNDV6P870EA6S7TK1DSYDG0
+                    path:
+                    - id: 01FCNDV6P870EA6S7TK1DSYDG0
+                      level:
+                        targets:
+                        - id: lawrencejones
+                          schedule_mode: currently_on_call
+                          selected_rota_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                          type: schedule
+                          urgency: high
+                      type: level
+                      voicemail:
+                        greeting_text: Sorry, no one is available to take your call. Please leave a message after the tone. This call will be recorded.
+                    prompt: For an urgent production outage, press 1
+                  path:
+                  - id: 01FCNDV6P870EA6S7TK1DSYDG0
+                    level:
+                      targets:
+                      - id: lawrencejones
+                        schedule_mode: currently_on_call
+                        selected_rota_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                        type: schedule
+                        urgency: high
+                    type: level
+                    voicemail:
+                      greeting_text: Sorry, no one is available to take your call. Please leave a message after the tone. This call will be recorded.
+                  phone_number: '+15551234567'
+                  phone_number_type: toll_free
+                  responder_caller_id: route_number
+                  updated_at: '2021-08-17T13:28:57.801578Z'
+                  use_caller_allowlist: true
+              schema:
+                $ref: '#/components/schemas/CallRoutesUpdateResultV2'
+          description: OK response.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'invalid_request_error: There was a problem with the request, like a missing header or querying a resource that doesn''t exist.'
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'authentication_error: Authentication failed.'
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'resource_forbidden: Access to this resource is forbidden for the authenticated user.'
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_found: The referenced resource could not be found.'
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'method_not_allowed: The endpoint does not support this operation for the specified resource.'
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_acceptable: Requested a media type this endpoint does not support.'
+        '408':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'request_timeout: The request took too long to process.
+
+
+            client_timeout: The request was cancelled by the client.'
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'conflict: Request conflicted with current state of the resource, likely a concurrent update.'
+        '412':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'precondition_failed: A required condition hasn''t been met.'
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'payload_too_large: The request payload is too large.'
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'validation_error: A required field was not provided, or the provided data was invalid.'
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'too_many_requests: Too many requests hit the API too quickly. We recommend an exponential backoff of your requests.
+
+
+            rate_limit_reached: The rate limit associated with this resource or API key has been exceeded. Try again later.'
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'api_error: Something went wrong and has been reported internally.'
+      summary: Update Call Routes V2
+      tags:
+      - Call Routes V2
+      x-docs-display-name: Update
+      x-docs-group-name: Call Routes V2
+      x-docs-resource-type: CallRouteV2
+      x-mint:
+        content: 🔑 Requires the `call_routes.update` scope.
+      x-rbac-scopes:
+      - call_routes.update
+      x-operation-id-source: normalized
+      x-operation-id-original: Call Routes V2#Update
+components:
+  schemas:
+    CallRoutesUpdateAllowedCallerResultV2:
+      example:
+        allowed_caller:
+          id: 01FCNDV6P870EA6S7TK1DSYDG0
+          name: Regulator duty desk
+          phone_number: '+15551234567'
+      properties:
+        allowed_caller:
+          $ref: '#/components/schemas/CallRouteAllowedCallerV2'
+      required:
+      - allowed_caller
+      type: object
+    CallRoutesListOptionsResultV2:
+      example:
+        options:
+        - digit: '1'
+          id: 01FCNDV6P870EA6S7TK1DSYDG0
+          path:
+          - id: 01FCNDV6P870EA6S7TK1DSYDG0
+            level:
+              targets:
+              - id: lawrencejones
+                schedule_mode: currently_on_call
+                selected_rota_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                type: schedule
+                urgency: high
+            type: level
+            voicemail:
+              greeting_text: Sorry, no one is available to take your call. Please leave a message after the tone. This call will be recorded.
+          prompt: For an urgent production outage, press 1
+      properties:
+        options:
+          example:
+          - digit: '1'
+            id: 01FCNDV6P870EA6S7TK1DSYDG0
+            path:
+            - id: 01FCNDV6P870EA6S7TK1DSYDG0
+              level:
+                targets:
+                - id: lawrencejones
+                  schedule_mode: currently_on_call
+                  selected_rota_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  type: schedule
+                  urgency: high
+              type: level
+              voicemail:
+                greeting_text: Sorry, no one is available to take your call. Please leave a message after the tone. This call will be recorded.
+            prompt: For an urgent production outage, press 1
+          items:
+            $ref: '#/components/schemas/CallRouteOptionV2'
+          type: array
+      required:
+      - options
+      type: object
+    CallRoutesCreateAllowedCallerPayloadV2:
+      example:
+        name: Regulator duty desk
+        phone_number: '+15551234567'
+      properties:
+        name:
+          description: Label for whose number this is
+          example: Regulator duty desk
+          type: string
+        phone_number:
+          description: The number to allow, in international format
+          example: '+15551234567'
+          type: string
+      required:
+      - phone_number
+      type: object
+    CallRoutesCreateAllowedCallerResultV2:
+      example:
+        allowed_caller:
+          id: 01FCNDV6P870EA6S7TK1DSYDG0
+          name: Regulator duty desk
+          phone_number: '+15551234567'
+      properties:
+        allowed_caller:
+          $ref: '#/components/schemas/CallRouteAllowedCallerV2'
+      required:
+      - allowed_caller
+      type: object
+    CallRouteV2:
+      description: 'A call route is a phone number your customers can call to reach whoever is
+
+        on call, for an urgent support line or a regulator hotline.
+
+
+        When a call comes in we work down the route''s path, ringing each level''s targets
+
+        in turn until someone answers, then connect them to the caller. A trailing
+
+        voicemail node records a message instead. Every call raises an alert, so calls
+
+        can open incidents through an alert route.
+
+
+        List and edit call routes here. Create and delete them in the dashboard.'
+      example:
+        allowed_callers:
+        - id: 01FCNDV6P870EA6S7TK1DSYDG0
+          name: Regulator duty desk
+          phone_number: '+15551234567'
+        country_code: US
+        created_at: '2021-08-17T13:28:57.801578Z'
+        current_state: active
+        custom_language: en-US
+        id: 01FCNDV6P870EA6S7TK1DSYDG0
+        name: Regulator urgent request
+        options:
+        - digit: '1'
+          id: 01FCNDV6P870EA6S7TK1DSYDG0
+          path:
+          - id: 01FCNDV6P870EA6S7TK1DSYDG0
+            level:
+              targets:
+              - id: lawrencejones
+                schedule_mode: currently_on_call
+                selected_rota_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                type: schedule
+                urgency: high
+            type: level
+            voicemail:
+              greeting_text: Sorry, no one is available to take your call. Please leave a message after the tone. This call will be recorded.
+          prompt: For an urgent production outage, press 1
+        path:
+        - id: 01FCNDV6P870EA6S7TK1DSYDG0
+          level:
+            targets:
+            - id: lawrencejones
+              schedule_mode: currently_on_call
+              selected_rota_id: 01FCNDV6P870EA6S7TK1DSYDG0
+              type: schedule
+              urgency: high
+          type: level
+          voicemail:
+            greeting_text: Sorry, no one is available to take your call. Please leave a message after the tone. This call will be recorded.
+        phone_number: '+15551234567'
+        phone_number_type: toll_free
+        responder_caller_id: route_number
+        updated_at: '2021-08-17T13:28:57.801578Z'
+        use_caller_allowlist: true
+      properties:
+        allowed_callers:
+          description: The numbers allowed to call this route. Only enforced when use_caller_allowlist is true.
+          example:
+          - id: 01FCNDV6P870EA6S7TK1DSYDG0
+            name: Regulator duty desk
+            phone_number: '+15551234567'
+          items:
+            $ref: '#/components/schemas/CallRouteAllowedCallerV2'
+          type: array
+        country_code:
+          description: The country this route's number belongs to
+          example: US
+          type: string
+        created_at:
+          example: '2021-08-17T13:28:57.801578Z'
+          format: date-time
+          type: string
+        current_state:
+          description: 'Where this route is in provisioning. Only an active route answers calls:
+
+            * pending: created, and awaiting manual work from us
+
+            * pending_regulatory_information: awaiting regulatory compliance information, collected in the dashboard
+
+            * pending_number: compliance is settled, and we''re provisioning a number
+
+            * active: fully provisioned, and answering calls'
+          enum:
+          - pending
+          - pending_regulatory_information
+          - pending_number
+          - active
+          example: active
+          type: string
+        custom_language:
+          description: The language we speak voice prompts in, via text-to-speech
+          enum:
+          - en-US
+          - en-GB
+          - fr-FR
+          - es-ES
+          - pt-PT
+          - pt-BR
+          - de-DE
+          - nl-NL
+          example: en-US
+          type: string
+        id:
+          description: Unique identifier for this call route
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+        name:
+          description: Name for this call route
+          example: Regulator urgent request
+          type: string
+        options:
+          description: The phone-tree menu this route presents. Empty when callers are routed down the route's path.
+          example:
+          - digit: '1'
+            id: 01FCNDV6P870EA6S7TK1DSYDG0
+            path:
+            - id: 01FCNDV6P870EA6S7TK1DSYDG0
+              level:
+                targets:
+                - id: lawrencejones
+                  schedule_mode: currently_on_call
+                  selected_rota_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  type: schedule
+                  urgency: high
+              type: level
+              voicemail:
+                greeting_text: Sorry, no one is available to take your call. Please leave a message after the tone. This call will be recorded.
+            prompt: For an urgent production outage, press 1
+          items:
+            $ref: '#/components/schemas/CallRouteOptionV2'
+          type: array
+        path:
+          description: Who we page when a call comes in. Empty when this route presents a phone-tree menu, in which case each menu option carries its own path.
+          example:
+          - id: 01FCNDV6P870EA6S7TK1DSYDG0
+            level:
+              targets:
+              - id: lawrencejones
+                schedule_mode: currently_on_call
+                selected_rota_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                type: schedule
+                urgency: high
+            type: level
+            voicemail:
+              greeting_text: Sorry, no one is available to take your call. Please leave a message after the tone. This call will be recorded.
+          items:
+            $ref: '#/components/schemas/CallRoutePathNodeV2'
+          type: array
+        phone_number:
+          description: The number your customers call to reach this route, once one has been provisioned
+          example: '+15551234567'
+          type: string
+        phone_number_type:
+          description: The type of phone number, which determines the regulatory requirements for provisioning it
+          enum:
+          - toll_free
+          - mobile
+          - national
+          - local
+          example: toll_free
+          type: string
+          x-public-api-version: v2
+        responder_caller_id:
+          description: 'Which number responders see when we call them:
+
+            * route_number: this route''s own number
+
+            * oncall_number: an incident.io on-call number'
+          enum:
+          - route_number
+          - oncall_number
+          example: route_number
+          type: string
+        updated_at:
+          example: '2021-08-17T13:28:57.801578Z'
+          format: date-time
+          type: string
+        use_caller_allowlist:
+          description: Whether this route only answers calls from its allowed callers
+          example: true
+          type: boolean
+      required:
+      - id
+      - name
+      - current_state
+      - custom_language
+      - responder_caller_id
+      - path
+      - options
+      - use_caller_allowlist
+      - allowed_callers
+      - created_at
+      - updated_at
+      type: object
+    CallRoutesShowAllowedCallerResultV2:
+      example:
+        allowed_caller:
+          id: 01FCNDV6P870EA6S7TK1DSYDG0
+          name: Regulator duty desk
+          phone_number: '+15551234567'
+      properties:
+        allowed_caller:
+          $ref: '#/components/schemas/CallRouteAllowedCallerV2'
+      required:
+      - allowed_caller
+      type: object
+    CallRoutesListResultV2:
+      example:
+        call_routes:
+        - allowed_callers:
+          - id: 01FCNDV6P870EA6S7TK1DSYDG0
+            name: Regulator duty desk
+            phone_number: '+15551234567'
+          country_code: US
+          created_at: '2021-08-17T13:28:57.801578Z'
+          current_state: active
+          custom_language: en-US
+          id: 01FCNDV6P870EA6S7TK1DSYDG0
+          name: Regulator urgent request
+          options:
+          - digit: '1'
+            id: 01FCNDV6P870EA6S7TK1DSYDG0
+            path:
+            - id: 01FCNDV6P870EA6S7TK1DSYDG0
+              level:
+                targets:
+                - id: lawrencejones
+                  schedule_mode: currently_on_call
+                  selected_rota_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  type: schedule
+                  urgency: high
+              type: level
+              voicemail:
+                greeting_text: Sorry, no one is available to take your call. Please leave a message after the tone. This call will be recorded.
+            prompt: For an urgent production outage, press 1
+          path:
+          - id: 01FCNDV6P870EA6S7TK1DSYDG0
+            level:
+              targets:
+              - id: lawrencejones
+                schedule_mode: currently_on_call
+                selected_rota_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                type: schedule
+                urgency: high
+            type: level
+            voicemail:
+              greeting_text: Sorry, no one is available to take your call. Please leave a message after the tone. This call will be recorded.
+          phone_number: '+15551234567'
+          phone_number_type: toll_free
+          responder_caller_id: route_number
+          updated_at: '2021-08-17T13:28:57.801578Z'
+          use_caller_allowlist: true
+        pagination_meta:
+          after: 01FCNDV6P870EA6S7TK1DSYDG0
+          page_size: 25
+      properties:
+        call_routes:
+          example:
+          - allowed_callers:
+            - id: 01FCNDV6P870EA6S7TK1DSYDG0
+              name: Regulator duty desk
+              phone_number: '+15551234567'
+            country_code: US
+            created_at: '2021-08-17T13:28:57.801578Z'
+            current_state: active
+            custom_language: en-US
+            id: 01FCNDV6P870EA6S7TK1DSYDG0
+            name: Regulator urgent request
+            options:
+            - digit: '1'
+              id: 01FCNDV6P870EA6S7TK1DSYDG0
+              path:
+              - id: 01FCNDV6P870EA6S7TK1DSYDG0
+                level:
+                  targets:
+                  - id: lawrencejones
+                    schedule_mode: currently_on_call
+                    selected_rota_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                    type: schedule
+                    urgency: high
+                type: level
+                voicemail:
+                  greeting_text: Sorry, no one is available to take your call. Please leave a message after the tone. This call will be recorded.
+              prompt: For an urgent production outage, press 1
+            path:
+            - id: 01FCNDV6P870EA6S7TK1DSYDG0
+              level:
+                targets:
+                - id: lawrencejones
+                  schedule_mode: currently_on_call
+                  selected_rota_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  type: schedule
+                  urgency: high
+              type: level
+              voicemail:
+                greeting_text: Sorry, no one is available to take your call. Please leave a message after the tone. This call will be recorded.
+            phone_number: '+15551234567'
+            phone_number_type: toll_free
+            responder_caller_id: route_number
+            updated_at: '2021-08-17T13:28:57.801578Z'
+            use_caller_allowlist: true
+          items:
+            $ref: '#/components/schemas/CallRouteV2'
+          type: array
+        pagination_meta:
+          $ref: '#/components/schemas/PaginationMetaResultV2'
+      required:
+      - call_routes
+      type: object
+    CallRouteTargetV2:
+      description: Someone a call route pages when a call comes in.
+      example:
+        id: lawrencejones
+        schedule_mode: currently_on_call
+        selected_rota_id: 01FCNDV6P870EA6S7TK1DSYDG0
+        type: schedule
+        urgency: high
+      properties:
+        id:
+          description: Uniquely identifies an entity of this type
+          example: lawrencejones
+          type: string
+        schedule_mode:
+          description: Only set for schedule targets, this specifies which users to fetch from the schedule. Use currently_on_call to notify whoever is on call right now across the schedule, all_users to notify every user attached to the schedule, or all_users_for_rota / currently_on_call_for_rota / next_on_call_for_rota to scope to a specific rota (in which case selected_rota_id is required). next_on_call notifies whoever is next on call across the schedule.
+          enum:
+          - currently_on_call
+          - all_users_for_rota
+          - all_users
+          - currently_on_call_for_rota
+          - next_on_call_for_rota
+          - next_on_call
+          - ''
+          example: currently_on_call
+          type: string
+        selected_rota_id:
+          description: For schedule targets, identifies which rota on the schedule the schedule_mode applies to. Required when schedule_mode is all_users_for_rota, currently_on_call_for_rota, or next_on_call_for_rota; must be omitted for other schedule_mode values.
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+        type:
+          description: Whether a call route target is a user or a schedule
+          enum:
+          - user
+          - schedule
+          example: schedule
+          type: string
+          x-public-api-version: v2
+        urgency:
+          description: The urgency of this escalation path target
+          enum:
+          - high
+          - low
+          example: high
+          type: string
+      required:
+      - type
+      - id
+      - urgency
+      type: object
+    PaginationMetaResultV2:
+      example:
+        after: 01FCNDV6P870EA6S7TK1DSYDG0
+        page_size: 25
+      properties:
+        after:
+          description: If provided, pass this as the 'after' param to load the next page
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+        page_size:
+          default: 25
+          description: What was the maximum number of results requested
+          example: 25
+          format: int64
+          maximum: 250
+          type: integer
+      required:
+      - page_size
+      type: object
+    ErrorResponse:
+      example:
+        debug:
+          message: 'Something broke: and something else: and something else'
+          stacktrace:
+          - thing.go:123
+        errors:
+        - code: trial_expired
+          message: Default incident call link must be a valid URL
+          metadata:
+            abc123: abc123
+          source:
+            field: default_call_url
+            pointer: /settings/default_call_url
+        rate_limit:
+          limit: 100
+          name: client_ip
+          remaining: 98
+          retry_after: '2020-01-01T00:00:00Z'
+        request_id: 2T1p0e3j
+        status: 408
+        type: invalid_request_error
+      properties:
+        debug:
+          $ref: '#/components/schemas/ErrorDebug'
+        errors:
+          description: List of errors that caused this request to fail
+          example:
+          - code: trial_expired
+            message: Default incident call link must be a valid URL
+            metadata:
+              abc123: abc123
+            source:
+              field: default_call_url
+              pointer: /settings/default_call_url
+          items:
+            $ref: '#/components/schemas/ErrorSingle'
+          type: array
+        rate_limit:
+          $ref: '#/components/schemas/ErrorRateLimit'
+        request_id:
+          description: Unique identifier of the request
+          example: 2T1p0e3j
+          type: string
+        status:
+          description: HTTP status of the response
+          example: 408
+          format: int64
+          type: integer
+        type:
+          description: Machine-readable identifier for the general category of error
+          enum:
+          - invalid_request_error
+          - authentication_error
+          - resource_forbidden
+          - not_found
+          - not_acceptable
+          - method_not_allowed
+          - request_timeout
+          - conflict
+          - precondition_failed
+          - payload_too_large
+          - validation_error
+          - too_many_requests
+          - api_error
+          - rate_limit_reached
+          - client_timeout
+          example: invalid_request_error
+          type: string
+      required:
+      - type
+      - status
+      - request_id
+      - errors
+      type: object
+    CallRoutesUpdateOptionResultV2:
+      example:
+        option:
+          digit: '1'
+          id: 01FCNDV6P870EA6S7TK1DSYDG0
+          path:
+          - id: 01FCNDV6P870EA6S7TK1DSYDG0
+            level:
+              targets:
+              - id: lawrencejones
+                schedule_mode: currently_on_call
+                selected_rota_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                type: schedule
+                urgency: high
+            type: level
+            voicemail:
+              greeting_text: Sorry, no one is available to take your call. Please leave a message after the tone. This call will be recorded.
+          prompt: For an urgent production outage, press 1
+      properties:
+        option:
+          $ref: '#/components/schemas/CallRouteOptionV2'
+      required:
+      - option
+      type: object
+    CallRouteAllowedCallerV2:
+      description: A phone number allowed to reach a call route.
+      example:
+        id: 01FCNDV6P870EA6S7TK1DSYDG0
+        name: Regulator duty desk
+        phone_number: '+15551234567'
+      properties:
+        id:
+          description: Unique identifier for this allowed caller
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+        name:
+          description: Label for whose number this is
+          example: Regulator duty desk
+          type: string
+        phone_number:
+          description: The number allowed to call this route, in international format
+          example: '+15551234567'
+          type: string
+      required:
+      - id
+      - phone_number
+      type: object
+    ErrorSource:
+      example:
+        field: default_call_url
+        pointer: /settings/default_call_url
+      properties:
+        field:
+          description: Field name that is the source of the error
+          example: default_call_url
+          type: string
+        pointer:
+          description: JSON pointer to the request field that is the source of the error
+          example: /settings/default_call_url
+          type: string
+      required:
+      - field
+      - pointer
+      type: object
+    CallRoutesShowOptionResultV2:
+      example:
+        option:
+          digit: '1'
+          id: 01FCNDV6P870EA6S7TK1DSYDG0
+          path:
+          - id: 01FCNDV6P870EA6S7TK1DSYDG0
+            level:
+              targets:
+              - id: lawrencejones
+                schedule_mode: currently_on_call
+                selected_rota_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                type: schedule
+                urgency: high
+            type: level
+            voicemail:
+              greeting_text: Sorry, no one is available to take your call. Please leave a message after the tone. This call will be recorded.
+          prompt: For an urgent production outage, press 1
+      properties:
+        option:
+          $ref: '#/components/schemas/CallRouteOptionV2'
+      required:
+      - option
+      type: object
+    ErrorRateLimit:
+      example:
+        limit: 100
+        name: client_ip
+        remaining: 98
+        retry_after: '2020-01-01T00:00:00Z'
+      properties:
+        limit:
+          description: The maximum number of requests that the consumer is permitted to make per minute
+          example: 100
+          format: int64
+          type: integer
+        name:
+          description: Which rate limit was exceeded
+          example: client_ip
+          type: string
+        remaining:
+          description: The number of requests remaining in the current rate limit window
+          example: 98
+          format: int64
+          type: integer
+        retry_after:
+          description: When the client can retry, as an RFC3339 timestamp in UTC. Prefer the Retry-After response header, which carries the same instant as a number of seconds
+          example: '2020-01-01T00:00:00Z'
+          type: string
+      required:
+      - name
+      - limit
+      - remaining
+      - retry_after
+      type: object
+    CallRoutesUpdatePayloadV2:
+      example:
+        custom_language: en-US
+        name: Regulator urgent request
+        path:
+        - id: 01FCNDV6P870EA6S7TK1DSYDG0
+          level:
+            targets:
+            - id: lawrencejones
+              schedule_mode: currently_on_call
+              selected_rota_id: 01FCNDV6P870EA6S7TK1DSYDG0
+              type: schedule
+              urgency: high
+          type: level
+          voicemail:
+            greeting_text: Sorry, no one is available to take your call. Please leave a message after the tone. This call will be recorded.
+        responder_caller_id: route_number
+        use_caller_allowlist: true
+      properties:
+        custom_language:
+          description: The language we speak voice prompts in, via text-to-speech
+          enum:
+          - en-US
+          - en-GB
+          - fr-FR
+          - es-ES
+          - pt-PT
+          - pt-BR
+          - de-DE
+          - nl-NL
+          example: en-US
+          type: string
+        name:
+          description: Name for this call route
+          example: Regulator urgent request
+          type: string
+        path:
+          description: Who to page when a call comes in. Retires any phone-tree menu on the route; send an empty list to keep the menu.
+          example:
+          - id: 01FCNDV6P870EA6S7TK1DSYDG0
+            level:
+              targets:
+              - id: lawrencejones
+                schedule_mode: currently_on_call
+                selected_rota_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                type: schedule
+                urgency: high
+            type: level
+            voicemail:
+              greeting_text: Sorry, no one is available to take your call. Please leave a message after the tone. This call will be recorded.
+          items:
+            $ref: '#/components/schemas/CallRoutePathNodePayloadV2'
+          type: array
+        responder_caller_id:
+          description: 'Which number responders see when we call them:
+
+            * route_number: this route''s own number
+
+            * oncall_number: an incident.io on-call number'
+          enum:
+          - route_number
+          - oncall_number
+          example: route_number
+          type: string
+        use_caller_allowlist:
+          description: Whether to only answer calls from this route's allowed callers. Needs at least one allowed caller.
+          example: true
+          type: boolean
+      required:
+      - name
+      - custom_language
+      - responder_caller_id
+      - use_caller_allowlist
+      - path
+      type: object
+    CallRoutesUpdateOptionPayloadV2:
+      example:
+        digit: '1'
+        path:
+        - id: 01FCNDV6P870EA6S7TK1DSYDG0
+          level:
+            targets:
+            - id: lawrencejones
+              schedule_mode: currently_on_call
+              selected_rota_id: 01FCNDV6P870EA6S7TK1DSYDG0
+              type: schedule
+              urgency: high
+          type: level
+          voicemail:
+            greeting_text: Sorry, no one is available to take your call. Please leave a message after the tone. This call will be recorded.
+        prompt: For an urgent production outage, press 1
+      properties:
+        digit:
+          description: The keypad digit a caller presses to choose this option
+          enum:
+          - '1'
+          - '2'
+          - '3'
+          - '4'
+          - '5'
+          - '6'
+          - '7'
+          - '8'
+          - '9'
+          example: '1'
+          type: string
+        path:
+          description: Who to page when a caller chooses this option
+          example:
+          - id: 01FCNDV6P870EA6S7TK1DSYDG0
+            level:
+              targets:
+              - id: lawrencejones
+                schedule_mode: currently_on_call
+                selected_rota_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                type: schedule
+                urgency: high
+            type: level
+            voicemail:
+              greeting_text: Sorry, no one is available to take your call. Please leave a message after the tone. This call will be recorded.
+          items:
+            $ref: '#/components/schemas/CallRoutePathNodePayloadV2'
+          type: array
+        prompt:
+          description: What we read out to offer this option, via text-to-speech in the route's language, exactly as written
+          example: For an urgent production outage, press 1
+          maxLength: 250
+          type: string
+      required:
+      - digit
+      - prompt
+      - path
+      type: object
+    ErrorDebug:
+      example:
+        message: 'Something broke: and something else: and something else'
+        stacktrace:
+        - thing.go:123
+      properties:
+        message:
+          description: Original internal error message
+          example: 'Something broke: and something else: and something else'
+          type: string
+        stacktrace:
+          description: Stacktrace of the error, if applicable
+          example:
+          - thing.go:123
+          items:
+            example: thing.go:123
+            type: string
+          type: array
+      required:
+      - message
+      - stacktrace
+      type: object
+    CallRoutePathNodeV2:
+      description: 'A single step in a call route''s path.
+
+
+        Levels page a set of targets, and a trailing voicemail node records a message
+
+        from the caller. A path made up of only a voicemail node sends callers straight
+
+        to voicemail without paging anyone.'
+      example:
+        id: 01FCNDV6P870EA6S7TK1DSYDG0
+        level:
+          targets:
+          - id: lawrencejones
+            schedule_mode: currently_on_call
+            selected_rota_id: 01FCNDV6P870EA6S7TK1DSYDG0
+            type: schedule
+            urgency: high
+        type: level
+        voicemail:
+          greeting_text: Sorry, no one is available to take your call. Please leave a message after the tone. This call will be recorded.
+      properties:
+        id:
+          description: Unique identifier for this node
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+        level:
+          $ref: '#/components/schemas/CallRoutePathNodeLevelV2'
+        type:
+          description: 'The type of this node. Available types are:
+
+            * level: page a set of targets, rotating between them
+
+            * voicemail: record a message from the caller'
+          enum:
+          - level
+          - voicemail
+          example: level
+          type: string
+        voicemail:
+          $ref: '#/components/schemas/CallRoutePathNodeVoicemailV2'
+      required:
+      - id
+      - type
+      type: object
+    CallRoutesShowResultV2:
+      example:
+        call_route:
+          allowed_callers:
+          - id: 01FCNDV6P870EA6S7TK1DSYDG0
+            name: Regulator duty desk
+            phone_number: '+15551234567'
+          country_code: US
+          created_at: '2021-08-17T13:28:57.801578Z'
+          current_state: active
+          custom_language: en-US
+          id: 01FCNDV6P870EA6S7TK1DSYDG0
+          name: Regulator urgent request
+          options:
+          - digit: '1'
+            id: 01FCNDV6P870EA6S7TK1DSYDG0
+            path:
+            - id: 01FCNDV6P870EA6S7TK1DSYDG0
+              level:
+                targets:
+                - id: lawrencejones
+                  schedule_mode: currently_on_call
+                  selected_rota_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  type: schedule
+                  urgency: high
+              type: level
+              voicemail:
+                greeting_text: Sorry, no one is available to take your call. Please leave a message after the tone. This call will be recorded.
+            prompt: For an urgent production outage, press 1
+          path:
+          - id: 01FCNDV6P870EA6S7TK1DSYDG0
+            level:
+              targets:
+              - id: lawrencejones
+                schedule_mode: currently_on_call
+                selected_rota_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                type: schedule
+                urgency: high
+            type: level
+            voicemail:
+              greeting_text: Sorry, no one is available to take your call. Please leave a message after the tone. This call will be recorded.
+          phone_number: '+15551234567'
+          phone_number_type: toll_free
+          responder_caller_id: route_number
+          updated_at: '2021-08-17T13:28:57.801578Z'
+          use_caller_allowlist: true
+      properties:
+        call_route:
+          $ref: '#/components/schemas/CallRouteV2'
+      required:
+      - call_route
+      type: object
+    CallRoutesCreateOptionResultV2:
+      example:
+        option:
+          digit: '1'
+          id: 01FCNDV6P870EA6S7TK1DSYDG0
+          path:
+          - id: 01FCNDV6P870EA6S7TK1DSYDG0
+            level:
+              targets:
+              - id: lawrencejones
+                schedule_mode: currently_on_call
+                selected_rota_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                type: schedule
+                urgency: high
+            type: level
+            voicemail:
+              greeting_text: Sorry, no one is available to take your call. Please leave a message after the tone. This call will be recorded.
+          prompt: For an urgent production outage, press 1
+      properties:
+        option:
+          $ref: '#/components/schemas/CallRouteOptionV2'
+      required:
+      - option
+      type: object
+    CallRoutePathNodeLevelV2:
+      description: 'The targets a level pages.
+
+
+        We call each target for 30 seconds, rotating to the next after 60 seconds, and
+
+        move to the next node if nobody acknowledges within 5 minutes. Those timings are
+
+        fixed for call routes.'
+      example:
+        targets:
+        - id: lawrencejones
+          schedule_mode: currently_on_call
+          selected_rota_id: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: schedule
+          urgency: high
+      properties:
+        targets:
+          description: The users and schedules to page
+          example:
+          - id: lawrencejones
+            schedule_mode: currently_on_call
+            selected_rota_id: 01FCNDV6P870EA6S7TK1DSYDG0
+            type: schedule
+            urgency: high
+          items:
+            $ref: '#/components/schemas/CallRouteTargetV2'
+          type: array
+      required:
+      - targets
+      type: object
+    CallRoutePathNodePayloadV2:
+      example:
+        id: 01FCNDV6P870EA6S7TK1DSYDG0
+        level:
+          targets:
+          - id: lawrencejones
+            schedule_mode: currently_on_call
+            selected_rota_id: 01FCNDV6P870EA6S7TK1DSYDG0
+            type: schedule
+            urgency: high
+        type: level
+        voicemail:
+          greeting_text: Sorry, no one is available to take your call. Please leave a message after the tone. This call will be recorded.
+      properties:
+        id:
+          description: Unique identifier for this node. Omit it and we'll generate one.
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+        level:
+          $ref: '#/components/schemas/CallRoutePathNodeLevelV2'
+        type:
+          description: 'The type of this node. Available types are:
+
+            * level: page a set of targets, rotating between them
+
+            * voicemail: record a message from the caller'
+          enum:
+          - level
+          - voicemail
+          example: level
+          type: string
+        voicemail:
+          $ref: '#/components/schemas/CallRoutePathNodeVoicemailV2'
+      required:
+      - type
+      type: object
+    CallRoutesCreateOptionPayloadV2:
+      example:
+        digit: '1'
+        path:
+        - id: 01FCNDV6P870EA6S7TK1DSYDG0
+          level:
+            targets:
+            - id: lawrencejones
+              schedule_mode: currently_on_call
+              selected_rota_id: 01FCNDV6P870EA6S7TK1DSYDG0
+              type: schedule
+              urgency: high
+          type: level
+          voicemail:
+            greeting_text: Sorry, no one is available to take your call. Please leave a message after the tone. This call will be recorded.
+        prompt: For an urgent production outage, press 1
+      properties:
+        digit:
+          description: The keypad digit a caller presses to choose this option
+          enum:
+          - '1'
+          - '2'
+          - '3'
+          - '4'
+          - '5'
+          - '6'
+          - '7'
+          - '8'
+          - '9'
+          example: '1'
+          type: string
+        path:
+          description: Who to page when a caller chooses this option
+          example:
+          - id: 01FCNDV6P870EA6S7TK1DSYDG0
+            level:
+              targets:
+              - id: lawrencejones
+                schedule_mode: currently_on_call
+                selected_rota_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                type: schedule
+                urgency: high
+            type: level
+            voicemail:
+              greeting_text: Sorry, no one is available to take your call. Please leave a message after the tone. This call will be recorded.
+          items:
+            $ref: '#/components/schemas/CallRoutePathNodePayloadV2'
+          type: array
+        prompt:
+          description: What we read out to offer this option, via text-to-speech in the route's language, exactly as written
+          example: For an urgent production outage, press 1
+          maxLength: 250
+          type: string
+      required:
+      - digit
+      - prompt
+      - path
+      type: object
+    CallRoutesUpdateAllowedCallerPayloadV2:
+      example:
+        name: Regulator duty desk
+        phone_number: '+15551234567'
+      properties:
+        name:
+          description: Label for whose number this is
+          example: Regulator duty desk
+          type: string
+        phone_number:
+          description: The number to allow, in international format
+          example: '+15551234567'
+          type: string
+      required:
+      - phone_number
+      type: object
+    CallRoutesUpdateResultV2:
+      example:
+        call_route:
+          allowed_callers:
+          - id: 01FCNDV6P870EA6S7TK1DSYDG0
+            name: Regulator duty desk
+            phone_number: '+15551234567'
+          country_code: US
+          created_at: '2021-08-17T13:28:57.801578Z'
+          current_state: active
+          custom_language: en-US
+          id: 01FCNDV6P870EA6S7TK1DSYDG0
+          name: Regulator urgent request
+          options:
+          - digit: '1'
+            id: 01FCNDV6P870EA6S7TK1DSYDG0
+            path:
+            - id: 01FCNDV6P870EA6S7TK1DSYDG0
+              level:
+                targets:
+                - id: lawrencejones
+                  schedule_mode: currently_on_call
+                  selected_rota_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  type: schedule
+                  urgency: high
+              type: level
+              voicemail:
+                greeting_text: Sorry, no one is available to take your call. Please leave a message after the tone. This call will be recorded.
+            prompt: For an urgent production outage, press 1
+          path:
+          - id: 01FCNDV6P870EA6S7TK1DSYDG0
+            level:
+              targets:
+              - id: lawrencejones
+                schedule_mode: currently_on_call
+                selected_rota_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                type: schedule
+                urgency: high
+            type: level
+            voicemail:
+              greeting_text: Sorry, no one is available to take your call. Please leave a message after the tone. This call will be recorded.
+          phone_number: '+15551234567'
+          phone_number_type: toll_free
+          responder_caller_id: route_number
+          updated_at: '2021-08-17T13:28:57.801578Z'
+          use_caller_allowlist: true
+      properties:
+        call_route:
+          $ref: '#/components/schemas/CallRouteV2'
+      required:
+      - call_route
+      type: object
+    CallRoutesListAllowedCallersResultV2:
+      example:
+        allowed_callers:
+        - id: 01FCNDV6P870EA6S7TK1DSYDG0
+          name: Regulator duty desk
+          phone_number: '+15551234567'
+      properties:
+        allowed_callers:
+          example:
+          - id: 01FCNDV6P870EA6S7TK1DSYDG0
+            name: Regulator duty desk
+            phone_number: '+15551234567'
+          items:
+            $ref: '#/components/schemas/CallRouteAllowedCallerV2'
+          type: array
+      required:
+      - allowed_callers
+      type: object
+    CallRoutePathNodeVoicemailV2:
+      description: Records a message from the caller, and enriches the resulting alert with the transcript.
+      example:
+        greeting_text: Sorry, no one is available to take your call. Please leave a message after the tone. This call will be recorded.
+      properties:
+        greeting_text:
+          description: What we read to the caller before recording, via text-to-speech in the route's language, exactly as written
+          example: Sorry, no one is available to take your call. Please leave a message after the tone. This call will be recorded.
+          maxLength: 250
+          type: string
+      required:
+      - greeting_text
+      type: object
+    CallRouteOptionV2:
+      description: 'One entry in a call route''s phone-tree menu: the digit a caller presses, the
+
+        prompt we read out to offer it, and who we page when they choose it.'
+      example:
+        digit: '1'
+        id: 01FCNDV6P870EA6S7TK1DSYDG0
+        path:
+        - id: 01FCNDV6P870EA6S7TK1DSYDG0
+          level:
+            targets:
+            - id: lawrencejones
+              schedule_mode: currently_on_call
+              selected_rota_id: 01FCNDV6P870EA6S7TK1DSYDG0
+              type: schedule
+              urgency: high
+          type: level
+          voicemail:
+            greeting_text: Sorry, no one is available to take your call. Please leave a message after the tone. This call will be recorded.
+        prompt: For an urgent production outage, press 1
+      properties:
+        digit:
+          description: The keypad digit a caller presses to choose this option
+          enum:
+          - '1'
+          - '2'
+          - '3'
+          - '4'
+          - '5'
+          - '6'
+          - '7'
+          - '8'
+          - '9'
+          example: '1'
+          type: string
+        id:
+          description: Unique identifier for this option
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+        path:
+          description: Who we page when a caller chooses this option
+          example:
+          - id: 01FCNDV6P870EA6S7TK1DSYDG0
+            level:
+              targets:
+              - id: lawrencejones
+                schedule_mode: currently_on_call
+                selected_rota_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                type: schedule
+                urgency: high
+            type: level
+            voicemail:
+              greeting_text: Sorry, no one is available to take your call. Please leave a message after the tone. This call will be recorded.
+          items:
+            $ref: '#/components/schemas/CallRoutePathNodeV2'
+          type: array
+        prompt:
+          description: What we read out to offer this option, via text-to-speech in the route's language, exactly as written
+          example: For an urgent production outage, press 1
+          maxLength: 250
+          type: string
+      required:
+      - id
+      - digit
+      - prompt
+      - path
+      type: object
+    ErrorSingle:
+      example:
+        code: trial_expired
+        message: Default incident call link must be a valid URL
+        metadata:
+          abc123: abc123
+        source:
+          field: default_call_url
+          pointer: /settings/default_call_url
+      properties:
+        code:
+          description: Machine-readable identifier for this specific error
+          example: trial_expired
+          type: string
+        message:
+          description: Human readable description of the error
+          example: Default incident call link must be a valid URL
+          type: string
+        metadata:
+          additionalProperties:
+            example: abc123
+            type: string
+          description: Additional metadata about the error, keyed by a string identifier
+          example:
+            abc123: abc123
+          type: object
+        source:
+          $ref: '#/components/schemas/ErrorSource'
+      required:
+      - code
+      - message
+      type: object
+  securitySchemes:
+    BearerAuth:
+      description: API key from your incident.io dashboard (Settings > API keys)
+      scheme: bearer
+      type: http
+externalDocs:
+  description: View our API docs at api-docs.incident.io
+  url: https://api-docs.incident.io/

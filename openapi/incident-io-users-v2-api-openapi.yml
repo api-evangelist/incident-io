@@ -1,0 +1,1644 @@
+openapi: 3.2.0
+info:
+  description: 'This is the API reference for incident.io. It documents available API endpoints, provides examples of how to use it, and
+
+    instructions around things like authentication and error handling. The API is hosted at:
+
+
+    - https://api.incident.io/
+
+
+    And you will need to create an API key via your incident.io
+
+    dashboard to make requests. # Making requests
+
+
+    Here are the key concepts required to make requests to the incident.io API. ## Authentication
+
+
+    For all requests made to the incident.io API, you''ll need an API key. To create an API key, head to the incident dashboard and visit API
+
+    keys. When you create the key, you''ll be able to choose what actions it
+
+    can take for your account: choose carefully, as those roles can only be set
+
+    when you first create the key. We''ll only show you the token once, so make sure
+
+    you store it somewhere safe. API keys are global to your incident.io account, and can be managed by anyone
+
+    who has the right permissions. We display the user that created the API key,
+
+    and the API key will remain valid if that user becomes deactivated. Once you have the key, you should make requests to the API that set the
+
+    `Authorization` request header using a "Bearer" authentication scheme:
+
+
+    ```
+
+    Authorization: Bearer
+
+    ```
+
+
+    ## Rate Limits
+
+
+    The incident.io API enforces rate limits to ensure consistent performance for all users. The default rate limit is 1200 requests/minute per API key. This limit applies to most endpoints across the API. Limits are token buckets that refill continuously rather than resetting on a fixed window boundary. The default
+
+    bucket holds 1200 requests and refills at 20 per second, so you can burst up to the full bucket and then sustain
+
+    20 requests/second indefinitely. There is no boundary at which your quota resets to full in one step. Some endpoints have lower rate limits, particularly those that interact with external third-party systems that impose
+
+    their own limitations. These specific limits vary by endpoint. ### Rate limit headers
+
+
+    Responses to requests authenticated with an API key carry your current allowance, so you can pace yourself rather
+
+    than waiting to be throttled:
+
+
+    ```
+
+    X-RateLimit-Limit: 60, 1200;window=60, 60;window=60
+
+    X-RateLimit-Remaining: 59
+
+    X-RateLimit-Used: 1
+
+    X-RateLimit-Reset: 1785173199
+
+    ```
+
+
+    | Header | Meaning |
+
+    | --- | --- |
+
+    | `X-RateLimit-Limit` | The quota that binds this request, followed by every limit that applied and the window it applies over |
+
+    | `X-RateLimit-Remaining` | Requests you can make right now against the binding limit |
+
+    | `X-RateLimit-Used` | Requests you have spent against it |
+
+    | `X-RateLimit-Reset` | Unix timestamp (seconds) at which that limit will be back to full |
+
+
+    More than one limit can apply to a request: your API key''s overall limit, and for some endpoints a lower limit of
+
+    their own. `X-RateLimit-Limit` lists all of them, each with its window, so `1200;window=60` means 1200 requests per
+
+    minute. Because our limits refill continuously rather than resetting on a boundary, that window is what tells you
+
+    the rate you can sustain: 1200 per 60 seconds is 20 requests/second indefinitely. `Remaining`, `Used` and `Reset` describe whichever limit has the least allowance left, since that is the one you
+
+    will hit first. `X-RateLimit-Remaining` may lag by a small number of requests under high concurrency, and can move by more than the
+
+    requests you made, because limits scoped to your whole organisation are shared with your other API keys. Headers are omitted rather than guessed if we cannot determine your allowance for a request. ### Exceeding a rate limit
+
+
+    When you exceed a rate limit the API responds with `429 Too Many Requests` and a `Retry-After` header giving the
+
+    number of seconds to wait:
+
+
+    ```
+
+    X-RateLimit-Limit: 1200, 1200;window=60
+
+    X-RateLimit-Remaining: 0
+
+    X-RateLimit-Used: 1200
+
+    X-RateLimit-Reset: 1785173199
+
+    Retry-After: 1
+
+    ```
+
+
+    Prefer `Retry-After` over `X-RateLimit-Reset` when deciding how long to back off.'
+  title: incident.io Users V2 API
+  version: 1.0.0
+servers:
+- url: https://api.incident.io
+security:
+- BearerAuth: []
+tags:
+- description: 'View users.
+
+
+    Users all have a single base role, and can be assigned multiple custom roles. They can be managed via your Slack workspace or SAML provider.'
+  name: Users V2
+paths:
+  /v2/users:
+    get:
+      description: List users in your account.
+      operationId: UsersV2#List
+      parameters:
+      - allowEmptyValue: true
+        description: Filter by email address
+        example: john.doe@incident.io
+        in: query
+        name: email
+        schema:
+          description: Filter by email address
+          example: john.doe@incident.io
+          type: string
+      - allowEmptyValue: true
+        description: Filter by Slack user ID
+        example: U12345678
+        in: query
+        name: slack_user_id
+        schema:
+          description: Filter by Slack user ID
+          example: U12345678
+          type: string
+      - allowEmptyValue: true
+        description: Include deactivated or not-yet-active users (defaults to false). Useful for resolving users who have since been offboarded.
+        example: true
+        in: query
+        name: include_inactive
+        schema:
+          description: Include deactivated or not-yet-active users (defaults to false). Useful for resolving users who have since been offboarded.
+          example: true
+          type: boolean
+      - allowEmptyValue: true
+        description: Integer number of records to return
+        example: 25
+        in: query
+        name: page_size
+        schema:
+          default: 25
+          description: Integer number of records to return
+          example: 25
+          format: int64
+          maximum: 10000
+          minimum: 1
+          type: integer
+      - allowEmptyValue: true
+        description: An record's ID. This endpoint will return a list of records after this ID in relation to the API response order.
+        example: 01FDAG4SAP5TYPT98WGR2N7W91
+        in: query
+        name: after
+        schema:
+          description: An record's ID. This endpoint will return a list of records after this ID in relation to the API response order.
+          example: 01FDAG4SAP5TYPT98WGR2N7W91
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              example:
+                pagination_meta:
+                  after: 01FCNDV6P870EA6S7TK1DSYDG0
+                  page_size: 25
+                users:
+                - base_role:
+                    description: Elevated permissions for the customer success team.
+                    id: 01FCNDV6P870EA6S7TK1DSYDG0
+                    name: Customer Success
+                    slug: customer-success
+                  custom_roles:
+                  - description: Elevated permissions for the customer success team.
+                    id: 01FCNDV6P870EA6S7TK1DSYDG0
+                    name: Customer Success
+                    slug: customer-success
+                  email: lisa@incident.io
+                  id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  is_active: true
+                  name: Lisa Karlin Curtis
+                  role: owner
+                  seats:
+                    on_call: full_access
+                    response: viewer_only
+                  slack_user_id: U02AYNF2XJM
+              schema:
+                $ref: '#/components/schemas/UsersListResultV2'
+          description: OK response.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'invalid_request_error: There was a problem with the request, like a missing header or querying a resource that doesn''t exist.'
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'authentication_error: Authentication failed.'
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'resource_forbidden: Access to this resource is forbidden for the authenticated user.'
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_found: The referenced resource could not be found.'
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'method_not_allowed: The endpoint does not support this operation for the specified resource.'
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_acceptable: Requested a media type this endpoint does not support.'
+        '408':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'request_timeout: The request took too long to process.
+
+
+            client_timeout: The request was cancelled by the client.'
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'conflict: Request conflicted with current state of the resource, likely a concurrent update.'
+        '412':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'precondition_failed: A required condition hasn''t been met.'
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'payload_too_large: The request payload is too large.'
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'validation_error: A required field was not provided, or the provided data was invalid.'
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'too_many_requests: Too many requests hit the API too quickly. We recommend an exponential backoff of your requests.
+
+
+            rate_limit_reached: The rate limit associated with this resource or API key has been exceeded. Try again later.'
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'api_error: Something went wrong and has been reported internally.'
+      summary: List Users V2
+      tags:
+      - Users V2
+      x-docs-display-name: List
+      x-docs-group-name: Users V2
+      x-docs-resource-type: UserWithRolesV2
+      x-mint:
+        content: 🔑 Requires the `users.view` scope.
+      x-rbac-scopes:
+      - users.view
+      x-operation-id-source: normalized
+      x-operation-id-original: Users V2#List
+  /v2/users/{id}:
+    get:
+      description: Get a single user.
+      operationId: UsersV2#Show
+      parameters:
+      - description: Unique identifier of the user
+        example: 01FCNDV6P870EA6S7TK1DSYDG0
+        in: path
+        name: id
+        required: true
+        schema:
+          description: Unique identifier of the user
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              example:
+                user:
+                  base_role:
+                    description: Elevated permissions for the customer success team.
+                    id: 01FCNDV6P870EA6S7TK1DSYDG0
+                    name: Customer Success
+                    slug: customer-success
+                  custom_roles:
+                  - description: Elevated permissions for the customer success team.
+                    id: 01FCNDV6P870EA6S7TK1DSYDG0
+                    name: Customer Success
+                    slug: customer-success
+                  email: lisa@incident.io
+                  id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  is_active: true
+                  name: Lisa Karlin Curtis
+                  role: owner
+                  seats:
+                    on_call: full_access
+                    response: viewer_only
+                  slack_user_id: U02AYNF2XJM
+              schema:
+                $ref: '#/components/schemas/UsersShowResultV2'
+          description: OK response.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'invalid_request_error: There was a problem with the request, like a missing header or querying a resource that doesn''t exist.'
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'authentication_error: Authentication failed.'
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'resource_forbidden: Access to this resource is forbidden for the authenticated user.'
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_found: The referenced resource could not be found.'
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'method_not_allowed: The endpoint does not support this operation for the specified resource.'
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_acceptable: Requested a media type this endpoint does not support.'
+        '408':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'request_timeout: The request took too long to process.
+
+
+            client_timeout: The request was cancelled by the client.'
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'conflict: Request conflicted with current state of the resource, likely a concurrent update.'
+        '412':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'precondition_failed: A required condition hasn''t been met.'
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'payload_too_large: The request payload is too large.'
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'validation_error: A required field was not provided, or the provided data was invalid.'
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'too_many_requests: Too many requests hit the API too quickly. We recommend an exponential backoff of your requests.
+
+
+            rate_limit_reached: The rate limit associated with this resource or API key has been exceeded. Try again later.'
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'api_error: Something went wrong and has been reported internally.'
+      summary: Show Users V2
+      tags:
+      - Users V2
+      x-docs-display-name: Show
+      x-docs-group-name: Users V2
+      x-docs-resource-type: UserWithRolesV2
+      x-mint:
+        content: 🔑 Requires the `users.view` scope.
+      x-rbac-scopes:
+      - users.view
+      x-operation-id-source: normalized
+      x-operation-id-original: Users V2#Show
+  /v2/users/{user_id}/notification_methods:
+    get:
+      description: List notification methods for a user. Phone numbers are partially redacted unless the API key holds the notification_methods.view_unredacted scope.
+      operationId: UsersV2#ListNotificationMethods
+      parameters:
+      - description: The ID of the user whose notification methods you want to list.
+        example: 01FCNDV6P870EA6S7TK1DSYDG0
+        in: path
+        name: user_id
+        required: true
+        schema:
+          description: The ID of the user whose notification methods you want to list.
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              example:
+                notification_methods:
+                - address: •••••••6789
+                  id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  is_usable: true
+                  method_type: app
+                  phone_details:
+                    supports_sms: true
+                    supports_voice: true
+              schema:
+                $ref: '#/components/schemas/UsersListNotificationMethodsResultV2'
+          description: OK response.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'invalid_request_error: There was a problem with the request, like a missing header or querying a resource that doesn''t exist.'
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'authentication_error: Authentication failed.'
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'resource_forbidden: Access to this resource is forbidden for the authenticated user.'
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_found: The referenced resource could not be found.'
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'method_not_allowed: The endpoint does not support this operation for the specified resource.'
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_acceptable: Requested a media type this endpoint does not support.'
+        '408':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'request_timeout: The request took too long to process.
+
+
+            client_timeout: The request was cancelled by the client.'
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'conflict: Request conflicted with current state of the resource, likely a concurrent update.'
+        '412':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'precondition_failed: A required condition hasn''t been met.'
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'payload_too_large: The request payload is too large.'
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'validation_error: A required field was not provided, or the provided data was invalid.'
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'too_many_requests: Too many requests hit the API too quickly. We recommend an exponential backoff of your requests.
+
+
+            rate_limit_reached: The rate limit associated with this resource or API key has been exceeded. Try again later.'
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'api_error: Something went wrong and has been reported internally.'
+      summary: ListNotificationMethods Users V2
+      tags:
+      - Users V2
+      x-display-name: List
+      x-docs-display-name: List
+      x-docs-group-name: Notification Methods V2
+      x-docs-resource-type: OnCallNotificationMethodPublicV2
+      x-mint:
+        content: 🔑 Requires the `notification_methods.view` scope.
+      x-rbac-scopes:
+      - notification_methods.view
+      x-operation-id-source: normalized
+      x-operation-id-original: Users V2#ListNotificationMethods
+  /v2/users/{user_id}/notification_rules:
+    get:
+      description: List notification rules for a user. Rules define how and when a user is notified for on-call pages. Only includes high_urgency and low_urgency rules; shift_changes rules are not returned.
+      operationId: UsersV2#ListNotificationRules
+      parameters:
+      - description: The ID of the user whose notification rules you want to list.
+        example: 01FCNDV6P870EA6S7TK1DSYDG0
+        in: path
+        name: user_id
+        required: true
+        schema:
+          description: The ID of the user whose notification rules you want to list.
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              example:
+                notification_rules:
+                - app:
+                    push_notification_criticality: critical
+                  delay_seconds: 0
+                  id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  method_target:
+                    all: {}
+                    specific:
+                      id: 01FCNDV6P870EA6S7TK1DSYDG0
+                    type: specific
+                  method_type: app
+                  phone:
+                    channel: voice
+                  rule_type: low_urgency
+              schema:
+                $ref: '#/components/schemas/UsersListNotificationRulesResultV2'
+          description: OK response.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'invalid_request_error: There was a problem with the request, like a missing header or querying a resource that doesn''t exist.'
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'authentication_error: Authentication failed.'
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'resource_forbidden: Access to this resource is forbidden for the authenticated user.'
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_found: The referenced resource could not be found.'
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'method_not_allowed: The endpoint does not support this operation for the specified resource.'
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_acceptable: Requested a media type this endpoint does not support.'
+        '408':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'request_timeout: The request took too long to process.
+
+
+            client_timeout: The request was cancelled by the client.'
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'conflict: Request conflicted with current state of the resource, likely a concurrent update.'
+        '412':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'precondition_failed: A required condition hasn''t been met.'
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'payload_too_large: The request payload is too large.'
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'validation_error: A required field was not provided, or the provided data was invalid.'
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'too_many_requests: Too many requests hit the API too quickly. We recommend an exponential backoff of your requests.
+
+
+            rate_limit_reached: The rate limit associated with this resource or API key has been exceeded. Try again later.'
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'api_error: Something went wrong and has been reported internally.'
+      summary: ListNotificationRules Users V2
+      tags:
+      - Users V2
+      x-display-name: List
+      x-docs-display-name: List
+      x-docs-group-name: Notification Rules V2
+      x-docs-resource-type: OnCallNotificationRulePublicV2
+      x-mint:
+        content: 🔑 Requires the `notification_rules.view` scope.
+      x-rbac-scopes:
+      - notification_rules.view
+      x-operation-id-source: normalized
+      x-operation-id-original: Users V2#ListNotificationRules
+  /v2/users/{user_id}/paging_provider:
+    get:
+      description: Show the paging provider that would be used to escalate to this user. Reflects their explicit preference if set; otherwise resolves to the effective fallback (typically `native` for on-call seat users, or a linked external provider otherwise). May be omitted only when the user cannot be escalated to at all (no seat and no linked external user).
+      operationId: UsersV2#ShowPagingProvider
+      parameters:
+      - description: The ID of the user.
+        example: 01FCNDV6P870EA6S7TK1DSYDG0
+        in: path
+        name: user_id
+        required: true
+        schema:
+          description: The ID of the user.
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              example:
+                preferred_escalation_provider: native
+              schema:
+                $ref: '#/components/schemas/UsersShowPagingProviderResultV2'
+          description: OK response.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'invalid_request_error: There was a problem with the request, like a missing header or querying a resource that doesn''t exist.'
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'authentication_error: Authentication failed.'
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'resource_forbidden: Access to this resource is forbidden for the authenticated user.'
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_found: The referenced resource could not be found.'
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'method_not_allowed: The endpoint does not support this operation for the specified resource.'
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_acceptable: Requested a media type this endpoint does not support.'
+        '408':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'request_timeout: The request took too long to process.
+
+
+            client_timeout: The request was cancelled by the client.'
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'conflict: Request conflicted with current state of the resource, likely a concurrent update.'
+        '412':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'precondition_failed: A required condition hasn''t been met.'
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'payload_too_large: The request payload is too large.'
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'validation_error: A required field was not provided, or the provided data was invalid.'
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'too_many_requests: Too many requests hit the API too quickly. We recommend an exponential backoff of your requests.
+
+
+            rate_limit_reached: The rate limit associated with this resource or API key has been exceeded. Try again later.'
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'api_error: Something went wrong and has been reported internally.'
+      summary: ShowPagingProvider Users V2
+      tags:
+      - Users V2
+      x-docs-display-name: Show paging provider
+      x-docs-group-name: Users V2
+      x-docs-resource-type: UserWithRolesV2
+      x-mint:
+        content: 🔑 Requires the `user_preferences.view` scope.
+      x-rbac-scopes:
+      - user_preferences.view
+      x-operation-id-source: normalized
+      x-operation-id-original: Users V2#ShowPagingProvider
+    post:
+      description: Update a user's preferred paging provider.
+      operationId: UsersV2#UpdatePagingProvider
+      parameters:
+      - description: The ID of the user to update.
+        example: 01FCNDV6P870EA6S7TK1DSYDG0
+        in: path
+        name: user_id
+        required: true
+        schema:
+          description: The ID of the user to update.
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+      requestBody:
+        content:
+          application/json:
+            example:
+              preferred_escalation_provider: native
+            schema:
+              $ref: '#/components/schemas/UsersUpdatePagingProviderPayloadV2'
+        required: true
+      responses:
+        '204':
+          description: No Content response.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'invalid_request_error: There was a problem with the request, like a missing header or querying a resource that doesn''t exist.'
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'authentication_error: Authentication failed.'
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'resource_forbidden: Access to this resource is forbidden for the authenticated user.'
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_found: The referenced resource could not be found.'
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'method_not_allowed: The endpoint does not support this operation for the specified resource.'
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_acceptable: Requested a media type this endpoint does not support.'
+        '408':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'request_timeout: The request took too long to process.
+
+
+            client_timeout: The request was cancelled by the client.'
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'conflict: Request conflicted with current state of the resource, likely a concurrent update.'
+        '412':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'precondition_failed: A required condition hasn''t been met.'
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'payload_too_large: The request payload is too large.'
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'validation_error: A required field was not provided, or the provided data was invalid.'
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'too_many_requests: Too many requests hit the API too quickly. We recommend an exponential backoff of your requests.
+
+
+            rate_limit_reached: The rate limit associated with this resource or API key has been exceeded. Try again later.'
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'api_error: Something went wrong and has been reported internally.'
+      summary: UpdatePagingProvider Users V2
+      tags:
+      - Users V2
+      x-docs-display-name: Update paging provider
+      x-docs-group-name: Users V2
+      x-docs-resource-type: UserWithRolesV2
+      x-mint:
+        content: 🔑 Requires the `users.preferred_paging_provider.edit` scope.
+      x-rbac-scopes:
+      - users.preferred_paging_provider.edit
+      x-operation-id-source: normalized
+      x-operation-id-original: Users V2#UpdatePagingProvider
+components:
+  schemas:
+    UserWithRolesV2:
+      example:
+        base_role:
+          description: Elevated permissions for the customer success team.
+          id: 01FCNDV6P870EA6S7TK1DSYDG0
+          name: Customer Success
+          slug: customer-success
+        custom_roles:
+        - description: Elevated permissions for the customer success team.
+          id: 01FCNDV6P870EA6S7TK1DSYDG0
+          name: Customer Success
+          slug: customer-success
+        email: lisa@incident.io
+        id: 01FCNDV6P870EA6S7TK1DSYDG0
+        is_active: true
+        name: Lisa Karlin Curtis
+        role: owner
+        seats:
+          on_call: full_access
+          response: viewer_only
+        slack_user_id: U02AYNF2XJM
+      properties:
+        base_role:
+          $ref: '#/components/schemas/RBACRoleV2'
+        custom_roles:
+          example:
+          - description: Elevated permissions for the customer success team.
+            id: 01FCNDV6P870EA6S7TK1DSYDG0
+            name: Customer Success
+            slug: customer-success
+          items:
+            $ref: '#/components/schemas/RBACRoleV2'
+          type: array
+        email:
+          description: Email address of the user.
+          example: lisa@incident.io
+          type: string
+        id:
+          description: Unique identifier of the user
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+        is_active:
+          description: Whether the user is active. False if the user has been deactivated (e.g. offboarded) or is not yet active.
+          example: true
+          type: boolean
+        name:
+          description: Name of the user
+          example: Lisa Karlin Curtis
+          type: string
+        role:
+          description: 'DEPRECATED: Role of the user as of March 9th 2023, this value is no longer updated.'
+          enum:
+          - viewer
+          - responder
+          - administrator
+          - owner
+          - unset
+          example: owner
+          type: string
+        seats:
+          $ref: '#/components/schemas/UserSeatsV2'
+        slack_user_id:
+          description: Slack ID of the user
+          example: U02AYNF2XJM
+          type: string
+      required:
+      - base_role
+      - custom_roles
+      - seats
+      - is_active
+      - role
+      - id
+      - name
+      type: object
+    UsersUpdatePagingProviderPayloadV2:
+      example:
+        preferred_escalation_provider: native
+      properties:
+        preferred_escalation_provider:
+          description: The preferred escalation provider for the user.
+          enum:
+          - native
+          - opsgenie
+          - pagerduty
+          - splunk_on_call
+          example: native
+          type: string
+      required:
+      - preferred_escalation_provider
+      type: object
+    UsersListNotificationRulesResultV2:
+      example:
+        notification_rules:
+        - app:
+            push_notification_criticality: critical
+          delay_seconds: 0
+          id: 01FCNDV6P870EA6S7TK1DSYDG0
+          method_target:
+            all: {}
+            specific:
+              id: 01FCNDV6P870EA6S7TK1DSYDG0
+            type: specific
+          method_type: app
+          phone:
+            channel: voice
+          rule_type: low_urgency
+      properties:
+        notification_rules:
+          example:
+          - app:
+              push_notification_criticality: critical
+            delay_seconds: 0
+            id: 01FCNDV6P870EA6S7TK1DSYDG0
+            method_target:
+              all: {}
+              specific:
+                id: 01FCNDV6P870EA6S7TK1DSYDG0
+              type: specific
+            method_type: app
+            phone:
+              channel: voice
+            rule_type: low_urgency
+          items:
+            $ref: '#/components/schemas/OnCallNotificationRulePublicV2'
+          type: array
+      required:
+      - notification_rules
+      type: object
+    UsersListResultV2:
+      example:
+        pagination_meta:
+          after: 01FCNDV6P870EA6S7TK1DSYDG0
+          page_size: 25
+        users:
+        - base_role:
+            description: Elevated permissions for the customer success team.
+            id: 01FCNDV6P870EA6S7TK1DSYDG0
+            name: Customer Success
+            slug: customer-success
+          custom_roles:
+          - description: Elevated permissions for the customer success team.
+            id: 01FCNDV6P870EA6S7TK1DSYDG0
+            name: Customer Success
+            slug: customer-success
+          email: lisa@incident.io
+          id: 01FCNDV6P870EA6S7TK1DSYDG0
+          is_active: true
+          name: Lisa Karlin Curtis
+          role: owner
+          seats:
+            on_call: full_access
+            response: viewer_only
+          slack_user_id: U02AYNF2XJM
+      properties:
+        pagination_meta:
+          $ref: '#/components/schemas/PaginationMetaResultV2'
+        users:
+          example:
+          - base_role:
+              description: Elevated permissions for the customer success team.
+              id: 01FCNDV6P870EA6S7TK1DSYDG0
+              name: Customer Success
+              slug: customer-success
+            custom_roles:
+            - description: Elevated permissions for the customer success team.
+              id: 01FCNDV6P870EA6S7TK1DSYDG0
+              name: Customer Success
+              slug: customer-success
+            email: lisa@incident.io
+            id: 01FCNDV6P870EA6S7TK1DSYDG0
+            is_active: true
+            name: Lisa Karlin Curtis
+            role: owner
+            seats:
+              on_call: full_access
+              response: viewer_only
+            slack_user_id: U02AYNF2XJM
+          items:
+            $ref: '#/components/schemas/UserWithRolesV2'
+          type: array
+      required:
+      - users
+      - pagination_meta
+      type: object
+    OnCallNotificationRuleAppDetailsPublicV2:
+      example:
+        push_notification_criticality: critical
+      properties:
+        push_notification_criticality:
+          description: Controls the interruption level of push notifications. 'critical' bypasses Do Not Disturb, 'active' respects it.
+          enum:
+          - critical
+          - active
+          example: critical
+          type: string
+          x-public-api-version: v2
+      required:
+      - push_notification_criticality
+      type: object
+    RBACRoleV2:
+      example:
+        description: Elevated permissions for the customer success team.
+        id: 01FCNDV6P870EA6S7TK1DSYDG0
+        name: Customer Success
+        slug: customer-success
+      properties:
+        description:
+          description: Description of the purpose for the RBAC role
+          example: Elevated permissions for the customer success team.
+          type: string
+        id:
+          description: Unique identifier of the RBAC role
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+        name:
+          description: Name of the RBAC role
+          example: Customer Success
+          type: string
+        slug:
+          description: Unique human-readable slug for the RBAC role
+          example: customer-success
+          type: string
+      required:
+      - id
+      - name
+      - slug
+      type: object
+    PaginationMetaResultV2:
+      example:
+        after: 01FCNDV6P870EA6S7TK1DSYDG0
+        page_size: 25
+      properties:
+        after:
+          description: If provided, pass this as the 'after' param to load the next page
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+        page_size:
+          default: 25
+          description: What was the maximum number of results requested
+          example: 25
+          format: int64
+          maximum: 250
+          type: integer
+      required:
+      - page_size
+      type: object
+    ErrorResponse:
+      example:
+        debug:
+          message: 'Something broke: and something else: and something else'
+          stacktrace:
+          - thing.go:123
+        errors:
+        - code: trial_expired
+          message: Default incident call link must be a valid URL
+          metadata:
+            abc123: abc123
+          source:
+            field: default_call_url
+            pointer: /settings/default_call_url
+        rate_limit:
+          limit: 100
+          name: client_ip
+          remaining: 98
+          retry_after: '2020-01-01T00:00:00Z'
+        request_id: 2T1p0e3j
+        status: 408
+        type: invalid_request_error
+      properties:
+        debug:
+          $ref: '#/components/schemas/ErrorDebug'
+        errors:
+          description: List of errors that caused this request to fail
+          example:
+          - code: trial_expired
+            message: Default incident call link must be a valid URL
+            metadata:
+              abc123: abc123
+            source:
+              field: default_call_url
+              pointer: /settings/default_call_url
+          items:
+            $ref: '#/components/schemas/ErrorSingle'
+          type: array
+        rate_limit:
+          $ref: '#/components/schemas/ErrorRateLimit'
+        request_id:
+          description: Unique identifier of the request
+          example: 2T1p0e3j
+          type: string
+        status:
+          description: HTTP status of the response
+          example: 408
+          format: int64
+          type: integer
+        type:
+          description: Machine-readable identifier for the general category of error
+          enum:
+          - invalid_request_error
+          - authentication_error
+          - resource_forbidden
+          - not_found
+          - not_acceptable
+          - method_not_allowed
+          - request_timeout
+          - conflict
+          - precondition_failed
+          - payload_too_large
+          - validation_error
+          - too_many_requests
+          - api_error
+          - rate_limit_reached
+          - client_timeout
+          example: invalid_request_error
+          type: string
+      required:
+      - type
+      - status
+      - request_id
+      - errors
+      type: object
+    OnCallNotificationRuleMethodTargetPublicV2:
+      example:
+        all: {}
+        specific:
+          id: 01FCNDV6P870EA6S7TK1DSYDG0
+        type: specific
+      properties:
+        all:
+          $ref: '#/components/schemas/OnCallNotificationRuleMethodTargetAllPublicV2'
+        specific:
+          $ref: '#/components/schemas/OnCallNotificationRuleMethodTargetSpecificPublicV2'
+        type:
+          description: Whether this targets a specific method or all methods of a given type.
+          enum:
+          - specific
+          - all
+          example: specific
+          type: string
+      required:
+      - type
+      type: object
+    UsersShowPagingProviderResultV2:
+      example:
+        preferred_escalation_provider: native
+      properties:
+        preferred_escalation_provider:
+          description: The user's effective escalation provider.
+          enum:
+          - native
+          - opsgenie
+          - pagerduty
+          - splunk_on_call
+          example: native
+          type: string
+      type: object
+    ErrorSource:
+      example:
+        field: default_call_url
+        pointer: /settings/default_call_url
+      properties:
+        field:
+          description: Field name that is the source of the error
+          example: default_call_url
+          type: string
+        pointer:
+          description: JSON pointer to the request field that is the source of the error
+          example: /settings/default_call_url
+          type: string
+      required:
+      - field
+      - pointer
+      type: object
+    ErrorRateLimit:
+      example:
+        limit: 100
+        name: client_ip
+        remaining: 98
+        retry_after: '2020-01-01T00:00:00Z'
+      properties:
+        limit:
+          description: The maximum number of requests that the consumer is permitted to make per minute
+          example: 100
+          format: int64
+          type: integer
+        name:
+          description: Which rate limit was exceeded
+          example: client_ip
+          type: string
+        remaining:
+          description: The number of requests remaining in the current rate limit window
+          example: 98
+          format: int64
+          type: integer
+        retry_after:
+          description: When the client can retry, as an RFC3339 timestamp in UTC. Prefer the Retry-After response header, which carries the same instant as a number of seconds
+          example: '2020-01-01T00:00:00Z'
+          type: string
+      required:
+      - name
+      - limit
+      - remaining
+      - retry_after
+      type: object
+    ErrorDebug:
+      example:
+        message: 'Something broke: and something else: and something else'
+        stacktrace:
+        - thing.go:123
+      properties:
+        message:
+          description: Original internal error message
+          example: 'Something broke: and something else: and something else'
+          type: string
+        stacktrace:
+          description: Stacktrace of the error, if applicable
+          example:
+          - thing.go:123
+          items:
+            example: thing.go:123
+            type: string
+          type: array
+      required:
+      - message
+      - stacktrace
+      type: object
+    OnCallNotificationRuleMethodTargetSpecificPublicV2:
+      example:
+        id: 01FCNDV6P870EA6S7TK1DSYDG0
+      properties:
+        id:
+          description: The ID of the notification method. References a method from the notification methods list.
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+      required:
+      - id
+      type: object
+    UsersShowResultV2:
+      example:
+        user:
+          base_role:
+            description: Elevated permissions for the customer success team.
+            id: 01FCNDV6P870EA6S7TK1DSYDG0
+            name: Customer Success
+            slug: customer-success
+          custom_roles:
+          - description: Elevated permissions for the customer success team.
+            id: 01FCNDV6P870EA6S7TK1DSYDG0
+            name: Customer Success
+            slug: customer-success
+          email: lisa@incident.io
+          id: 01FCNDV6P870EA6S7TK1DSYDG0
+          is_active: true
+          name: Lisa Karlin Curtis
+          role: owner
+          seats:
+            on_call: full_access
+            response: viewer_only
+          slack_user_id: U02AYNF2XJM
+      properties:
+        user:
+          $ref: '#/components/schemas/UserWithRolesV2'
+      required:
+      - user
+      type: object
+    OnCallNotificationRuleMethodTargetAllPublicV2:
+      example: {}
+      type: object
+    OnCallNotificationMethodPhoneDetailsPublicV2:
+      example:
+        supports_sms: true
+        supports_voice: true
+      properties:
+        supports_sms:
+          description: Whether this phone number can receive SMS notifications.
+          example: true
+          type: boolean
+        supports_voice:
+          description: Whether this phone number can receive voice call notifications.
+          example: true
+          type: boolean
+      required:
+      - supports_sms
+      - supports_voice
+      type: object
+    OnCallNotificationRulePublicV2:
+      example:
+        app:
+          push_notification_criticality: critical
+        delay_seconds: 0
+        id: 01FCNDV6P870EA6S7TK1DSYDG0
+        method_target:
+          all: {}
+          specific:
+            id: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: specific
+        method_type: app
+        phone:
+          channel: voice
+        rule_type: low_urgency
+      properties:
+        app:
+          $ref: '#/components/schemas/OnCallNotificationRuleAppDetailsPublicV2'
+        delay_seconds:
+          description: Delay in seconds before this rule activates. 0 means immediate.
+          example: 0
+          format: int64
+          maximum: 1200
+          minimum: 0
+          type: integer
+        id:
+          description: Unique identifier for this notification rule
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+        method_target:
+          $ref: '#/components/schemas/OnCallNotificationRuleMethodTargetPublicV2'
+        method_type:
+          description: The high-level type of notification method. Phone rules include phone details that distinguish SMS from voice calls.
+          enum:
+          - app
+          - email
+          - microsoft_teams
+          - phone
+          - slack
+          - whatsapp_message
+          example: app
+          type: string
+          x-public-api-version: v2
+        phone:
+          $ref: '#/components/schemas/OnCallNotificationRulePhoneDetailsPublicV2'
+        rule_type:
+          description: The urgency level this rule applies to
+          enum:
+          - high_urgency
+          - low_urgency
+          example: low_urgency
+          type: string
+          x-public-api-version: v2
+      required:
+      - id
+      - method_type
+      - method_target
+      - rule_type
+      type: object
+    UsersListNotificationMethodsResultV2:
+      example:
+        notification_methods:
+        - address: •••••••6789
+          id: 01FCNDV6P870EA6S7TK1DSYDG0
+          is_usable: true
+          method_type: app
+          phone_details:
+            supports_sms: true
+            supports_voice: true
+      properties:
+        notification_methods:
+          example:
+          - address: •••••••6789
+            id: 01FCNDV6P870EA6S7TK1DSYDG0
+            is_usable: true
+            method_type: app
+            phone_details:
+              supports_sms: true
+              supports_voice: true
+          items:
+            $ref: '#/components/schemas/OnCallNotificationMethodPublicV2'
+          type: array
+      required:
+      - notification_methods
+      type: object
+    UserSeatsV2:
+      example:
+        on_call: full_access
+        response: viewer_only
+      properties:
+        on_call:
+          description: On-call seat access level
+          enum:
+          - full_access
+          - viewer_only
+          - none
+          example: full_access
+          type: string
+        response:
+          description: Response seat access level
+          enum:
+          - full_access
+          - viewer_only
+          - none
+          example: viewer_only
+          type: string
+      required:
+      - on_call
+      - response
+      type: object
+    OnCallNotificationRulePhoneDetailsPublicV2:
+      example:
+        channel: voice
+      properties:
+        channel:
+          description: Which channel of a phone notification method this rule uses.
+          enum:
+          - sms
+          - voice
+          example: voice
+          type: string
+          x-public-api-version: v2
+      required:
+      - channel
+      type: object
+    OnCallNotificationMethodPublicV2:
+      example:
+        address: •••••••6789
+        id: 01FCNDV6P870EA6S7TK1DSYDG0
+        is_usable: true
+        method_type: app
+        phone_details:
+          supports_sms: true
+          supports_voice: true
+      properties:
+        address:
+          description: The address of this method (e.g. redacted phone number, email address, device name, Slack user name)
+          example: •••••••6789
+          type: string
+        id:
+          description: Unique identifier for this notification method
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+        is_usable:
+          description: Whether this method is ready to receive notifications. For phone, this means verified. For app devices, this means push notifications can be sent. For email, Slack, and Microsoft Teams this is always true.
+          example: true
+          type: boolean
+        method_type:
+          description: The high-level type of notification method. Phone rules include phone details that distinguish SMS from voice calls.
+          enum:
+          - app
+          - email
+          - microsoft_teams
+          - phone
+          - slack
+          - whatsapp_message
+          example: app
+          type: string
+          x-public-api-version: v2
+        phone_details:
+          $ref: '#/components/schemas/OnCallNotificationMethodPhoneDetailsPublicV2'
+      required:
+      - id
+      - method_type
+      - is_usable
+      - address
+      type: object
+    ErrorSingle:
+      example:
+        code: trial_expired
+        message: Default incident call link must be a valid URL
+        metadata:
+          abc123: abc123
+        source:
+          field: default_call_url
+          pointer: /settings/default_call_url
+      properties:
+        code:
+          description: Machine-readable identifier for this specific error
+          example: trial_expired
+          type: string
+        message:
+          description: Human readable description of the error
+          example: Default incident call link must be a valid URL
+          type: string
+        metadata:
+          additionalProperties:
+            example: abc123
+            type: string
+          description: Additional metadata about the error, keyed by a string identifier
+          example:
+            abc123: abc123
+          type: object
+        source:
+          $ref: '#/components/schemas/ErrorSource'
+      required:
+      - code
+      - message
+      type: object
+  securitySchemes:
+    BearerAuth:
+      description: API key from your incident.io dashboard (Settings > API keys)
+      scheme: bearer
+      type: http
+externalDocs:
+  description: View our API docs at api-docs.incident.io
+  url: https://api-docs.incident.io/

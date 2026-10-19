@@ -1,0 +1,4094 @@
+openapi: 3.2.0
+info:
+  description: 'This is the API reference for incident.io. It documents available API endpoints, provides examples of how to use it, and
+
+    instructions around things like authentication and error handling. The API is hosted at:
+
+
+    - https://api.incident.io/
+
+
+    And you will need to create an API key via your incident.io
+
+    dashboard to make requests. # Making requests
+
+
+    Here are the key concepts required to make requests to the incident.io API. ## Authentication
+
+
+    For all requests made to the incident.io API, you''ll need an API key. To create an API key, head to the incident dashboard and visit API
+
+    keys. When you create the key, you''ll be able to choose what actions it
+
+    can take for your account: choose carefully, as those roles can only be set
+
+    when you first create the key. We''ll only show you the token once, so make sure
+
+    you store it somewhere safe. API keys are global to your incident.io account, and can be managed by anyone
+
+    who has the right permissions. We display the user that created the API key,
+
+    and the API key will remain valid if that user becomes deactivated. Once you have the key, you should make requests to the API that set the
+
+    `Authorization` request header using a "Bearer" authentication scheme:
+
+
+    ```
+
+    Authorization: Bearer
+
+    ```
+
+
+    ## Rate Limits
+
+
+    The incident.io API enforces rate limits to ensure consistent performance for all users. The default rate limit is 1200 requests/minute per API key. This limit applies to most endpoints across the API. Limits are token buckets that refill continuously rather than resetting on a fixed window boundary. The default
+
+    bucket holds 1200 requests and refills at 20 per second, so you can burst up to the full bucket and then sustain
+
+    20 requests/second indefinitely. There is no boundary at which your quota resets to full in one step. Some endpoints have lower rate limits, particularly those that interact with external third-party systems that impose
+
+    their own limitations. These specific limits vary by endpoint. ### Rate limit headers
+
+
+    Responses to requests authenticated with an API key carry your current allowance, so you can pace yourself rather
+
+    than waiting to be throttled:
+
+
+    ```
+
+    X-RateLimit-Limit: 60, 1200;window=60, 60;window=60
+
+    X-RateLimit-Remaining: 59
+
+    X-RateLimit-Used: 1
+
+    X-RateLimit-Reset: 1785173199
+
+    ```
+
+
+    | Header | Meaning |
+
+    | --- | --- |
+
+    | `X-RateLimit-Limit` | The quota that binds this request, followed by every limit that applied and the window it applies over |
+
+    | `X-RateLimit-Remaining` | Requests you can make right now against the binding limit |
+
+    | `X-RateLimit-Used` | Requests you have spent against it |
+
+    | `X-RateLimit-Reset` | Unix timestamp (seconds) at which that limit will be back to full |
+
+
+    More than one limit can apply to a request: your API key''s overall limit, and for some endpoints a lower limit of
+
+    their own. `X-RateLimit-Limit` lists all of them, each with its window, so `1200;window=60` means 1200 requests per
+
+    minute. Because our limits refill continuously rather than resetting on a boundary, that window is what tells you
+
+    the rate you can sustain: 1200 per 60 seconds is 20 requests/second indefinitely. `Remaining`, `Used` and `Reset` describe whichever limit has the least allowance left, since that is the one you
+
+    will hit first. `X-RateLimit-Remaining` may lag by a small number of requests under high concurrency, and can move by more than the
+
+    requests you made, because limits scoped to your whole organisation are shared with your other API keys. Headers are omitted rather than guessed if we cannot determine your allowance for a request. ### Exceeding a rate limit
+
+
+    When you exceed a rate limit the API responds with `429 Too Many Requests` and a `Retry-After` header giving the
+
+    number of seconds to wait:
+
+
+    ```
+
+    X-RateLimit-Limit: 1200, 1200;window=60
+
+    X-RateLimit-Remaining: 0
+
+    X-RateLimit-Used: 1200
+
+    X-RateLimit-Reset: 1785173199
+
+    Retry-After: 1
+
+    ```
+
+
+    Prefer `Retry-After` over `X-RateLimit-Reset` when deciding how long to back off.'
+  title: incident.io Catalog V2 API
+  version: 1.0.0
+servers:
+- url: https://api.incident.io
+security:
+- BearerAuth: []
+tags:
+- description: 'Manage and browse catalog resources.
+
+
+    These endpoints have been deprecated in favour of CatalogV3. The only breaking change is
+
+    that the ''manual'' attribute mode is now split into ''api'' and ''dashboard''. We also removed
+
+    the usage of some types that were deprecated in the V2 API.
+
+
+    Use the incident.io catalog to track services, teams, product features and anything
+
+    else that helps build a map of your organisation. These different categories of thing
+
+    become catalog types, and each instance (like a particular service or team) is a
+
+    catalog entry.
+
+
+    Each type is made up of a series of attributes, and each attribute has a type. Types
+
+    can even have attributes that refer to other catalog types.
+
+
+    We automatically create catalog types when you connect an integration, such as GitHub
+
+    repositories or PagerDuty services and teams. You can use this API to create custom
+
+    types, that are specifically tailored to your organisation.
+
+
+    Examples might be a ''Service'' type with an ''Alert channel'' which you can point at a
+
+    Slack channel, or ''Team'' which specifies its ''Manager'' and ''Technical Lead'' as Slack
+
+    users. You can then use these types to create powerful new workflows.
+
+
+    Consider using our official catalog importer.
+
+    It can be used to sync catalog data from sources like local files or GitHub and push
+
+    them into the incident.io catalog without having to directly interact with our public API.'
+  name: Catalog V2
+paths:
+  /v2/catalog_entries:
+    get:
+      deprecated: true
+      description: List entries for a catalog type.
+      operationId: CatalogV2#ListEntries
+      parameters:
+      - allowEmptyValue: true
+        description: ID of this catalog type
+        example: 01FCNDV6P870EA6S7TK1DSYDG0
+        in: query
+        name: catalog_type_id
+        required: true
+        schema:
+          description: ID of this catalog type
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+      - allowEmptyValue: true
+        description: Integer number of records to return
+        example: 25
+        in: query
+        name: page_size
+        schema:
+          default: 25
+          description: Integer number of records to return
+          example: 25
+          format: int64
+          maximum: 250
+          minimum: 1
+          type: integer
+      - allowEmptyValue: true
+        description: An record's ID. This endpoint will return a list of records after this ID in relation to the API response order.
+        example: 01FDAG4SAP5TYPT98WGR2N7W91
+        in: query
+        name: after
+        schema:
+          description: An record's ID. This endpoint will return a list of records after this ID in relation to the API response order.
+          example: 01FDAG4SAP5TYPT98WGR2N7W91
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              example:
+                catalog_entries:
+                - aliases:
+                  - lawrence@incident.io
+                  - lawrence
+                  archived_at: '2021-08-17T14:28:57.801578Z'
+                  attribute_values:
+                    abc123:
+                      array_value:
+                      - catalog_entry:
+                          archived_at: '2021-08-17T14:28:57.801578Z'
+                          catalog_entry_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                          catalog_entry_name: Primary escalation
+                          catalog_type_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                        helptext: abc123
+                        image_url: abc123
+                        is_image_slack_icon: false
+                        label: Lawrence Jones
+                        literal: SEV123
+                        reference: incident.severity
+                        sort_key: abc123
+                        unavailable: false
+                        value: abc123
+                      value:
+                        catalog_entry:
+                          archived_at: '2021-08-17T14:28:57.801578Z'
+                          catalog_entry_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                          catalog_entry_name: Primary escalation
+                          catalog_type_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                        helptext: abc123
+                        image_url: abc123
+                        is_image_slack_icon: false
+                        label: Lawrence Jones
+                        literal: SEV123
+                        reference: incident.severity
+                        sort_key: abc123
+                        unavailable: false
+                        value: abc123
+                  catalog_type_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  created_at: '2021-08-17T13:28:57.801578Z'
+                  external_id: 761722cd-d1d7-477b-ac7e-90f9e079dc33
+                  id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  name: Primary On-call
+                  rank: 3
+                  updated_at: '2021-08-17T13:28:57.801578Z'
+                catalog_type:
+                  annotations:
+                    incident.io/catalog-importer/id: id-of-config
+                  categories:
+                  - customer
+                  color: yellow
+                  created_at: '2021-08-17T13:28:57.801578Z'
+                  description: Represents Kubernetes clusters that we run inside of GKE.
+                  dynamic_resource_parameter: abc123
+                  estimated_count: 7
+                  icon: alert
+                  id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  is_editable: false
+                  last_synced_at: '2021-08-17T13:28:57.801578Z'
+                  name: Kubernetes Cluster
+                  ranked: true
+                  registry_type: PagerDutyService
+                  required_integrations:
+                  - pager_duty
+                  schema:
+                    attributes:
+                    - array: false
+                      backlink_attribute: abc123
+                      id: 01GW2G3V0S59R238FAHPDS1R66
+                      mode: ''
+                      name: tier
+                      path:
+                      - attribute_id: abc123
+                        attribute_name: abc123
+                      type: Custom["Service"]
+                    version: 1
+                  semantic_type: abc123
+                  source_repo_url: https://github.com/my-company/incident-io-catalog
+                  type_name: Custom["BackstageGroup"]
+                  updated_at: '2021-08-17T13:28:57.801578Z'
+                pagination_meta:
+                  after: 01FCNDV6P870EA6S7TK1DSYDG0
+                  page_size: 25
+              schema:
+                $ref: '#/components/schemas/CatalogListEntriesResultV2'
+          description: OK response.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'invalid_request_error: There was a problem with the request, like a missing header or querying a resource that doesn''t exist.'
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'authentication_error: Authentication failed.'
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'resource_forbidden: Access to this resource is forbidden for the authenticated user.'
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_found: The referenced resource could not be found.'
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'method_not_allowed: The endpoint does not support this operation for the specified resource.'
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_acceptable: Requested a media type this endpoint does not support.'
+        '408':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'request_timeout: The request took too long to process.
+
+
+            client_timeout: The request was cancelled by the client.'
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'conflict: Request conflicted with current state of the resource, likely a concurrent update.'
+        '412':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'precondition_failed: A required condition hasn''t been met.'
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'payload_too_large: The request payload is too large.'
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'validation_error: A required field was not provided, or the provided data was invalid.'
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'too_many_requests: Too many requests hit the API too quickly. We recommend an exponential backoff of your requests.
+
+
+            rate_limit_reached: The rate limit associated with this resource or API key has been exceeded. Try again later.'
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'api_error: Something went wrong and has been reported internally.'
+      summary: ListEntries Catalog V2
+      tags:
+      - Catalog V2
+      x-docs-display-name: List
+      x-docs-group-name: Catalog Entries V2
+      x-docs-resource-type: CatalogEntryV2
+      x-mint:
+        content: 🔑 Requires the `catalog_entries.view` scope.
+      x-rbac-scopes:
+      - catalog_entries.view
+      x-operation-id-source: normalized
+      x-operation-id-original: Catalog V2#ListEntries
+    post:
+      deprecated: true
+      description: 'Create an entry within the catalog. We support a maximum of 50,000 entries per type.
+
+
+        If you call this API with a payload where the external_id and catalog_type_id match an existing entry, the existing entry will be updated.'
+      operationId: CatalogV2#CreateEntry
+      requestBody:
+        content:
+          application/json:
+            example:
+              aliases:
+              - lawrence@incident.io
+              - lawrence
+              attribute_values:
+                abc123:
+                  array_value:
+                  - literal: SEV123
+                    reference: incident.severity
+                  value:
+                    literal: SEV123
+                    reference: incident.severity
+              catalog_type_id: 01FCNDV6P870EA6S7TK1DSYDG0
+              external_id: 761722cd-d1d7-477b-ac7e-90f9e079dc33
+              name: Primary On-call
+              rank: 3
+            schema:
+              $ref: '#/components/schemas/CatalogCreateEntryPayloadV2'
+        required: true
+      responses:
+        '201':
+          content:
+            application/json:
+              example:
+                catalog_entry:
+                  aliases:
+                  - lawrence@incident.io
+                  - lawrence
+                  archived_at: '2021-08-17T14:28:57.801578Z'
+                  attribute_values:
+                    abc123:
+                      array_value:
+                      - catalog_entry:
+                          archived_at: '2021-08-17T14:28:57.801578Z'
+                          catalog_entry_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                          catalog_entry_name: Primary escalation
+                          catalog_type_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                        helptext: abc123
+                        image_url: abc123
+                        is_image_slack_icon: false
+                        label: Lawrence Jones
+                        literal: SEV123
+                        reference: incident.severity
+                        sort_key: abc123
+                        unavailable: false
+                        value: abc123
+                      value:
+                        catalog_entry:
+                          archived_at: '2021-08-17T14:28:57.801578Z'
+                          catalog_entry_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                          catalog_entry_name: Primary escalation
+                          catalog_type_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                        helptext: abc123
+                        image_url: abc123
+                        is_image_slack_icon: false
+                        label: Lawrence Jones
+                        literal: SEV123
+                        reference: incident.severity
+                        sort_key: abc123
+                        unavailable: false
+                        value: abc123
+                  catalog_type_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  created_at: '2021-08-17T13:28:57.801578Z'
+                  external_id: 761722cd-d1d7-477b-ac7e-90f9e079dc33
+                  id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  name: Primary On-call
+                  rank: 3
+                  updated_at: '2021-08-17T13:28:57.801578Z'
+              schema:
+                $ref: '#/components/schemas/CatalogCreateEntryResultV2'
+          description: Created response.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'invalid_request_error: There was a problem with the request, like a missing header or querying a resource that doesn''t exist.'
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'authentication_error: Authentication failed.'
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'resource_forbidden: Access to this resource is forbidden for the authenticated user.'
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_found: The referenced resource could not be found.'
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'method_not_allowed: The endpoint does not support this operation for the specified resource.'
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_acceptable: Requested a media type this endpoint does not support.'
+        '408':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'request_timeout: The request took too long to process.
+
+
+            client_timeout: The request was cancelled by the client.'
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'conflict: Request conflicted with current state of the resource, likely a concurrent update.'
+        '412':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'precondition_failed: A required condition hasn''t been met.'
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'payload_too_large: The request payload is too large.'
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'validation_error: A required field was not provided, or the provided data was invalid.'
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'too_many_requests: Too many requests hit the API too quickly. We recommend an exponential backoff of your requests.
+
+
+            rate_limit_reached: The rate limit associated with this resource or API key has been exceeded. Try again later.'
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'api_error: Something went wrong and has been reported internally.'
+      summary: CreateEntry Catalog V2
+      tags:
+      - Catalog V2
+      x-docs-display-name: Create
+      x-docs-group-name: Catalog Entries V2
+      x-docs-resource-type: CatalogEntryV2
+      x-mint:
+        content: 🔑 Requires the `catalog_entries.create` scope.
+      x-rbac-scopes:
+      - catalog_entries.create
+      x-operation-id-source: normalized
+      x-operation-id-original: Catalog V2#CreateEntry
+  /v2/catalog_entries/{id}:
+    delete:
+      deprecated: true
+      description: Archives a catalog entry.
+      operationId: CatalogV2#DestroyEntry
+      parameters:
+      - description: ID of this catalog entry
+        example: 01FCNDV6P870EA6S7TK1DSYDG0
+        in: path
+        name: id
+        required: true
+        schema:
+          description: ID of this catalog entry
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+      responses:
+        '204':
+          description: No Content response.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'invalid_request_error: There was a problem with the request, like a missing header or querying a resource that doesn''t exist.'
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'authentication_error: Authentication failed.'
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'resource_forbidden: Access to this resource is forbidden for the authenticated user.'
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_found: The referenced resource could not be found.'
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'method_not_allowed: The endpoint does not support this operation for the specified resource.'
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_acceptable: Requested a media type this endpoint does not support.'
+        '408':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'request_timeout: The request took too long to process.
+
+
+            client_timeout: The request was cancelled by the client.'
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'conflict: Request conflicted with current state of the resource, likely a concurrent update.'
+        '412':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'precondition_failed: A required condition hasn''t been met.'
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'payload_too_large: The request payload is too large.'
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'validation_error: A required field was not provided, or the provided data was invalid.'
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'too_many_requests: Too many requests hit the API too quickly. We recommend an exponential backoff of your requests.
+
+
+            rate_limit_reached: The rate limit associated with this resource or API key has been exceeded. Try again later.'
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'api_error: Something went wrong and has been reported internally.'
+      summary: DestroyEntry Catalog V2
+      tags:
+      - Catalog V2
+      x-docs-display-name: Delete
+      x-docs-group-name: Catalog Entries V2
+      x-docs-resource-type: CatalogEntryV2
+      x-mint:
+        content: 🔑 Requires the `catalog_entries.destroy` scope.
+      x-rbac-scopes:
+      - catalog_entries.destroy
+      x-operation-id-source: normalized
+      x-operation-id-original: Catalog V2#DestroyEntry
+    get:
+      deprecated: true
+      description: Show a single catalog entry.
+      operationId: CatalogV2#ShowEntry
+      parameters:
+      - description: ID of this catalog entry
+        example: 01FCNDV6P870EA6S7TK1DSYDG0
+        in: path
+        name: id
+        required: true
+        schema:
+          description: ID of this catalog entry
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              example:
+                catalog_entry:
+                  aliases:
+                  - lawrence@incident.io
+                  - lawrence
+                  archived_at: '2021-08-17T14:28:57.801578Z'
+                  attribute_values:
+                    abc123:
+                      array_value:
+                      - catalog_entry:
+                          archived_at: '2021-08-17T14:28:57.801578Z'
+                          catalog_entry_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                          catalog_entry_name: Primary escalation
+                          catalog_type_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                        helptext: abc123
+                        image_url: abc123
+                        is_image_slack_icon: false
+                        label: Lawrence Jones
+                        literal: SEV123
+                        reference: incident.severity
+                        sort_key: abc123
+                        unavailable: false
+                        value: abc123
+                      value:
+                        catalog_entry:
+                          archived_at: '2021-08-17T14:28:57.801578Z'
+                          catalog_entry_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                          catalog_entry_name: Primary escalation
+                          catalog_type_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                        helptext: abc123
+                        image_url: abc123
+                        is_image_slack_icon: false
+                        label: Lawrence Jones
+                        literal: SEV123
+                        reference: incident.severity
+                        sort_key: abc123
+                        unavailable: false
+                        value: abc123
+                  catalog_type_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  created_at: '2021-08-17T13:28:57.801578Z'
+                  external_id: 761722cd-d1d7-477b-ac7e-90f9e079dc33
+                  id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  name: Primary On-call
+                  rank: 3
+                  updated_at: '2021-08-17T13:28:57.801578Z'
+                catalog_type:
+                  annotations:
+                    incident.io/catalog-importer/id: id-of-config
+                  categories:
+                  - customer
+                  color: yellow
+                  created_at: '2021-08-17T13:28:57.801578Z'
+                  description: Represents Kubernetes clusters that we run inside of GKE.
+                  dynamic_resource_parameter: abc123
+                  estimated_count: 7
+                  icon: alert
+                  id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  is_editable: false
+                  last_synced_at: '2021-08-17T13:28:57.801578Z'
+                  name: Kubernetes Cluster
+                  ranked: true
+                  registry_type: PagerDutyService
+                  required_integrations:
+                  - pager_duty
+                  schema:
+                    attributes:
+                    - array: false
+                      backlink_attribute: abc123
+                      id: 01GW2G3V0S59R238FAHPDS1R66
+                      mode: ''
+                      name: tier
+                      path:
+                      - attribute_id: abc123
+                        attribute_name: abc123
+                      type: Custom["Service"]
+                    version: 1
+                  semantic_type: abc123
+                  source_repo_url: https://github.com/my-company/incident-io-catalog
+                  type_name: Custom["BackstageGroup"]
+                  updated_at: '2021-08-17T13:28:57.801578Z'
+              schema:
+                $ref: '#/components/schemas/CatalogShowEntryResultV2'
+          description: OK response.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'invalid_request_error: There was a problem with the request, like a missing header or querying a resource that doesn''t exist.'
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'authentication_error: Authentication failed.'
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'resource_forbidden: Access to this resource is forbidden for the authenticated user.'
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_found: The referenced resource could not be found.'
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'method_not_allowed: The endpoint does not support this operation for the specified resource.'
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_acceptable: Requested a media type this endpoint does not support.'
+        '408':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'request_timeout: The request took too long to process.
+
+
+            client_timeout: The request was cancelled by the client.'
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'conflict: Request conflicted with current state of the resource, likely a concurrent update.'
+        '412':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'precondition_failed: A required condition hasn''t been met.'
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'payload_too_large: The request payload is too large.'
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'validation_error: A required field was not provided, or the provided data was invalid.'
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'too_many_requests: Too many requests hit the API too quickly. We recommend an exponential backoff of your requests.
+
+
+            rate_limit_reached: The rate limit associated with this resource or API key has been exceeded. Try again later.'
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'api_error: Something went wrong and has been reported internally.'
+      summary: ShowEntry Catalog V2
+      tags:
+      - Catalog V2
+      x-docs-display-name: Show
+      x-docs-group-name: Catalog Entries V2
+      x-docs-resource-type: CatalogEntryV2
+      x-mint:
+        content: 🔑 Requires the `catalog_entries.view` scope.
+      x-rbac-scopes:
+      - catalog_entries.view
+      x-operation-id-source: normalized
+      x-operation-id-original: Catalog V2#ShowEntry
+    put:
+      deprecated: true
+      description: Updates an existing catalog entry.
+      operationId: CatalogV2#UpdateEntry
+      parameters:
+      - description: ID of this catalog entry
+        example: 01FCNDV6P870EA6S7TK1DSYDG0
+        in: path
+        name: id
+        required: true
+        schema:
+          description: ID of this catalog entry
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+      requestBody:
+        content:
+          application/json:
+            example:
+              aliases:
+              - lawrence@incident.io
+              - lawrence
+              attribute_values:
+                abc123:
+                  array_value:
+                  - literal: SEV123
+                    reference: incident.severity
+                  value:
+                    literal: SEV123
+                    reference: incident.severity
+              external_id: 761722cd-d1d7-477b-ac7e-90f9e079dc33
+              name: Primary On-call
+              rank: 3
+            schema:
+              $ref: '#/components/schemas/CatalogUpdateEntryPayloadV2'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              example:
+                catalog_entry:
+                  aliases:
+                  - lawrence@incident.io
+                  - lawrence
+                  archived_at: '2021-08-17T14:28:57.801578Z'
+                  attribute_values:
+                    abc123:
+                      array_value:
+                      - catalog_entry:
+                          archived_at: '2021-08-17T14:28:57.801578Z'
+                          catalog_entry_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                          catalog_entry_name: Primary escalation
+                          catalog_type_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                        helptext: abc123
+                        image_url: abc123
+                        is_image_slack_icon: false
+                        label: Lawrence Jones
+                        literal: SEV123
+                        reference: incident.severity
+                        sort_key: abc123
+                        unavailable: false
+                        value: abc123
+                      value:
+                        catalog_entry:
+                          archived_at: '2021-08-17T14:28:57.801578Z'
+                          catalog_entry_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                          catalog_entry_name: Primary escalation
+                          catalog_type_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                        helptext: abc123
+                        image_url: abc123
+                        is_image_slack_icon: false
+                        label: Lawrence Jones
+                        literal: SEV123
+                        reference: incident.severity
+                        sort_key: abc123
+                        unavailable: false
+                        value: abc123
+                  catalog_type_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  created_at: '2021-08-17T13:28:57.801578Z'
+                  external_id: 761722cd-d1d7-477b-ac7e-90f9e079dc33
+                  id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  name: Primary On-call
+                  rank: 3
+                  updated_at: '2021-08-17T13:28:57.801578Z'
+                catalog_type:
+                  annotations:
+                    incident.io/catalog-importer/id: id-of-config
+                  categories:
+                  - customer
+                  color: yellow
+                  created_at: '2021-08-17T13:28:57.801578Z'
+                  description: Represents Kubernetes clusters that we run inside of GKE.
+                  dynamic_resource_parameter: abc123
+                  estimated_count: 7
+                  icon: alert
+                  id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  is_editable: false
+                  last_synced_at: '2021-08-17T13:28:57.801578Z'
+                  name: Kubernetes Cluster
+                  ranked: true
+                  registry_type: PagerDutyService
+                  required_integrations:
+                  - pager_duty
+                  schema:
+                    attributes:
+                    - array: false
+                      backlink_attribute: abc123
+                      id: 01GW2G3V0S59R238FAHPDS1R66
+                      mode: ''
+                      name: tier
+                      path:
+                      - attribute_id: abc123
+                        attribute_name: abc123
+                      type: Custom["Service"]
+                    version: 1
+                  semantic_type: abc123
+                  source_repo_url: https://github.com/my-company/incident-io-catalog
+                  type_name: Custom["BackstageGroup"]
+                  updated_at: '2021-08-17T13:28:57.801578Z'
+              schema:
+                $ref: '#/components/schemas/CatalogUpdateEntryResultV2'
+          description: OK response.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'invalid_request_error: There was a problem with the request, like a missing header or querying a resource that doesn''t exist.'
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'authentication_error: Authentication failed.'
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'resource_forbidden: Access to this resource is forbidden for the authenticated user.'
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_found: The referenced resource could not be found.'
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'method_not_allowed: The endpoint does not support this operation for the specified resource.'
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_acceptable: Requested a media type this endpoint does not support.'
+        '408':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'request_timeout: The request took too long to process.
+
+
+            client_timeout: The request was cancelled by the client.'
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'conflict: Request conflicted with current state of the resource, likely a concurrent update.'
+        '412':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'precondition_failed: A required condition hasn''t been met.'
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'payload_too_large: The request payload is too large.'
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'validation_error: A required field was not provided, or the provided data was invalid.'
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'too_many_requests: Too many requests hit the API too quickly. We recommend an exponential backoff of your requests.
+
+
+            rate_limit_reached: The rate limit associated with this resource or API key has been exceeded. Try again later.'
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'api_error: Something went wrong and has been reported internally.'
+      summary: UpdateEntry Catalog V2
+      tags:
+      - Catalog V2
+      x-docs-display-name: Update
+      x-docs-group-name: Catalog Entries V2
+      x-docs-resource-type: CatalogEntryV2
+      x-mint:
+        content: 🔑 Requires the `catalog_entries.edit` scope.
+      x-rbac-scopes:
+      - catalog_entries.edit
+      x-operation-id-source: normalized
+      x-operation-id-original: Catalog V2#UpdateEntry
+  /v2/catalog_resources:
+    get:
+      deprecated: true
+      description: 'List available engine resources for the catalog.
+
+
+        A resource represents a type of data that can be held within the catalog, so this
+
+        endpoint can be used to see what attribute types can be used when updating the
+
+        schema of a catalog type.'
+      operationId: CatalogV2#ListResources
+      responses:
+        '200':
+          content:
+            application/json:
+              example:
+                resources:
+                - category: custom
+                  description: Boolean true or false value
+                  label: GitHub Repository
+                  type: Custom["Team"]
+                  value_docstring: Either the GraphQL node ID of the repository or a string of <owner>/<repo>, e.g. incident-io/website
+              schema:
+                $ref: '#/components/schemas/CatalogListResourcesResultV2'
+          description: OK response.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'invalid_request_error: There was a problem with the request, like a missing header or querying a resource that doesn''t exist.'
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'authentication_error: Authentication failed.'
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'resource_forbidden: Access to this resource is forbidden for the authenticated user.'
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_found: The referenced resource could not be found.'
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'method_not_allowed: The endpoint does not support this operation for the specified resource.'
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_acceptable: Requested a media type this endpoint does not support.'
+        '408':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'request_timeout: The request took too long to process.
+
+
+            client_timeout: The request was cancelled by the client.'
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'conflict: Request conflicted with current state of the resource, likely a concurrent update.'
+        '412':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'precondition_failed: A required condition hasn''t been met.'
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'payload_too_large: The request payload is too large.'
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'validation_error: A required field was not provided, or the provided data was invalid.'
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'too_many_requests: Too many requests hit the API too quickly. We recommend an exponential backoff of your requests.
+
+
+            rate_limit_reached: The rate limit associated with this resource or API key has been exceeded. Try again later.'
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'api_error: Something went wrong and has been reported internally.'
+      summary: ListResources Catalog V2
+      tags:
+      - Catalog V2
+      x-docs-display-name: List
+      x-docs-group-name: Catalog Resources V2
+      x-docs-resource-type: CatalogResourceV2
+      x-mint:
+        content: 🔑 Requires the `catalog_types.view` scope.
+      x-rbac-scopes:
+      - catalog_types.view
+      x-operation-id-source: normalized
+      x-operation-id-original: Catalog V2#ListResources
+  /v2/catalog_types:
+    get:
+      deprecated: true
+      description: List all catalog types for an organisation, including those synced from external resources.
+      operationId: CatalogV2#ListTypes
+      responses:
+        '200':
+          content:
+            application/json:
+              example:
+                catalog_types:
+                - annotations:
+                    incident.io/catalog-importer/id: id-of-config
+                  categories:
+                  - customer
+                  color: yellow
+                  created_at: '2021-08-17T13:28:57.801578Z'
+                  description: Represents Kubernetes clusters that we run inside of GKE.
+                  dynamic_resource_parameter: abc123
+                  estimated_count: 7
+                  icon: alert
+                  id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  is_editable: false
+                  last_synced_at: '2021-08-17T13:28:57.801578Z'
+                  name: Kubernetes Cluster
+                  ranked: true
+                  registry_type: PagerDutyService
+                  required_integrations:
+                  - pager_duty
+                  schema:
+                    attributes:
+                    - array: false
+                      backlink_attribute: abc123
+                      id: 01GW2G3V0S59R238FAHPDS1R66
+                      mode: ''
+                      name: tier
+                      path:
+                      - attribute_id: abc123
+                        attribute_name: abc123
+                      type: Custom["Service"]
+                    version: 1
+                  semantic_type: abc123
+                  source_repo_url: https://github.com/my-company/incident-io-catalog
+                  type_name: Custom["BackstageGroup"]
+                  updated_at: '2021-08-17T13:28:57.801578Z'
+              schema:
+                $ref: '#/components/schemas/CatalogListTypesResultV2'
+          description: OK response.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'invalid_request_error: There was a problem with the request, like a missing header or querying a resource that doesn''t exist.'
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'authentication_error: Authentication failed.'
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'resource_forbidden: Access to this resource is forbidden for the authenticated user.'
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_found: The referenced resource could not be found.'
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'method_not_allowed: The endpoint does not support this operation for the specified resource.'
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_acceptable: Requested a media type this endpoint does not support.'
+        '408':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'request_timeout: The request took too long to process.
+
+
+            client_timeout: The request was cancelled by the client.'
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'conflict: Request conflicted with current state of the resource, likely a concurrent update.'
+        '412':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'precondition_failed: A required condition hasn''t been met.'
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'payload_too_large: The request payload is too large.'
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'validation_error: A required field was not provided, or the provided data was invalid.'
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'too_many_requests: Too many requests hit the API too quickly. We recommend an exponential backoff of your requests.
+
+
+            rate_limit_reached: The rate limit associated with this resource or API key has been exceeded. Try again later.'
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'api_error: Something went wrong and has been reported internally.'
+      summary: ListTypes Catalog V2
+      tags:
+      - Catalog V2
+      x-docs-display-name: List
+      x-docs-group-name: Catalog Types V2
+      x-docs-resource-type: CatalogTypeV2
+      x-mint:
+        content: 🔑 Requires the `catalog_types.view` scope.
+      x-rbac-scopes:
+      - catalog_types.view
+      x-operation-id-source: normalized
+      x-operation-id-original: Catalog V2#ListTypes
+    post:
+      deprecated: true
+      description: Create a catalog type. The schema must be updated using the UpdateTypeSchema endpoint.
+      operationId: CatalogV2#CreateType
+      requestBody:
+        content:
+          application/json:
+            example:
+              annotations:
+                incident.io/catalog-importer/id: id-of-config
+              categories:
+              - customer
+              color: yellow
+              description: Represents Kubernetes clusters that we run inside of GKE.
+              icon: alert
+              name: Kubernetes Cluster
+              ranked: true
+              source_repo_url: https://github.com/my-company/incident-io-catalog
+              type_name: Custom["BackstageGroup"]
+            schema:
+              $ref: '#/components/schemas/CatalogCreateTypePayloadV2'
+        required: true
+      responses:
+        '201':
+          content:
+            application/json:
+              example:
+                catalog_type:
+                  annotations:
+                    incident.io/catalog-importer/id: id-of-config
+                  categories:
+                  - customer
+                  color: yellow
+                  created_at: '2021-08-17T13:28:57.801578Z'
+                  description: Represents Kubernetes clusters that we run inside of GKE.
+                  dynamic_resource_parameter: abc123
+                  estimated_count: 7
+                  icon: alert
+                  id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  is_editable: false
+                  last_synced_at: '2021-08-17T13:28:57.801578Z'
+                  name: Kubernetes Cluster
+                  ranked: true
+                  registry_type: PagerDutyService
+                  required_integrations:
+                  - pager_duty
+                  schema:
+                    attributes:
+                    - array: false
+                      backlink_attribute: abc123
+                      id: 01GW2G3V0S59R238FAHPDS1R66
+                      mode: ''
+                      name: tier
+                      path:
+                      - attribute_id: abc123
+                        attribute_name: abc123
+                      type: Custom["Service"]
+                    version: 1
+                  semantic_type: abc123
+                  source_repo_url: https://github.com/my-company/incident-io-catalog
+                  type_name: Custom["BackstageGroup"]
+                  updated_at: '2021-08-17T13:28:57.801578Z'
+              schema:
+                $ref: '#/components/schemas/CatalogCreateTypeResultV2'
+          description: Created response.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'invalid_request_error: There was a problem with the request, like a missing header or querying a resource that doesn''t exist.'
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'authentication_error: Authentication failed.'
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'resource_forbidden: Access to this resource is forbidden for the authenticated user.'
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_found: The referenced resource could not be found.'
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'method_not_allowed: The endpoint does not support this operation for the specified resource.'
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_acceptable: Requested a media type this endpoint does not support.'
+        '408':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'request_timeout: The request took too long to process.
+
+
+            client_timeout: The request was cancelled by the client.'
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'conflict: Request conflicted with current state of the resource, likely a concurrent update.'
+        '412':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'precondition_failed: A required condition hasn''t been met.'
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'payload_too_large: The request payload is too large.'
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'validation_error: A required field was not provided, or the provided data was invalid.'
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'too_many_requests: Too many requests hit the API too quickly. We recommend an exponential backoff of your requests.
+
+
+            rate_limit_reached: The rate limit associated with this resource or API key has been exceeded. Try again later.'
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'api_error: Something went wrong and has been reported internally.'
+      summary: CreateType Catalog V2
+      tags:
+      - Catalog V2
+      x-docs-display-name: Create
+      x-docs-group-name: Catalog Types V2
+      x-docs-resource-type: CatalogTypeV2
+      x-mint:
+        content: 🔑 Requires the `catalog_types.create` scope.
+      x-rbac-scopes:
+      - catalog_types.create
+      x-operation-id-source: normalized
+      x-operation-id-original: Catalog V2#CreateType
+  /v2/catalog_types/{id}:
+    delete:
+      deprecated: true
+      description: Archives a catalog type and associated entries.
+      operationId: CatalogV2#DestroyType
+      parameters:
+      - description: ID of this catalog type
+        example: 01FCNDV6P870EA6S7TK1DSYDG0
+        in: path
+        name: id
+        required: true
+        schema:
+          description: ID of this catalog type
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+      responses:
+        '204':
+          description: No Content response.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'invalid_request_error: There was a problem with the request, like a missing header or querying a resource that doesn''t exist.'
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'authentication_error: Authentication failed.'
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'resource_forbidden: Access to this resource is forbidden for the authenticated user.'
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_found: The referenced resource could not be found.'
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'method_not_allowed: The endpoint does not support this operation for the specified resource.'
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_acceptable: Requested a media type this endpoint does not support.'
+        '408':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'request_timeout: The request took too long to process.
+
+
+            client_timeout: The request was cancelled by the client.'
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'conflict: Request conflicted with current state of the resource, likely a concurrent update.'
+        '412':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'precondition_failed: A required condition hasn''t been met.'
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'payload_too_large: The request payload is too large.'
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'validation_error: A required field was not provided, or the provided data was invalid.'
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'too_many_requests: Too many requests hit the API too quickly. We recommend an exponential backoff of your requests.
+
+
+            rate_limit_reached: The rate limit associated with this resource or API key has been exceeded. Try again later.'
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'api_error: Something went wrong and has been reported internally.'
+      summary: DestroyType Catalog V2
+      tags:
+      - Catalog V2
+      x-docs-display-name: Delete
+      x-docs-group-name: Catalog Types V2
+      x-docs-resource-type: CatalogTypeV2
+      x-mint:
+        content: 🔑 Requires the `catalog_types.destroy` scope.
+      x-rbac-scopes:
+      - catalog_types.destroy
+      x-operation-id-source: normalized
+      x-operation-id-original: Catalog V2#DestroyType
+    get:
+      deprecated: true
+      description: Show a single catalog type.
+      operationId: CatalogV2#ShowType
+      parameters:
+      - description: ID of this catalog type
+        example: 01FCNDV6P870EA6S7TK1DSYDG0
+        in: path
+        name: id
+        required: true
+        schema:
+          description: ID of this catalog type
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              example:
+                catalog_type:
+                  annotations:
+                    incident.io/catalog-importer/id: id-of-config
+                  categories:
+                  - customer
+                  color: yellow
+                  created_at: '2021-08-17T13:28:57.801578Z'
+                  description: Represents Kubernetes clusters that we run inside of GKE.
+                  dynamic_resource_parameter: abc123
+                  estimated_count: 7
+                  icon: alert
+                  id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  is_editable: false
+                  last_synced_at: '2021-08-17T13:28:57.801578Z'
+                  name: Kubernetes Cluster
+                  ranked: true
+                  registry_type: PagerDutyService
+                  required_integrations:
+                  - pager_duty
+                  schema:
+                    attributes:
+                    - array: false
+                      backlink_attribute: abc123
+                      id: 01GW2G3V0S59R238FAHPDS1R66
+                      mode: ''
+                      name: tier
+                      path:
+                      - attribute_id: abc123
+                        attribute_name: abc123
+                      type: Custom["Service"]
+                    version: 1
+                  semantic_type: abc123
+                  source_repo_url: https://github.com/my-company/incident-io-catalog
+                  type_name: Custom["BackstageGroup"]
+                  updated_at: '2021-08-17T13:28:57.801578Z'
+              schema:
+                $ref: '#/components/schemas/CatalogShowTypeResultV2'
+          description: OK response.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'invalid_request_error: There was a problem with the request, like a missing header or querying a resource that doesn''t exist.'
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'authentication_error: Authentication failed.'
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'resource_forbidden: Access to this resource is forbidden for the authenticated user.'
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_found: The referenced resource could not be found.'
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'method_not_allowed: The endpoint does not support this operation for the specified resource.'
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_acceptable: Requested a media type this endpoint does not support.'
+        '408':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'request_timeout: The request took too long to process.
+
+
+            client_timeout: The request was cancelled by the client.'
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'conflict: Request conflicted with current state of the resource, likely a concurrent update.'
+        '412':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'precondition_failed: A required condition hasn''t been met.'
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'payload_too_large: The request payload is too large.'
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'validation_error: A required field was not provided, or the provided data was invalid.'
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'too_many_requests: Too many requests hit the API too quickly. We recommend an exponential backoff of your requests.
+
+
+            rate_limit_reached: The rate limit associated with this resource or API key has been exceeded. Try again later.'
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'api_error: Something went wrong and has been reported internally.'
+      summary: ShowType Catalog V2
+      tags:
+      - Catalog V2
+      x-docs-display-name: Show
+      x-docs-group-name: Catalog Types V2
+      x-docs-resource-type: CatalogTypeV2
+      x-mint:
+        content: 🔑 Requires the `catalog_types.view` scope.
+      x-rbac-scopes:
+      - catalog_types.view
+      x-operation-id-source: normalized
+      x-operation-id-original: Catalog V2#ShowType
+    put:
+      deprecated: true
+      description: Updates an existing catalog type. The schema must be updated using the UpdateTypeSchema endpoint.
+      operationId: CatalogV2#UpdateType
+      parameters:
+      - description: ID of this catalog type
+        example: 01FCNDV6P870EA6S7TK1DSYDG0
+        in: path
+        name: id
+        required: true
+        schema:
+          description: ID of this catalog type
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+      requestBody:
+        content:
+          application/json:
+            example:
+              annotations:
+                incident.io/catalog-importer/id: id-of-config
+              categories:
+              - customer
+              color: yellow
+              description: Represents Kubernetes clusters that we run inside of GKE.
+              icon: alert
+              name: Kubernetes Cluster
+              ranked: true
+              source_repo_url: https://github.com/my-company/incident-io-catalog
+            schema:
+              $ref: '#/components/schemas/CatalogUpdateTypePayloadV2'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              example:
+                catalog_type:
+                  annotations:
+                    incident.io/catalog-importer/id: id-of-config
+                  categories:
+                  - customer
+                  color: yellow
+                  created_at: '2021-08-17T13:28:57.801578Z'
+                  description: Represents Kubernetes clusters that we run inside of GKE.
+                  dynamic_resource_parameter: abc123
+                  estimated_count: 7
+                  icon: alert
+                  id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  is_editable: false
+                  last_synced_at: '2021-08-17T13:28:57.801578Z'
+                  name: Kubernetes Cluster
+                  ranked: true
+                  registry_type: PagerDutyService
+                  required_integrations:
+                  - pager_duty
+                  schema:
+                    attributes:
+                    - array: false
+                      backlink_attribute: abc123
+                      id: 01GW2G3V0S59R238FAHPDS1R66
+                      mode: ''
+                      name: tier
+                      path:
+                      - attribute_id: abc123
+                        attribute_name: abc123
+                      type: Custom["Service"]
+                    version: 1
+                  semantic_type: abc123
+                  source_repo_url: https://github.com/my-company/incident-io-catalog
+                  type_name: Custom["BackstageGroup"]
+                  updated_at: '2021-08-17T13:28:57.801578Z'
+              schema:
+                $ref: '#/components/schemas/CatalogUpdateTypeResultV2'
+          description: OK response.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'invalid_request_error: There was a problem with the request, like a missing header or querying a resource that doesn''t exist.'
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'authentication_error: Authentication failed.'
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'resource_forbidden: Access to this resource is forbidden for the authenticated user.'
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_found: The referenced resource could not be found.'
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'method_not_allowed: The endpoint does not support this operation for the specified resource.'
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_acceptable: Requested a media type this endpoint does not support.'
+        '408':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'request_timeout: The request took too long to process.
+
+
+            client_timeout: The request was cancelled by the client.'
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'conflict: Request conflicted with current state of the resource, likely a concurrent update.'
+        '412':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'precondition_failed: A required condition hasn''t been met.'
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'payload_too_large: The request payload is too large.'
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'validation_error: A required field was not provided, or the provided data was invalid.'
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'too_many_requests: Too many requests hit the API too quickly. We recommend an exponential backoff of your requests.
+
+
+            rate_limit_reached: The rate limit associated with this resource or API key has been exceeded. Try again later.'
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'api_error: Something went wrong and has been reported internally.'
+      summary: UpdateType Catalog V2
+      tags:
+      - Catalog V2
+      x-docs-display-name: Update Type
+      x-docs-group-name: Catalog Types V2
+      x-docs-resource-type: CatalogTypeV2
+      x-mint:
+        content: 🔑 Requires the `catalog_types.edit` scope.
+      x-rbac-scopes:
+      - catalog_types.edit
+      x-operation-id-source: normalized
+      x-operation-id-original: Catalog V2#UpdateType
+  /v2/catalog_types/{id}/actions/update_schema:
+    post:
+      deprecated: true
+      description: 'Update an existing catalog types schema, adding or removing attributes.
+
+
+        Updating the schema is handled separately from creating and updating types, so that you don''t
+
+        have to worry about dependencies between types. For example, if type A has an attribute that
+
+        relies on type B, you would have to create type B first.
+
+
+        By allowing the creation of types without a schema, they can be created in any order, but it
+
+        means that you need to make a separate call to this endpoint to update the schema.'
+      operationId: CatalogV2#UpdateTypeSchema
+      parameters:
+      - description: ID of this catalog type
+        example: 01FCNDV6P870EA6S7TK1DSYDG0
+        in: path
+        name: id
+        required: true
+        schema:
+          description: ID of this catalog type
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+      requestBody:
+        content:
+          application/json:
+            example:
+              attributes:
+              - array: false
+                backlink_attribute: abc123
+                id: 01GW2G3V0S59R238FAHPDS1R66
+                mode: ''
+                name: tier
+                path:
+                - attribute_id: abc123
+                type: Custom["Service"]
+              version: 1
+            schema:
+              $ref: '#/components/schemas/CatalogUpdateTypeSchemaPayloadV2'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              example:
+                catalog_type:
+                  annotations:
+                    incident.io/catalog-importer/id: id-of-config
+                  categories:
+                  - customer
+                  color: yellow
+                  created_at: '2021-08-17T13:28:57.801578Z'
+                  description: Represents Kubernetes clusters that we run inside of GKE.
+                  dynamic_resource_parameter: abc123
+                  estimated_count: 7
+                  icon: alert
+                  id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  is_editable: false
+                  last_synced_at: '2021-08-17T13:28:57.801578Z'
+                  name: Kubernetes Cluster
+                  ranked: true
+                  registry_type: PagerDutyService
+                  required_integrations:
+                  - pager_duty
+                  schema:
+                    attributes:
+                    - array: false
+                      backlink_attribute: abc123
+                      id: 01GW2G3V0S59R238FAHPDS1R66
+                      mode: ''
+                      name: tier
+                      path:
+                      - attribute_id: abc123
+                        attribute_name: abc123
+                      type: Custom["Service"]
+                    version: 1
+                  semantic_type: abc123
+                  source_repo_url: https://github.com/my-company/incident-io-catalog
+                  type_name: Custom["BackstageGroup"]
+                  updated_at: '2021-08-17T13:28:57.801578Z'
+              schema:
+                $ref: '#/components/schemas/CatalogUpdateTypeSchemaResultV2'
+          description: OK response.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'invalid_request_error: There was a problem with the request, like a missing header or querying a resource that doesn''t exist.'
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'authentication_error: Authentication failed.'
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'resource_forbidden: Access to this resource is forbidden for the authenticated user.'
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_found: The referenced resource could not be found.'
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'method_not_allowed: The endpoint does not support this operation for the specified resource.'
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_acceptable: Requested a media type this endpoint does not support.'
+        '408':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'request_timeout: The request took too long to process.
+
+
+            client_timeout: The request was cancelled by the client.'
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'conflict: Request conflicted with current state of the resource, likely a concurrent update.'
+        '412':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'precondition_failed: A required condition hasn''t been met.'
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'payload_too_large: The request payload is too large.'
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'validation_error: A required field was not provided, or the provided data was invalid.'
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'too_many_requests: Too many requests hit the API too quickly. We recommend an exponential backoff of your requests.
+
+
+            rate_limit_reached: The rate limit associated with this resource or API key has been exceeded. Try again later.'
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'api_error: Something went wrong and has been reported internally.'
+      summary: UpdateTypeSchema Catalog V2
+      tags:
+      - Catalog V2
+      x-docs-display-name: Update Type Schema
+      x-docs-group-name: Catalog Types V2
+      x-docs-resource-type: CatalogTypeV2
+      x-mint:
+        content: 🔑 Requires the `catalog_types.edit` scope.
+      x-rbac-scopes:
+      - catalog_types.edit
+      x-operation-id-source: normalized
+      x-operation-id-original: Catalog V2#UpdateTypeSchema
+components:
+  schemas:
+    CatalogUpdateTypeSchemaResultV2:
+      example:
+        catalog_type:
+          annotations:
+            incident.io/catalog-importer/id: id-of-config
+          categories:
+          - customer
+          color: yellow
+          created_at: '2021-08-17T13:28:57.801578Z'
+          description: Represents Kubernetes clusters that we run inside of GKE.
+          dynamic_resource_parameter: abc123
+          estimated_count: 7
+          icon: alert
+          id: 01FCNDV6P870EA6S7TK1DSYDG0
+          is_editable: false
+          last_synced_at: '2021-08-17T13:28:57.801578Z'
+          name: Kubernetes Cluster
+          ranked: true
+          registry_type: PagerDutyService
+          required_integrations:
+          - pager_duty
+          schema:
+            attributes:
+            - array: false
+              backlink_attribute: abc123
+              id: 01GW2G3V0S59R238FAHPDS1R66
+              mode: ''
+              name: tier
+              path:
+              - attribute_id: abc123
+                attribute_name: abc123
+              type: Custom["Service"]
+            version: 1
+          semantic_type: abc123
+          source_repo_url: https://github.com/my-company/incident-io-catalog
+          type_name: Custom["BackstageGroup"]
+          updated_at: '2021-08-17T13:28:57.801578Z'
+      properties:
+        catalog_type:
+          $ref: '#/components/schemas/CatalogTypeV2'
+      required:
+      - catalog_type
+      type: object
+    CatalogTypeAttributePayloadV2:
+      example:
+        array: false
+        backlink_attribute: abc123
+        id: 01GW2G3V0S59R238FAHPDS1R66
+        mode: ''
+        name: tier
+        path:
+        - attribute_id: abc123
+        type: Custom["Service"]
+      properties:
+        array:
+          description: Whether this attribute is an array
+          example: false
+          type: boolean
+        backlink_attribute:
+          description: The attribute to use (if this is a backlink)
+          example: abc123
+          type: string
+        id:
+          description: The ID of this attribute
+          example: 01GW2G3V0S59R238FAHPDS1R66
+          type: string
+        mode:
+          description: Controls how this attribute is modified
+          enum:
+          - ''
+          - manual
+          - external
+          - internal
+          - dynamic
+          - backlink
+          - path
+          example: ''
+          type: string
+          x-public-api-version: v2
+        name:
+          description: Unique name of this attribute
+          example: tier
+          type: string
+        path:
+          description: The path to use (if this is an path)
+          example:
+          - attribute_id: abc123
+          items:
+            $ref: '#/components/schemas/CatalogTypeAttributePathItemPayloadV2'
+          type: array
+        type:
+          description: Catalog type name for this attribute
+          example: Custom["Service"]
+          type: string
+      required:
+      - name
+      - type
+      - array
+      type: object
+    CatalogCreateEntryResultV2:
+      example:
+        catalog_entry:
+          aliases:
+          - lawrence@incident.io
+          - lawrence
+          archived_at: '2021-08-17T14:28:57.801578Z'
+          attribute_values:
+            abc123:
+              array_value:
+              - catalog_entry:
+                  archived_at: '2021-08-17T14:28:57.801578Z'
+                  catalog_entry_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  catalog_entry_name: Primary escalation
+                  catalog_type_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                helptext: abc123
+                image_url: abc123
+                is_image_slack_icon: false
+                label: Lawrence Jones
+                literal: SEV123
+                reference: incident.severity
+                sort_key: abc123
+                unavailable: false
+                value: abc123
+              value:
+                catalog_entry:
+                  archived_at: '2021-08-17T14:28:57.801578Z'
+                  catalog_entry_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  catalog_entry_name: Primary escalation
+                  catalog_type_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                helptext: abc123
+                image_url: abc123
+                is_image_slack_icon: false
+                label: Lawrence Jones
+                literal: SEV123
+                reference: incident.severity
+                sort_key: abc123
+                unavailable: false
+                value: abc123
+          catalog_type_id: 01FCNDV6P870EA6S7TK1DSYDG0
+          created_at: '2021-08-17T13:28:57.801578Z'
+          external_id: 761722cd-d1d7-477b-ac7e-90f9e079dc33
+          id: 01FCNDV6P870EA6S7TK1DSYDG0
+          name: Primary On-call
+          rank: 3
+          updated_at: '2021-08-17T13:28:57.801578Z'
+      properties:
+        catalog_entry:
+          $ref: '#/components/schemas/CatalogEntryV2'
+      required:
+      - catalog_entry
+      type: object
+    CatalogEntryV2:
+      example:
+        aliases:
+        - lawrence@incident.io
+        - lawrence
+        archived_at: '2021-08-17T14:28:57.801578Z'
+        attribute_values:
+          abc123:
+            array_value:
+            - catalog_entry:
+                archived_at: '2021-08-17T14:28:57.801578Z'
+                catalog_entry_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                catalog_entry_name: Primary escalation
+                catalog_type_id: 01FCNDV6P870EA6S7TK1DSYDG0
+              helptext: abc123
+              image_url: abc123
+              is_image_slack_icon: false
+              label: Lawrence Jones
+              literal: SEV123
+              reference: incident.severity
+              sort_key: abc123
+              unavailable: false
+              value: abc123
+            value:
+              catalog_entry:
+                archived_at: '2021-08-17T14:28:57.801578Z'
+                catalog_entry_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                catalog_entry_name: Primary escalation
+                catalog_type_id: 01FCNDV6P870EA6S7TK1DSYDG0
+              helptext: abc123
+              image_url: abc123
+              is_image_slack_icon: false
+              label: Lawrence Jones
+              literal: SEV123
+              reference: incident.severity
+              sort_key: abc123
+              unavailable: false
+              value: abc123
+        catalog_type_id: 01FCNDV6P870EA6S7TK1DSYDG0
+        created_at: '2021-08-17T13:28:57.801578Z'
+        external_id: 761722cd-d1d7-477b-ac7e-90f9e079dc33
+        id: 01FCNDV6P870EA6S7TK1DSYDG0
+        name: Primary On-call
+        rank: 3
+        updated_at: '2021-08-17T13:28:57.801578Z'
+      properties:
+        aliases:
+          description: Optional aliases that can be used to reference this entry
+          example:
+          - lawrence@incident.io
+          - lawrence
+          items:
+            example: abc123
+            type: string
+          type: array
+        archived_at:
+          description: When this entry was archived
+          example: '2021-08-17T14:28:57.801578Z'
+          format: date-time
+          type: string
+        attribute_values:
+          additionalProperties:
+            $ref: '#/components/schemas/CatalogEntryEngineParamBindingV2'
+          description: Values of this entry
+          example:
+            abc123:
+              array_value:
+              - catalog_entry:
+                  archived_at: '2021-08-17T14:28:57.801578Z'
+                  catalog_entry_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  catalog_entry_name: Primary escalation
+                  catalog_type_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                helptext: abc123
+                image_url: abc123
+                is_image_slack_icon: false
+                label: Lawrence Jones
+                literal: SEV123
+                reference: incident.severity
+                sort_key: abc123
+                unavailable: false
+                value: abc123
+              value:
+                catalog_entry:
+                  archived_at: '2021-08-17T14:28:57.801578Z'
+                  catalog_entry_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  catalog_entry_name: Primary escalation
+                  catalog_type_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                helptext: abc123
+                image_url: abc123
+                is_image_slack_icon: false
+                label: Lawrence Jones
+                literal: SEV123
+                reference: incident.severity
+                sort_key: abc123
+                unavailable: false
+                value: abc123
+          type: object
+        catalog_type_id:
+          description: ID of this catalog type
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+        created_at:
+          description: When this entry was created
+          example: '2021-08-17T13:28:57.801578Z'
+          format: date-time
+          type: string
+        external_id:
+          description: An optional alternative ID for this entry, which is ensured to be unique for the type
+          example: 761722cd-d1d7-477b-ac7e-90f9e079dc33
+          type: string
+        id:
+          description: ID of this catalog entry
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+        name:
+          description: Name is the human readable name of this entry
+          example: Primary On-call
+          type: string
+        rank:
+          description: When catalog type is ranked, this is used to help order things
+          example: 3
+          format: int32
+          type: integer
+        updated_at:
+          description: When this entry was last updated
+          example: '2021-08-17T13:28:57.801578Z'
+          format: date-time
+          type: string
+      required:
+      - id
+      - catalog_type_id
+      - name
+      - aliases
+      - rank
+      - attribute_values
+      - created_at
+      - updated_at
+      type: object
+    CatalogShowEntryResultV2:
+      example:
+        catalog_entry:
+          aliases:
+          - lawrence@incident.io
+          - lawrence
+          archived_at: '2021-08-17T14:28:57.801578Z'
+          attribute_values:
+            abc123:
+              array_value:
+              - catalog_entry:
+                  archived_at: '2021-08-17T14:28:57.801578Z'
+                  catalog_entry_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  catalog_entry_name: Primary escalation
+                  catalog_type_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                helptext: abc123
+                image_url: abc123
+                is_image_slack_icon: false
+                label: Lawrence Jones
+                literal: SEV123
+                reference: incident.severity
+                sort_key: abc123
+                unavailable: false
+                value: abc123
+              value:
+                catalog_entry:
+                  archived_at: '2021-08-17T14:28:57.801578Z'
+                  catalog_entry_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  catalog_entry_name: Primary escalation
+                  catalog_type_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                helptext: abc123
+                image_url: abc123
+                is_image_slack_icon: false
+                label: Lawrence Jones
+                literal: SEV123
+                reference: incident.severity
+                sort_key: abc123
+                unavailable: false
+                value: abc123
+          catalog_type_id: 01FCNDV6P870EA6S7TK1DSYDG0
+          created_at: '2021-08-17T13:28:57.801578Z'
+          external_id: 761722cd-d1d7-477b-ac7e-90f9e079dc33
+          id: 01FCNDV6P870EA6S7TK1DSYDG0
+          name: Primary On-call
+          rank: 3
+          updated_at: '2021-08-17T13:28:57.801578Z'
+        catalog_type:
+          annotations:
+            incident.io/catalog-importer/id: id-of-config
+          categories:
+          - customer
+          color: yellow
+          created_at: '2021-08-17T13:28:57.801578Z'
+          description: Represents Kubernetes clusters that we run inside of GKE.
+          dynamic_resource_parameter: abc123
+          estimated_count: 7
+          icon: alert
+          id: 01FCNDV6P870EA6S7TK1DSYDG0
+          is_editable: false
+          last_synced_at: '2021-08-17T13:28:57.801578Z'
+          name: Kubernetes Cluster
+          ranked: true
+          registry_type: PagerDutyService
+          required_integrations:
+          - pager_duty
+          schema:
+            attributes:
+            - array: false
+              backlink_attribute: abc123
+              id: 01GW2G3V0S59R238FAHPDS1R66
+              mode: ''
+              name: tier
+              path:
+              - attribute_id: abc123
+                attribute_name: abc123
+              type: Custom["Service"]
+            version: 1
+          semantic_type: abc123
+          source_repo_url: https://github.com/my-company/incident-io-catalog
+          type_name: Custom["BackstageGroup"]
+          updated_at: '2021-08-17T13:28:57.801578Z'
+      properties:
+        catalog_entry:
+          $ref: '#/components/schemas/CatalogEntryV2'
+        catalog_type:
+          $ref: '#/components/schemas/CatalogTypeV2'
+      required:
+      - catalog_type
+      - catalog_entry
+      type: object
+    CatalogListEntriesResultV2:
+      example:
+        catalog_entries:
+        - aliases:
+          - lawrence@incident.io
+          - lawrence
+          archived_at: '2021-08-17T14:28:57.801578Z'
+          attribute_values:
+            abc123:
+              array_value:
+              - catalog_entry:
+                  archived_at: '2021-08-17T14:28:57.801578Z'
+                  catalog_entry_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  catalog_entry_name: Primary escalation
+                  catalog_type_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                helptext: abc123
+                image_url: abc123
+                is_image_slack_icon: false
+                label: Lawrence Jones
+                literal: SEV123
+                reference: incident.severity
+                sort_key: abc123
+                unavailable: false
+                value: abc123
+              value:
+                catalog_entry:
+                  archived_at: '2021-08-17T14:28:57.801578Z'
+                  catalog_entry_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  catalog_entry_name: Primary escalation
+                  catalog_type_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                helptext: abc123
+                image_url: abc123
+                is_image_slack_icon: false
+                label: Lawrence Jones
+                literal: SEV123
+                reference: incident.severity
+                sort_key: abc123
+                unavailable: false
+                value: abc123
+          catalog_type_id: 01FCNDV6P870EA6S7TK1DSYDG0
+          created_at: '2021-08-17T13:28:57.801578Z'
+          external_id: 761722cd-d1d7-477b-ac7e-90f9e079dc33
+          id: 01FCNDV6P870EA6S7TK1DSYDG0
+          name: Primary On-call
+          rank: 3
+          updated_at: '2021-08-17T13:28:57.801578Z'
+        catalog_type:
+          annotations:
+            incident.io/catalog-importer/id: id-of-config
+          categories:
+          - customer
+          color: yellow
+          created_at: '2021-08-17T13:28:57.801578Z'
+          description: Represents Kubernetes clusters that we run inside of GKE.
+          dynamic_resource_parameter: abc123
+          estimated_count: 7
+          icon: alert
+          id: 01FCNDV6P870EA6S7TK1DSYDG0
+          is_editable: false
+          last_synced_at: '2021-08-17T13:28:57.801578Z'
+          name: Kubernetes Cluster
+          ranked: true
+          registry_type: PagerDutyService
+          required_integrations:
+          - pager_duty
+          schema:
+            attributes:
+            - array: false
+              backlink_attribute: abc123
+              id: 01GW2G3V0S59R238FAHPDS1R66
+              mode: ''
+              name: tier
+              path:
+              - attribute_id: abc123
+                attribute_name: abc123
+              type: Custom["Service"]
+            version: 1
+          semantic_type: abc123
+          source_repo_url: https://github.com/my-company/incident-io-catalog
+          type_name: Custom["BackstageGroup"]
+          updated_at: '2021-08-17T13:28:57.801578Z'
+        pagination_meta:
+          after: 01FCNDV6P870EA6S7TK1DSYDG0
+          page_size: 25
+      properties:
+        catalog_entries:
+          example:
+          - aliases:
+            - lawrence@incident.io
+            - lawrence
+            archived_at: '2021-08-17T14:28:57.801578Z'
+            attribute_values:
+              abc123:
+                array_value:
+                - catalog_entry:
+                    archived_at: '2021-08-17T14:28:57.801578Z'
+                    catalog_entry_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                    catalog_entry_name: Primary escalation
+                    catalog_type_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  helptext: abc123
+                  image_url: abc123
+                  is_image_slack_icon: false
+                  label: Lawrence Jones
+                  literal: SEV123
+                  reference: incident.severity
+                  sort_key: abc123
+                  unavailable: false
+                  value: abc123
+                value:
+                  catalog_entry:
+                    archived_at: '2021-08-17T14:28:57.801578Z'
+                    catalog_entry_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                    catalog_entry_name: Primary escalation
+                    catalog_type_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  helptext: abc123
+                  image_url: abc123
+                  is_image_slack_icon: false
+                  label: Lawrence Jones
+                  literal: SEV123
+                  reference: incident.severity
+                  sort_key: abc123
+                  unavailable: false
+                  value: abc123
+            catalog_type_id: 01FCNDV6P870EA6S7TK1DSYDG0
+            created_at: '2021-08-17T13:28:57.801578Z'
+            external_id: 761722cd-d1d7-477b-ac7e-90f9e079dc33
+            id: 01FCNDV6P870EA6S7TK1DSYDG0
+            name: Primary On-call
+            rank: 3
+            updated_at: '2021-08-17T13:28:57.801578Z'
+          items:
+            $ref: '#/components/schemas/CatalogEntryV2'
+          type: array
+        catalog_type:
+          $ref: '#/components/schemas/CatalogTypeV2'
+        pagination_meta:
+          $ref: '#/components/schemas/PaginationMetaResultV2'
+      required:
+      - catalog_type
+      - catalog_entries
+      - pagination_meta
+      type: object
+    CatalogCreateEntryPayloadV2:
+      example:
+        aliases:
+        - lawrence@incident.io
+        - lawrence
+        attribute_values:
+          abc123:
+            array_value:
+            - literal: SEV123
+              reference: incident.severity
+            value:
+              literal: SEV123
+              reference: incident.severity
+        catalog_type_id: 01FCNDV6P870EA6S7TK1DSYDG0
+        external_id: 761722cd-d1d7-477b-ac7e-90f9e079dc33
+        name: Primary On-call
+        rank: 3
+      properties:
+        aliases:
+          description: Optional aliases that can be used to reference this entry
+          example:
+          - lawrence@incident.io
+          - lawrence
+          items:
+            example: abc123
+            type: string
+          type: array
+        attribute_values:
+          additionalProperties:
+            $ref: '#/components/schemas/EngineParamBindingPayloadV2'
+          description: Values of this entry
+          example:
+            abc123:
+              array_value:
+              - literal: SEV123
+                reference: incident.severity
+              value:
+                literal: SEV123
+                reference: incident.severity
+          type: object
+        catalog_type_id:
+          description: ID of this catalog type
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+        external_id:
+          description: An optional alternative ID for this entry, which is ensured to be unique for the type
+          example: 761722cd-d1d7-477b-ac7e-90f9e079dc33
+          type: string
+        name:
+          description: Name is the human readable name of this entry
+          example: Primary On-call
+          type: string
+        rank:
+          description: When catalog type is ranked, this is used to help order things
+          example: 3
+          format: int32
+          type: integer
+      required:
+      - catalog_type_id
+      - name
+      - attribute_values
+      type: object
+    PaginationMetaResultV2:
+      example:
+        after: 01FCNDV6P870EA6S7TK1DSYDG0
+        page_size: 25
+      properties:
+        after:
+          description: If provided, pass this as the 'after' param to load the next page
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+        page_size:
+          default: 25
+          description: What was the maximum number of results requested
+          example: 25
+          format: int64
+          maximum: 250
+          type: integer
+      required:
+      - page_size
+      type: object
+    ErrorResponse:
+      example:
+        debug:
+          message: 'Something broke: and something else: and something else'
+          stacktrace:
+          - thing.go:123
+        errors:
+        - code: trial_expired
+          message: Default incident call link must be a valid URL
+          metadata:
+            abc123: abc123
+          source:
+            field: default_call_url
+            pointer: /settings/default_call_url
+        rate_limit:
+          limit: 100
+          name: client_ip
+          remaining: 98
+          retry_after: '2020-01-01T00:00:00Z'
+        request_id: 2T1p0e3j
+        status: 408
+        type: invalid_request_error
+      properties:
+        debug:
+          $ref: '#/components/schemas/ErrorDebug'
+        errors:
+          description: List of errors that caused this request to fail
+          example:
+          - code: trial_expired
+            message: Default incident call link must be a valid URL
+            metadata:
+              abc123: abc123
+            source:
+              field: default_call_url
+              pointer: /settings/default_call_url
+          items:
+            $ref: '#/components/schemas/ErrorSingle'
+          type: array
+        rate_limit:
+          $ref: '#/components/schemas/ErrorRateLimit'
+        request_id:
+          description: Unique identifier of the request
+          example: 2T1p0e3j
+          type: string
+        status:
+          description: HTTP status of the response
+          example: 408
+          format: int64
+          type: integer
+        type:
+          description: Machine-readable identifier for the general category of error
+          enum:
+          - invalid_request_error
+          - authentication_error
+          - resource_forbidden
+          - not_found
+          - not_acceptable
+          - method_not_allowed
+          - request_timeout
+          - conflict
+          - precondition_failed
+          - payload_too_large
+          - validation_error
+          - too_many_requests
+          - api_error
+          - rate_limit_reached
+          - client_timeout
+          example: invalid_request_error
+          type: string
+      required:
+      - type
+      - status
+      - request_id
+      - errors
+      type: object
+    CatalogEntryEngineParamBindingValueV2:
+      example:
+        catalog_entry:
+          archived_at: '2021-08-17T14:28:57.801578Z'
+          catalog_entry_id: 01FCNDV6P870EA6S7TK1DSYDG0
+          catalog_entry_name: Primary escalation
+          catalog_type_id: 01FCNDV6P870EA6S7TK1DSYDG0
+        helptext: abc123
+        image_url: abc123
+        is_image_slack_icon: false
+        label: Lawrence Jones
+        literal: SEV123
+        reference: incident.severity
+        sort_key: abc123
+        unavailable: false
+        value: abc123
+      properties:
+        catalog_entry:
+          $ref: '#/components/schemas/CatalogEntryReferenceV2'
+        helptext:
+          description: This field is deprecated. It will not be present in any responses, and will be removed in a future version
+          example: abc123
+          type: string
+        image_url:
+          description: This field is deprecated. It will not be present in any responses, and will be removed in a future version
+          example: abc123
+          type: string
+        is_image_slack_icon:
+          description: This field is deprecated. It will not be present in any responses, and will be removed in a future version
+          example: false
+          type: boolean
+        label:
+          description: Human readable label to be displayed for user to select
+          example: Lawrence Jones
+          type: string
+        literal:
+          description: If set, this is the literal value of the step parameter
+          example: SEV123
+          type: string
+        reference:
+          description: This field is deprecated. It will not be present in any responses, and will be removed in a future version
+          example: incident.severity
+          type: string
+        sort_key:
+          description: This field is deprecated. It will not be present in any responses, and will be removed in a future version
+          example: abc123
+          type: string
+        unavailable:
+          description: This field is deprecated. It will not be present in any responses, and will be removed in a future version
+          example: false
+          type: boolean
+        value:
+          description: This field is deprecated. It will not be present in any responses, and will be removed in a future version
+          example: abc123
+          type: string
+      required:
+      - label
+      - sort_key
+      type: object
+    CatalogListTypesResultV2:
+      example:
+        catalog_types:
+        - annotations:
+            incident.io/catalog-importer/id: id-of-config
+          categories:
+          - customer
+          color: yellow
+          created_at: '2021-08-17T13:28:57.801578Z'
+          description: Represents Kubernetes clusters that we run inside of GKE.
+          dynamic_resource_parameter: abc123
+          estimated_count: 7
+          icon: alert
+          id: 01FCNDV6P870EA6S7TK1DSYDG0
+          is_editable: false
+          last_synced_at: '2021-08-17T13:28:57.801578Z'
+          name: Kubernetes Cluster
+          ranked: true
+          registry_type: PagerDutyService
+          required_integrations:
+          - pager_duty
+          schema:
+            attributes:
+            - array: false
+              backlink_attribute: abc123
+              id: 01GW2G3V0S59R238FAHPDS1R66
+              mode: ''
+              name: tier
+              path:
+              - attribute_id: abc123
+                attribute_name: abc123
+              type: Custom["Service"]
+            version: 1
+          semantic_type: abc123
+          source_repo_url: https://github.com/my-company/incident-io-catalog
+          type_name: Custom["BackstageGroup"]
+          updated_at: '2021-08-17T13:28:57.801578Z'
+      properties:
+        catalog_types:
+          example:
+          - annotations:
+              incident.io/catalog-importer/id: id-of-config
+            categories:
+            - customer
+            color: yellow
+            created_at: '2021-08-17T13:28:57.801578Z'
+            description: Represents Kubernetes clusters that we run inside of GKE.
+            dynamic_resource_parameter: abc123
+            estimated_count: 7
+            icon: alert
+            id: 01FCNDV6P870EA6S7TK1DSYDG0
+            is_editable: false
+            last_synced_at: '2021-08-17T13:28:57.801578Z'
+            name: Kubernetes Cluster
+            ranked: true
+            registry_type: PagerDutyService
+            required_integrations:
+            - pager_duty
+            schema:
+              attributes:
+              - array: false
+                backlink_attribute: abc123
+                id: 01GW2G3V0S59R238FAHPDS1R66
+                mode: ''
+                name: tier
+                path:
+                - attribute_id: abc123
+                  attribute_name: abc123
+                type: Custom["Service"]
+              version: 1
+            semantic_type: abc123
+            source_repo_url: https://github.com/my-company/incident-io-catalog
+            type_name: Custom["BackstageGroup"]
+            updated_at: '2021-08-17T13:28:57.801578Z'
+          items:
+            $ref: '#/components/schemas/CatalogTypeV2'
+          type: array
+      required:
+      - catalog_types
+      type: object
+    CatalogUpdateTypeResultV2:
+      example:
+        catalog_type:
+          annotations:
+            incident.io/catalog-importer/id: id-of-config
+          categories:
+          - customer
+          color: yellow
+          created_at: '2021-08-17T13:28:57.801578Z'
+          description: Represents Kubernetes clusters that we run inside of GKE.
+          dynamic_resource_parameter: abc123
+          estimated_count: 7
+          icon: alert
+          id: 01FCNDV6P870EA6S7TK1DSYDG0
+          is_editable: false
+          last_synced_at: '2021-08-17T13:28:57.801578Z'
+          name: Kubernetes Cluster
+          ranked: true
+          registry_type: PagerDutyService
+          required_integrations:
+          - pager_duty
+          schema:
+            attributes:
+            - array: false
+              backlink_attribute: abc123
+              id: 01GW2G3V0S59R238FAHPDS1R66
+              mode: ''
+              name: tier
+              path:
+              - attribute_id: abc123
+                attribute_name: abc123
+              type: Custom["Service"]
+            version: 1
+          semantic_type: abc123
+          source_repo_url: https://github.com/my-company/incident-io-catalog
+          type_name: Custom["BackstageGroup"]
+          updated_at: '2021-08-17T13:28:57.801578Z'
+      properties:
+        catalog_type:
+          $ref: '#/components/schemas/CatalogTypeV2'
+      required:
+      - catalog_type
+      type: object
+    CatalogEntryReferenceV2:
+      example:
+        archived_at: '2021-08-17T14:28:57.801578Z'
+        catalog_entry_id: 01FCNDV6P870EA6S7TK1DSYDG0
+        catalog_entry_name: Primary escalation
+        catalog_type_id: 01FCNDV6P870EA6S7TK1DSYDG0
+      properties:
+        archived_at:
+          description: When this entry was archived
+          example: '2021-08-17T14:28:57.801578Z'
+          format: date-time
+          type: string
+        catalog_entry_id:
+          description: ID of this catalog entry
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+        catalog_entry_name:
+          description: The name of this entry
+          example: Primary escalation
+          type: string
+        catalog_type_id:
+          description: ID of this catalog type
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+      required:
+      - catalog_type_id
+      - catalog_entry_id
+      - catalog_entry_name
+      type: object
+    CatalogUpdateEntryResultV2:
+      example:
+        catalog_entry:
+          aliases:
+          - lawrence@incident.io
+          - lawrence
+          archived_at: '2021-08-17T14:28:57.801578Z'
+          attribute_values:
+            abc123:
+              array_value:
+              - catalog_entry:
+                  archived_at: '2021-08-17T14:28:57.801578Z'
+                  catalog_entry_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  catalog_entry_name: Primary escalation
+                  catalog_type_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                helptext: abc123
+                image_url: abc123
+                is_image_slack_icon: false
+                label: Lawrence Jones
+                literal: SEV123
+                reference: incident.severity
+                sort_key: abc123
+                unavailable: false
+                value: abc123
+              value:
+                catalog_entry:
+                  archived_at: '2021-08-17T14:28:57.801578Z'
+                  catalog_entry_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  catalog_entry_name: Primary escalation
+                  catalog_type_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                helptext: abc123
+                image_url: abc123
+                is_image_slack_icon: false
+                label: Lawrence Jones
+                literal: SEV123
+                reference: incident.severity
+                sort_key: abc123
+                unavailable: false
+                value: abc123
+          catalog_type_id: 01FCNDV6P870EA6S7TK1DSYDG0
+          created_at: '2021-08-17T13:28:57.801578Z'
+          external_id: 761722cd-d1d7-477b-ac7e-90f9e079dc33
+          id: 01FCNDV6P870EA6S7TK1DSYDG0
+          name: Primary On-call
+          rank: 3
+          updated_at: '2021-08-17T13:28:57.801578Z'
+        catalog_type:
+          annotations:
+            incident.io/catalog-importer/id: id-of-config
+          categories:
+          - customer
+          color: yellow
+          created_at: '2021-08-17T13:28:57.801578Z'
+          description: Represents Kubernetes clusters that we run inside of GKE.
+          dynamic_resource_parameter: abc123
+          estimated_count: 7
+          icon: alert
+          id: 01FCNDV6P870EA6S7TK1DSYDG0
+          is_editable: false
+          last_synced_at: '2021-08-17T13:28:57.801578Z'
+          name: Kubernetes Cluster
+          ranked: true
+          registry_type: PagerDutyService
+          required_integrations:
+          - pager_duty
+          schema:
+            attributes:
+            - array: false
+              backlink_attribute: abc123
+              id: 01GW2G3V0S59R238FAHPDS1R66
+              mode: ''
+              name: tier
+              path:
+              - attribute_id: abc123
+                attribute_name: abc123
+              type: Custom["Service"]
+            version: 1
+          semantic_type: abc123
+          source_repo_url: https://github.com/my-company/incident-io-catalog
+          type_name: Custom["BackstageGroup"]
+          updated_at: '2021-08-17T13:28:57.801578Z'
+      properties:
+        catalog_entry:
+          $ref: '#/components/schemas/CatalogEntryV2'
+        catalog_type:
+          $ref: '#/components/schemas/CatalogTypeV2'
+      required:
+      - catalog_type
+      - catalog_entry
+      type: object
+    CatalogCreateTypePayloadV2:
+      example:
+        annotations:
+          incident.io/catalog-importer/id: id-of-config
+        categories:
+        - customer
+        color: yellow
+        description: Represents Kubernetes clusters that we run inside of GKE.
+        icon: alert
+        name: Kubernetes Cluster
+        ranked: true
+        source_repo_url: https://github.com/my-company/incident-io-catalog
+        type_name: Custom["BackstageGroup"]
+      properties:
+        annotations:
+          additionalProperties:
+            example: abc123
+            type: string
+          description: Annotations that can track metadata about this type
+          example:
+            incident.io/catalog-importer/id: id-of-config
+          type: object
+        categories:
+          description: What categories is this type considered part of
+          example:
+          - customer
+          items:
+            enum:
+            - customer
+            - issue-tracker
+            - product-feature
+            - service
+            - on-call
+            - team
+            - user
+            example: customer
+            type: string
+          type: array
+        color:
+          description: Sets the display color of this type in the dashboard
+          enum:
+          - yellow
+          - green
+          - blue
+          - violet
+          - pink
+          - cyan
+          - orange
+          example: yellow
+          type: string
+        description:
+          description: Human readble description of this type
+          example: Represents Kubernetes clusters that we run inside of GKE.
+          type: string
+        icon:
+          description: Sets the display icon of this type in the dashboard
+          enum:
+          - alert
+          - bolt
+          - box
+          - briefcase
+          - browser
+          - bulb
+          - calendar
+          - clock
+          - cog
+          - components
+          - database
+          - doc
+          - email
+          - escalation-path
+          - files
+          - flag
+          - folder
+          - globe
+          - incident-template
+          - money
+          - server
+          - severity
+          - status-page
+          - store
+          - star
+          - tag
+          - user
+          - users
+          example: alert
+          type: string
+        name:
+          description: Name is the human readable name of this type
+          example: Kubernetes Cluster
+          type: string
+        ranked:
+          description: If this type should be ranked
+          example: true
+          type: boolean
+        source_repo_url:
+          description: The url of the external repository where this type is managed
+          example: https://github.com/my-company/incident-io-catalog
+          type: string
+        type_name:
+          description: The type name of this catalog type, to be used when defining attributes. This is immutable once a CatalogType has been created. For non-externally sync types, it must follow the pattern Custom["SomeName"]
+          example: Custom["BackstageGroup"]
+          type: string
+      required:
+      - name
+      - description
+      type: object
+    EngineParamBindingValuePayloadV2:
+      example:
+        literal: SEV123
+        reference: incident.severity
+      properties:
+        literal:
+          description: If set, this is the literal value of the step parameter
+          example: SEV123
+          type: string
+        reference:
+          description: If set, this is the reference into the trigger scope that is the value of this parameter
+          example: incident.severity
+          type: string
+      type: object
+    ErrorSource:
+      example:
+        field: default_call_url
+        pointer: /settings/default_call_url
+      properties:
+        field:
+          description: Field name that is the source of the error
+          example: default_call_url
+          type: string
+        pointer:
+          description: JSON pointer to the request field that is the source of the error
+          example: /settings/default_call_url
+          type: string
+      required:
+      - field
+      - pointer
+      type: object
+    ErrorRateLimit:
+      example:
+        limit: 100
+        name: client_ip
+        remaining: 98
+        retry_after: '2020-01-01T00:00:00Z'
+      properties:
+        limit:
+          description: The maximum number of requests that the consumer is permitted to make per minute
+          example: 100
+          format: int64
+          type: integer
+        name:
+          description: Which rate limit was exceeded
+          example: client_ip
+          type: string
+        remaining:
+          description: The number of requests remaining in the current rate limit window
+          example: 98
+          format: int64
+          type: integer
+        retry_after:
+          description: When the client can retry, as an RFC3339 timestamp in UTC. Prefer the Retry-After response header, which carries the same instant as a number of seconds
+          example: '2020-01-01T00:00:00Z'
+          type: string
+      required:
+      - name
+      - limit
+      - remaining
+      - retry_after
+      type: object
+    CatalogResourceV2:
+      example:
+        category: custom
+        description: Boolean true or false value
+        label: GitHub Repository
+        type: Custom["Team"]
+        value_docstring: Either the GraphQL node ID of the repository or a string of <owner>/<repo>, e.g. incident-io/website
+      properties:
+        category:
+          description: Which category of resource
+          enum:
+          - primitive
+          - custom
+          - external
+          example: custom
+          type: string
+        description:
+          description: Human readable description for this resource
+          example: Boolean true or false value
+          type: string
+        label:
+          description: Label for this catalog resource type
+          example: GitHub Repository
+          type: string
+        type:
+          description: Catalog type name for this resource, as used when setting the type of a catalog type attribute
+          example: Custom["Team"]
+          type: string
+        value_docstring:
+          description: Documentation for the literal string value of this resource
+          example: Either the GraphQL node ID of the repository or a string of <owner>/<repo>, e.g. incident-io/website
+          type: string
+      required:
+      - type
+      - label
+      - description
+      - value_docstring
+      - category
+      type: object
+    ErrorDebug:
+      example:
+        message: 'Something broke: and something else: and something else'
+        stacktrace:
+        - thing.go:123
+      properties:
+        message:
+          description: Original internal error message
+          example: 'Something broke: and something else: and something else'
+          type: string
+        stacktrace:
+          description: Stacktrace of the error, if applicable
+          example:
+          - thing.go:123
+          items:
+            example: thing.go:123
+            type: string
+          type: array
+      required:
+      - message
+      - stacktrace
+      type: object
+    CatalogCreateTypeResultV2:
+      example:
+        catalog_type:
+          annotations:
+            incident.io/catalog-importer/id: id-of-config
+          categories:
+          - customer
+          color: yellow
+          created_at: '2021-08-17T13:28:57.801578Z'
+          description: Represents Kubernetes clusters that we run inside of GKE.
+          dynamic_resource_parameter: abc123
+          estimated_count: 7
+          icon: alert
+          id: 01FCNDV6P870EA6S7TK1DSYDG0
+          is_editable: false
+          last_synced_at: '2021-08-17T13:28:57.801578Z'
+          name: Kubernetes Cluster
+          ranked: true
+          registry_type: PagerDutyService
+          required_integrations:
+          - pager_duty
+          schema:
+            attributes:
+            - array: false
+              backlink_attribute: abc123
+              id: 01GW2G3V0S59R238FAHPDS1R66
+              mode: ''
+              name: tier
+              path:
+              - attribute_id: abc123
+                attribute_name: abc123
+              type: Custom["Service"]
+            version: 1
+          semantic_type: abc123
+          source_repo_url: https://github.com/my-company/incident-io-catalog
+          type_name: Custom["BackstageGroup"]
+          updated_at: '2021-08-17T13:28:57.801578Z'
+      properties:
+        catalog_type:
+          $ref: '#/components/schemas/CatalogTypeV2'
+      required:
+      - catalog_type
+      type: object
+    CatalogTypeSchemaV2:
+      example:
+        attributes:
+        - array: false
+          backlink_attribute: abc123
+          id: 01GW2G3V0S59R238FAHPDS1R66
+          mode: ''
+          name: tier
+          path:
+          - attribute_id: abc123
+            attribute_name: abc123
+          type: Custom["Service"]
+        version: 1
+      properties:
+        attributes:
+          description: Attributes of this catalog type
+          example:
+          - array: false
+            backlink_attribute: abc123
+            id: 01GW2G3V0S59R238FAHPDS1R66
+            mode: ''
+            name: tier
+            path:
+            - attribute_id: abc123
+              attribute_name: abc123
+            type: Custom["Service"]
+          items:
+            $ref: '#/components/schemas/CatalogTypeAttributeV2'
+          type: array
+        version:
+          description: The version number of this schema
+          example: 1
+          format: int64
+          type: integer
+      required:
+      - attributes
+      - version
+      type: object
+    CatalogTypeAttributeV2:
+      example:
+        array: false
+        backlink_attribute: abc123
+        id: 01GW2G3V0S59R238FAHPDS1R66
+        mode: ''
+        name: tier
+        path:
+        - attribute_id: abc123
+          attribute_name: abc123
+        type: Custom["Service"]
+      properties:
+        array:
+          description: Whether this attribute is an array
+          example: false
+          type: boolean
+        backlink_attribute:
+          description: The attribute to use (if this is a backlink)
+          example: abc123
+          type: string
+        id:
+          description: The ID of this attribute
+          example: 01GW2G3V0S59R238FAHPDS1R66
+          type: string
+        mode:
+          description: Controls how this attribute is modified
+          enum:
+          - ''
+          - manual
+          - external
+          - internal
+          - dynamic
+          - backlink
+          - path
+          example: ''
+          type: string
+          x-public-api-version: v2
+        name:
+          description: Unique name of this attribute
+          example: tier
+          type: string
+        path:
+          description: The path to use (if this is a path attribute)
+          example:
+          - attribute_id: abc123
+            attribute_name: abc123
+          items:
+            $ref: '#/components/schemas/CatalogTypeAttributePathItemV2'
+          type: array
+        type:
+          description: Catalog type name for this attribute
+          example: Custom["Service"]
+          type: string
+      required:
+      - id
+      - mode
+      - name
+      - type
+      - array
+      type: object
+    CatalogTypeAttributePathItemV2:
+      example:
+        attribute_id: abc123
+        attribute_name: abc123
+      properties:
+        attribute_id:
+          description: the ID of the attribute to use
+          example: abc123
+          type: string
+        attribute_name:
+          description: the name of the attribute to use
+          example: abc123
+          type: string
+      required:
+      - attribute_id
+      - attribute_name
+      type: object
+    CatalogListResourcesResultV2:
+      example:
+        resources:
+        - category: custom
+          description: Boolean true or false value
+          label: GitHub Repository
+          type: Custom["Team"]
+          value_docstring: Either the GraphQL node ID of the repository or a string of <owner>/<repo>, e.g. incident-io/website
+      properties:
+        resources:
+          example:
+          - category: custom
+            description: Boolean true or false value
+            label: GitHub Repository
+            type: Custom["Team"]
+            value_docstring: Either the GraphQL node ID of the repository or a string of <owner>/<repo>, e.g. incident-io/website
+          items:
+            $ref: '#/components/schemas/CatalogResourceV2'
+          type: array
+      required:
+      - resources
+      type: object
+    CatalogUpdateEntryPayloadV2:
+      example:
+        aliases:
+        - lawrence@incident.io
+        - lawrence
+        attribute_values:
+          abc123:
+            array_value:
+            - literal: SEV123
+              reference: incident.severity
+            value:
+              literal: SEV123
+              reference: incident.severity
+        external_id: 761722cd-d1d7-477b-ac7e-90f9e079dc33
+        name: Primary On-call
+        rank: 3
+      properties:
+        aliases:
+          description: Optional aliases that can be used to reference this entry
+          example:
+          - lawrence@incident.io
+          - lawrence
+          items:
+            example: abc123
+            type: string
+          type: array
+        attribute_values:
+          additionalProperties:
+            $ref: '#/components/schemas/EngineParamBindingPayloadV2'
+          description: Values of this entry
+          example:
+            abc123:
+              array_value:
+              - literal: SEV123
+                reference: incident.severity
+              value:
+                literal: SEV123
+                reference: incident.severity
+          type: object
+        external_id:
+          description: An optional alternative ID for this entry, which is ensured to be unique for the type
+          example: 761722cd-d1d7-477b-ac7e-90f9e079dc33
+          type: string
+        name:
+          description: Name is the human readable name of this entry
+          example: Primary On-call
+          type: string
+        rank:
+          description: When catalog type is ranked, this is used to help order things
+          example: 3
+          format: int32
+          type: integer
+      required:
+      - name
+      - attribute_values
+      type: object
+    CatalogShowTypeResultV2:
+      example:
+        catalog_type:
+          annotations:
+            incident.io/catalog-importer/id: id-of-config
+          categories:
+          - customer
+          color: yellow
+          created_at: '2021-08-17T13:28:57.801578Z'
+          description: Represents Kubernetes clusters that we run inside of GKE.
+          dynamic_resource_parameter: abc123
+          estimated_count: 7
+          icon: alert
+          id: 01FCNDV6P870EA6S7TK1DSYDG0
+          is_editable: false
+          last_synced_at: '2021-08-17T13:28:57.801578Z'
+          name: Kubernetes Cluster
+          ranked: true
+          registry_type: PagerDutyService
+          required_integrations:
+          - pager_duty
+          schema:
+            attributes:
+            - array: false
+              backlink_attribute: abc123
+              id: 01GW2G3V0S59R238FAHPDS1R66
+              mode: ''
+              name: tier
+              path:
+              - attribute_id: abc123
+                attribute_name: abc123
+              type: Custom["Service"]
+            version: 1
+          semantic_type: abc123
+          source_repo_url: https://github.com/my-company/incident-io-catalog
+          type_name: Custom["BackstageGroup"]
+          updated_at: '2021-08-17T13:28:57.801578Z'
+      properties:
+        catalog_type:
+          $ref: '#/components/schemas/CatalogTypeV2'
+      required:
+      - catalog_type
+      type: object
+    CatalogTypeV2:
+      example:
+        annotations:
+          incident.io/catalog-importer/id: id-of-config
+        categories:
+        - customer
+        color: yellow
+        created_at: '2021-08-17T13:28:57.801578Z'
+        description: Represents Kubernetes clusters that we run inside of GKE.
+        dynamic_resource_parameter: abc123
+        estimated_count: 7
+        icon: alert
+        id: 01FCNDV6P870EA6S7TK1DSYDG0
+        is_editable: false
+        last_synced_at: '2021-08-17T13:28:57.801578Z'
+        name: Kubernetes Cluster
+        ranked: true
+        registry_type: PagerDutyService
+        required_integrations:
+        - pager_duty
+        schema:
+          attributes:
+          - array: false
+            backlink_attribute: abc123
+            id: 01GW2G3V0S59R238FAHPDS1R66
+            mode: ''
+            name: tier
+            path:
+            - attribute_id: abc123
+              attribute_name: abc123
+            type: Custom["Service"]
+          version: 1
+        semantic_type: custom
+        source_repo_url: https://github.com/my-company/incident-io-catalog
+        type_name: Custom["BackstageGroup"]
+        updated_at: '2021-08-17T13:28:57.801578Z'
+      properties:
+        annotations:
+          additionalProperties:
+            example: abc123
+            type: string
+          description: Annotations that can track metadata about this type
+          example:
+            incident.io/catalog-importer/id: id-of-config
+          type: object
+        categories:
+          description: What categories is this type considered part of
+          example:
+          - customer
+          items:
+            enum:
+            - customer
+            - issue-tracker
+            - product-feature
+            - service
+            - on-call
+            - team
+            - user
+            example: customer
+            type: string
+            x-public-api-version: v2
+          type: array
+        color:
+          description: Sets the display color of this type in the dashboard
+          enum:
+          - yellow
+          - green
+          - blue
+          - violet
+          - pink
+          - cyan
+          - orange
+          example: yellow
+          type: string
+        created_at:
+          description: When this type was created
+          example: '2021-08-17T13:28:57.801578Z'
+          format: date-time
+          type: string
+        description:
+          description: Human readble description of this type
+          example: Represents Kubernetes clusters that we run inside of GKE.
+          type: string
+        dynamic_resource_parameter:
+          description: If this is a dynamic catalog type, this will be the unique parameter for identitfying this resource externally.
+          example: abc123
+          type: string
+        estimated_count:
+          description: If populated, gives an estimated count of entries for this type
+          example: 7
+          format: int64
+          type: integer
+        icon:
+          description: Sets the display icon of this type in the dashboard
+          enum:
+          - alert
+          - bolt
+          - box
+          - briefcase
+          - browser
+          - bulb
+          - calendar
+          - clock
+          - cog
+          - components
+          - database
+          - doc
+          - email
+          - escalation-path
+          - files
+          - flag
+          - folder
+          - globe
+          - incident-template
+          - money
+          - server
+          - severity
+          - status-page
+          - store
+          - star
+          - tag
+          - user
+          - users
+          example: alert
+          type: string
+        id:
+          description: ID of this catalog type
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+        is_editable:
+          description: Catalog types that are synced with external resources can't be edited
+          example: false
+          type: boolean
+        last_synced_at:
+          description: When this type was last synced (if it's ever been sync'd)
+          example: '2021-08-17T13:28:57.801578Z'
+          format: date-time
+          type: string
+        name:
+          description: Name is the human readable name of this type
+          example: Kubernetes Cluster
+          type: string
+        ranked:
+          description: If this type should be ranked
+          example: true
+          type: boolean
+        registry_type:
+          description: The registry resource this type is synced from, if any
+          example: PagerDutyService
+          type: string
+        required_integrations:
+          description: If populated, the integrations required for this type
+          example:
+          - pager_duty
+          items:
+            example: abc123
+            type: string
+          type: array
+        schema:
+          $ref: '#/components/schemas/CatalogTypeSchemaV2'
+        semantic_type:
+          description: This type has been deprecated, and will always be empty.
+          example: abc123
+          type: string
+          x-public-api-version: v2
+        source_repo_url:
+          description: The url of the external repository where this type is managed
+          example: https://github.com/my-company/incident-io-catalog
+          type: string
+        type_name:
+          description: The type name of this catalog type, to be used when defining attributes. This is immutable once a CatalogType has been created. For non-externally sync types, it must follow the pattern Custom["SomeName"]
+          example: Custom["BackstageGroup"]
+          type: string
+        updated_at:
+          description: When this type was last updated
+          example: '2021-08-17T13:28:57.801578Z'
+          format: date-time
+          type: string
+      required:
+      - id
+      - name
+      - description
+      - type_name
+      - semantic_type
+      - ranked
+      - schema
+      - icon
+      - categories
+      - color
+      - is_editable
+      - annotations
+      - created_at
+      - updated_at
+      type: object
+    CatalogUpdateTypePayloadV2:
+      example:
+        annotations:
+          incident.io/catalog-importer/id: id-of-config
+        categories:
+        - customer
+        color: yellow
+        description: Represents Kubernetes clusters that we run inside of GKE.
+        icon: alert
+        name: Kubernetes Cluster
+        ranked: true
+        source_repo_url: https://github.com/my-company/incident-io-catalog
+      properties:
+        annotations:
+          additionalProperties:
+            example: abc123
+            type: string
+          description: Annotations that can track metadata about this type
+          example:
+            incident.io/catalog-importer/id: id-of-config
+          type: object
+        categories:
+          description: What categories is this type considered part of
+          example:
+          - customer
+          items:
+            enum:
+            - customer
+            - issue-tracker
+            - product-feature
+            - service
+            - on-call
+            - team
+            - user
+            example: customer
+            type: string
+          type: array
+        color:
+          description: Sets the display color of this type in the dashboard
+          enum:
+          - yellow
+          - green
+          - blue
+          - violet
+          - pink
+          - cyan
+          - orange
+          example: yellow
+          type: string
+        description:
+          description: Human readble description of this type
+          example: Represents Kubernetes clusters that we run inside of GKE.
+          type: string
+        icon:
+          description: Sets the display icon of this type in the dashboard
+          enum:
+          - alert
+          - bolt
+          - box
+          - briefcase
+          - browser
+          - bulb
+          - calendar
+          - clock
+          - cog
+          - components
+          - database
+          - doc
+          - email
+          - escalation-path
+          - files
+          - flag
+          - folder
+          - globe
+          - incident-template
+          - money
+          - server
+          - severity
+          - status-page
+          - store
+          - star
+          - tag
+          - user
+          - users
+          example: alert
+          type: string
+        name:
+          description: Name is the human readable name of this type
+          example: Kubernetes Cluster
+          type: string
+        ranked:
+          description: If this type should be ranked
+          example: true
+          type: boolean
+        source_repo_url:
+          description: The url of the external repository where this type is managed
+          example: https://github.com/my-company/incident-io-catalog
+          type: string
+      required:
+      - name
+      - description
+      type: object
+    CatalogEntryEngineParamBindingV2:
+      example:
+        array_value:
+        - catalog_entry:
+            archived_at: '2021-08-17T14:28:57.801578Z'
+            catalog_entry_id: 01FCNDV6P870EA6S7TK1DSYDG0
+            catalog_entry_name: Primary escalation
+            catalog_type_id: 01FCNDV6P870EA6S7TK1DSYDG0
+          helptext: abc123
+          image_url: abc123
+          is_image_slack_icon: false
+          label: Lawrence Jones
+          literal: SEV123
+          reference: incident.severity
+          sort_key: abc123
+          unavailable: false
+          value: abc123
+        value:
+          catalog_entry:
+            archived_at: '2021-08-17T14:28:57.801578Z'
+            catalog_entry_id: 01FCNDV6P870EA6S7TK1DSYDG0
+            catalog_entry_name: Primary escalation
+            catalog_type_id: 01FCNDV6P870EA6S7TK1DSYDG0
+          helptext: abc123
+          image_url: abc123
+          is_image_slack_icon: false
+          label: Lawrence Jones
+          literal: SEV123
+          reference: incident.severity
+          sort_key: abc123
+          unavailable: false
+          value: abc123
+      properties:
+        array_value:
+          description: If array_value is set, this helps render the values
+          example:
+          - catalog_entry:
+              archived_at: '2021-08-17T14:28:57.801578Z'
+              catalog_entry_id: 01FCNDV6P870EA6S7TK1DSYDG0
+              catalog_entry_name: Primary escalation
+              catalog_type_id: 01FCNDV6P870EA6S7TK1DSYDG0
+            helptext: abc123
+            image_url: abc123
+            is_image_slack_icon: false
+            label: Lawrence Jones
+            literal: SEV123
+            reference: incident.severity
+            sort_key: abc123
+            unavailable: false
+            value: abc123
+          items:
+            $ref: '#/components/schemas/CatalogEntryEngineParamBindingValueV2'
+          type: array
+        value:
+          $ref: '#/components/schemas/CatalogEntryEngineParamBindingValueV2'
+      type: object
+    CatalogTypeAttributePathItemPayloadV2:
+      example:
+        attribute_id: abc123
+      properties:
+        attribute_id:
+          description: the ID of the attribute to use
+          example: abc123
+          type: string
+      required:
+      - attribute_id
+      type: object
+    EngineParamBindingPayloadV2:
+      example:
+        array_value:
+        - literal: SEV123
+          reference: incident.severity
+        value:
+          literal: SEV123
+          reference: incident.severity
+      properties:
+        array_value:
+          description: If set, this is the array value of the step parameter
+          example:
+          - literal: SEV123
+            reference: incident.severity
+          items:
+            $ref: '#/components/schemas/EngineParamBindingValuePayloadV2'
+          type: array
+        value:
+          $ref: '#/components/schemas/EngineParamBindingValuePayloadV2'
+      type: object
+    CatalogUpdateTypeSchemaPayloadV2:
+      example:
+        attributes:
+        - array: false
+          backlink_attribute: abc123
+          id: 01GW2G3V0S59R238FAHPDS1R66
+          mode: ''
+          name: tier
+          path:
+          - attribute_id: abc123
+          type: Custom["Service"]
+        version: 1
+      properties:
+        attributes:
+          example:
+          - array: false
+            backlink_attribute: abc123
+            id: 01GW2G3V0S59R238FAHPDS1R66
+            mode: ''
+            name: tier
+            path:
+            - attribute_id: abc123
+            type: Custom["Service"]
+          items:
+            $ref: '#/components/schemas/CatalogTypeAttributePayloadV2'
+          type: array
+        version:
+          example: 1
+          format: int64
+          type: integer
+      required:
+      - attributes
+      - version
+      type: object
+    ErrorSingle:
+      example:
+        code: trial_expired
+        message: Default incident call link must be a valid URL
+        metadata:
+          abc123: abc123
+        source:
+          field: default_call_url
+          pointer: /settings/default_call_url
+      properties:
+        code:
+          description: Machine-readable identifier for this specific error
+          example: trial_expired
+          type: string
+        message:
+          description: Human readable description of the error
+          example: Default incident call link must be a valid URL
+          type: string
+        metadata:
+          additionalProperties:
+            example: abc123
+            type: string
+          description: Additional metadata about the error, keyed by a string identifier
+          example:
+            abc123: abc123
+          type: object
+        source:
+          $ref: '#/components/schemas/ErrorSource'
+      required:
+      - code
+      - message
+      type: object
+  securitySchemes:
+    BearerAuth:
+      description: API key from your incident.io dashboard (Settings > API keys)
+      scheme: bearer
+      type: http
+externalDocs:
+  description: View our API docs at api-docs.incident.io
+  url: https://api-docs.incident.io/

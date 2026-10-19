@@ -1,0 +1,1416 @@
+openapi: 3.2.0
+info:
+  description: 'This is the API reference for incident.io. It documents available API endpoints, provides examples of how to use it, and
+
+    instructions around things like authentication and error handling. The API is hosted at:
+
+
+    - https://api.incident.io/
+
+
+    And you will need to create an API key via your incident.io
+
+    dashboard to make requests. # Making requests
+
+
+    Here are the key concepts required to make requests to the incident.io API. ## Authentication
+
+
+    For all requests made to the incident.io API, you''ll need an API key. To create an API key, head to the incident dashboard and visit API
+
+    keys. When you create the key, you''ll be able to choose what actions it
+
+    can take for your account: choose carefully, as those roles can only be set
+
+    when you first create the key. We''ll only show you the token once, so make sure
+
+    you store it somewhere safe. API keys are global to your incident.io account, and can be managed by anyone
+
+    who has the right permissions. We display the user that created the API key,
+
+    and the API key will remain valid if that user becomes deactivated. Once you have the key, you should make requests to the API that set the
+
+    `Authorization` request header using a "Bearer" authentication scheme:
+
+
+    ```
+
+    Authorization: Bearer
+
+    ```
+
+
+    ## Rate Limits
+
+
+    The incident.io API enforces rate limits to ensure consistent performance for all users. The default rate limit is 1200 requests/minute per API key. This limit applies to most endpoints across the API. Limits are token buckets that refill continuously rather than resetting on a fixed window boundary. The default
+
+    bucket holds 1200 requests and refills at 20 per second, so you can burst up to the full bucket and then sustain
+
+    20 requests/second indefinitely. There is no boundary at which your quota resets to full in one step. Some endpoints have lower rate limits, particularly those that interact with external third-party systems that impose
+
+    their own limitations. These specific limits vary by endpoint. ### Rate limit headers
+
+
+    Responses to requests authenticated with an API key carry your current allowance, so you can pace yourself rather
+
+    than waiting to be throttled:
+
+
+    ```
+
+    X-RateLimit-Limit: 60, 1200;window=60, 60;window=60
+
+    X-RateLimit-Remaining: 59
+
+    X-RateLimit-Used: 1
+
+    X-RateLimit-Reset: 1785173199
+
+    ```
+
+
+    | Header | Meaning |
+
+    | --- | --- |
+
+    | `X-RateLimit-Limit` | The quota that binds this request, followed by every limit that applied and the window it applies over |
+
+    | `X-RateLimit-Remaining` | Requests you can make right now against the binding limit |
+
+    | `X-RateLimit-Used` | Requests you have spent against it |
+
+    | `X-RateLimit-Reset` | Unix timestamp (seconds) at which that limit will be back to full |
+
+
+    More than one limit can apply to a request: your API key''s overall limit, and for some endpoints a lower limit of
+
+    their own. `X-RateLimit-Limit` lists all of them, each with its window, so `1200;window=60` means 1200 requests per
+
+    minute. Because our limits refill continuously rather than resetting on a boundary, that window is what tells you
+
+    the rate you can sustain: 1200 per 60 seconds is 20 requests/second indefinitely. `Remaining`, `Used` and `Reset` describe whichever limit has the least allowance left, since that is the one you
+
+    will hit first. `X-RateLimit-Remaining` may lag by a small number of requests under high concurrency, and can move by more than the
+
+    requests you made, because limits scoped to your whole organisation are shared with your other API keys. Headers are omitted rather than guessed if we cannot determine your allowance for a request. ### Exceeding a rate limit
+
+
+    When you exceed a rate limit the API responds with `429 Too Many Requests` and a `Retry-After` header giving the
+
+    number of seconds to wait:
+
+
+    ```
+
+    X-RateLimit-Limit: 1200, 1200;window=60
+
+    X-RateLimit-Remaining: 0
+
+    X-RateLimit-Used: 1200
+
+    X-RateLimit-Reset: 1785173199
+
+    Retry-After: 1
+
+    ```
+
+
+    Prefer `Retry-After` over `X-RateLimit-Reset` when deciding how long to back off.'
+  title: incident.io Custom Fields V1 API
+  version: 1.0.0
+servers:
+- url: https://api.incident.io
+security:
+- BearerAuth: []
+tags:
+- description: 'Manage custom fields.
+
+
+    Custom fields are used to attach metadata to incidents, which you can use when searching
+
+    for incidents in the dashboard, triggering workflows, building announcement rules or for
+
+    your own data needs.
+
+
+    Each field has a type:
+
+
+    - Single-select, single value selected from a predefined list of options (e.g. Detection Method)
+
+    - Multi-select, as above but you can pick more than one option (e.g. Affected Teams)
+
+    - Text, freeform text field (e.g. Customer ID)
+
+    - Link, link URL that is synced to Slack bookmarks on the incident channel (e.g. External Status Page)
+
+    - Number, integer or fractional numbers (e.g. # Customers Affected)
+
+
+    We may add more custom field types in the future - we''d love to hear any other types you''d like to use!'
+  name: Custom Fields V1
+paths:
+  /v1/custom_fields:
+    get:
+      deprecated: true
+      description: List all custom fields for an organisation.
+      operationId: CustomFieldsV1#List
+      responses:
+        '200':
+          content:
+            application/json:
+              example:
+                custom_fields:
+                - catalog_type_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  created_at: '2021-08-17T13:28:57.801578Z'
+                  description: Which team is impacted by this issue
+                  field_type: single_select
+                  id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  name: Affected Team
+                  options:
+                  - custom_field_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                    id: 01FCNDV6P870EA6S7TK1DSYDG0
+                    sort_key: 10
+                    value: Product
+                  required: never
+                  required_v2: never
+                  show_before_closure: true
+                  show_before_creation: true
+                  show_before_update: true
+                  show_in_announcement_post: true
+                  updated_at: '2021-08-17T13:28:57.801578Z'
+              schema:
+                $ref: '#/components/schemas/CustomFieldsListResultV1'
+          description: OK response.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'invalid_request_error: There was a problem with the request, like a missing header or querying a resource that doesn''t exist.'
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'authentication_error: Authentication failed.'
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'resource_forbidden: Access to this resource is forbidden for the authenticated user.'
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_found: The referenced resource could not be found.'
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'method_not_allowed: The endpoint does not support this operation for the specified resource.'
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_acceptable: Requested a media type this endpoint does not support.'
+        '408':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'request_timeout: The request took too long to process.
+
+
+            client_timeout: The request was cancelled by the client.'
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'conflict: Request conflicted with current state of the resource, likely a concurrent update.'
+        '412':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'precondition_failed: A required condition hasn''t been met.'
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'payload_too_large: The request payload is too large.'
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'validation_error: A required field was not provided, or the provided data was invalid.'
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'too_many_requests: Too many requests hit the API too quickly. We recommend an exponential backoff of your requests.
+
+
+            rate_limit_reached: The rate limit associated with this resource or API key has been exceeded. Try again later.'
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'api_error: Something went wrong and has been reported internally.'
+      summary: List Custom Fields V1
+      tags:
+      - Custom Fields V1
+      x-docs-display-name: List
+      x-docs-group-name: Custom Fields V1
+      x-docs-resource-type: CustomFieldV1
+      x-mint:
+        content: 🔑 Requires the `custom_fields.view` scope.
+      x-rbac-scopes:
+      - custom_fields.view
+      x-operation-id-source: normalized
+      x-operation-id-original: Custom Fields V1#List
+    post:
+      deprecated: true
+      description: Create a new custom field
+      operationId: CustomFieldsV1#Create
+      requestBody:
+        content:
+          application/json:
+            example:
+              description: Which team is impacted by this issue
+              field_type: single_select
+              name: Affected Team
+              required: never
+              required_v2: never
+              show_before_closure: true
+              show_before_creation: true
+              show_before_update: true
+              show_in_announcement_post: true
+            schema:
+              $ref: '#/components/schemas/CustomFieldsCreatePayloadV1'
+        required: true
+      responses:
+        '201':
+          content:
+            application/json:
+              example:
+                custom_field:
+                  catalog_type_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  created_at: '2021-08-17T13:28:57.801578Z'
+                  description: Which team is impacted by this issue
+                  field_type: single_select
+                  id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  name: Affected Team
+                  options:
+                  - custom_field_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                    id: 01FCNDV6P870EA6S7TK1DSYDG0
+                    sort_key: 10
+                    value: Product
+                  required: never
+                  required_v2: never
+                  show_before_closure: true
+                  show_before_creation: true
+                  show_before_update: true
+                  show_in_announcement_post: true
+                  updated_at: '2021-08-17T13:28:57.801578Z'
+              schema:
+                $ref: '#/components/schemas/CustomFieldsCreateResultV1'
+          description: Created response.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'invalid_request_error: There was a problem with the request, like a missing header or querying a resource that doesn''t exist.'
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'authentication_error: Authentication failed.'
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'resource_forbidden: Access to this resource is forbidden for the authenticated user.'
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_found: The referenced resource could not be found.'
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'method_not_allowed: The endpoint does not support this operation for the specified resource.'
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_acceptable: Requested a media type this endpoint does not support.'
+        '408':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'request_timeout: The request took too long to process.
+
+
+            client_timeout: The request was cancelled by the client.'
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'conflict: Request conflicted with current state of the resource, likely a concurrent update.'
+        '412':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'precondition_failed: A required condition hasn''t been met.'
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'payload_too_large: The request payload is too large.'
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'validation_error: A required field was not provided, or the provided data was invalid.'
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'too_many_requests: Too many requests hit the API too quickly. We recommend an exponential backoff of your requests.
+
+
+            rate_limit_reached: The rate limit associated with this resource or API key has been exceeded. Try again later.'
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'api_error: Something went wrong and has been reported internally.'
+      summary: Create Custom Fields V1
+      tags:
+      - Custom Fields V1
+      x-docs-display-name: Create
+      x-docs-group-name: Custom Fields V1
+      x-docs-resource-type: CustomFieldV1
+      x-mint:
+        content: 🔑 Requires the `organisation_settings.update` scope.
+      x-rbac-scopes:
+      - organisation_settings.update
+      x-operation-id-source: normalized
+      x-operation-id-original: Custom Fields V1#Create
+  /v1/custom_fields/{id}:
+    delete:
+      deprecated: true
+      description: Delete a custom field
+      operationId: CustomFieldsV1#Delete
+      parameters:
+      - description: Unique identifier for the custom field
+        example: 01FCNDV6P870EA6S7TK1DSYDG0
+        in: path
+        name: id
+        required: true
+        schema:
+          description: Unique identifier for the custom field
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+      responses:
+        '204':
+          description: No Content response.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'invalid_request_error: There was a problem with the request, like a missing header or querying a resource that doesn''t exist.'
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'authentication_error: Authentication failed.'
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'resource_forbidden: Access to this resource is forbidden for the authenticated user.'
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_found: The referenced resource could not be found.'
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'method_not_allowed: The endpoint does not support this operation for the specified resource.'
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_acceptable: Requested a media type this endpoint does not support.'
+        '408':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'request_timeout: The request took too long to process.
+
+
+            client_timeout: The request was cancelled by the client.'
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'conflict: Request conflicted with current state of the resource, likely a concurrent update.'
+        '412':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'precondition_failed: A required condition hasn''t been met.'
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'payload_too_large: The request payload is too large.'
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'validation_error: A required field was not provided, or the provided data was invalid.'
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'too_many_requests: Too many requests hit the API too quickly. We recommend an exponential backoff of your requests.
+
+
+            rate_limit_reached: The rate limit associated with this resource or API key has been exceeded. Try again later.'
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'api_error: Something went wrong and has been reported internally.'
+      summary: Delete Custom Fields V1
+      tags:
+      - Custom Fields V1
+      x-docs-display-name: Delete
+      x-docs-group-name: Custom Fields V1
+      x-docs-resource-type: CustomFieldV1
+      x-mint:
+        content: 🔑 Requires the `organisation_settings.update` scope.
+      x-rbac-scopes:
+      - organisation_settings.update
+      x-operation-id-source: normalized
+      x-operation-id-original: Custom Fields V1#Delete
+    get:
+      deprecated: true
+      description: Get a single custom field.
+      operationId: CustomFieldsV1#Show
+      parameters:
+      - description: Unique identifier for the custom field
+        example: 01FCNDV6P870EA6S7TK1DSYDG0
+        in: path
+        name: id
+        required: true
+        schema:
+          description: Unique identifier for the custom field
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              example:
+                custom_field:
+                  catalog_type_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  created_at: '2021-08-17T13:28:57.801578Z'
+                  description: Which team is impacted by this issue
+                  field_type: single_select
+                  id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  name: Affected Team
+                  options:
+                  - custom_field_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                    id: 01FCNDV6P870EA6S7TK1DSYDG0
+                    sort_key: 10
+                    value: Product
+                  required: never
+                  required_v2: never
+                  show_before_closure: true
+                  show_before_creation: true
+                  show_before_update: true
+                  show_in_announcement_post: true
+                  updated_at: '2021-08-17T13:28:57.801578Z'
+              schema:
+                $ref: '#/components/schemas/CustomFieldsShowResultV1'
+          description: OK response.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'invalid_request_error: There was a problem with the request, like a missing header or querying a resource that doesn''t exist.'
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'authentication_error: Authentication failed.'
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'resource_forbidden: Access to this resource is forbidden for the authenticated user.'
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_found: The referenced resource could not be found.'
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'method_not_allowed: The endpoint does not support this operation for the specified resource.'
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_acceptable: Requested a media type this endpoint does not support.'
+        '408':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'request_timeout: The request took too long to process.
+
+
+            client_timeout: The request was cancelled by the client.'
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'conflict: Request conflicted with current state of the resource, likely a concurrent update.'
+        '412':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'precondition_failed: A required condition hasn''t been met.'
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'payload_too_large: The request payload is too large.'
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'validation_error: A required field was not provided, or the provided data was invalid.'
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'too_many_requests: Too many requests hit the API too quickly. We recommend an exponential backoff of your requests.
+
+
+            rate_limit_reached: The rate limit associated with this resource or API key has been exceeded. Try again later.'
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'api_error: Something went wrong and has been reported internally.'
+      summary: Show Custom Fields V1
+      tags:
+      - Custom Fields V1
+      x-docs-display-name: Show
+      x-docs-group-name: Custom Fields V1
+      x-docs-resource-type: CustomFieldV1
+      x-mint:
+        content: 🔑 Requires the `custom_fields.view` scope.
+      x-rbac-scopes:
+      - custom_fields.view
+      x-operation-id-source: normalized
+      x-operation-id-original: Custom Fields V1#Show
+    put:
+      deprecated: true
+      description: Update the details of a custom field
+      operationId: CustomFieldsV1#Update
+      parameters:
+      - description: Unique identifier for the custom field
+        example: 01FCNDV6P870EA6S7TK1DSYDG0
+        in: path
+        name: id
+        required: true
+        schema:
+          description: Unique identifier for the custom field
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+      requestBody:
+        content:
+          application/json:
+            example:
+              description: Which team is impacted by this issue
+              name: Affected Team
+              required: never
+              required_v2: never
+              show_before_closure: true
+              show_before_creation: true
+              show_before_update: true
+              show_in_announcement_post: true
+            schema:
+              $ref: '#/components/schemas/CustomFieldsUpdatePayloadV1'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              example:
+                custom_field:
+                  catalog_type_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  created_at: '2021-08-17T13:28:57.801578Z'
+                  description: Which team is impacted by this issue
+                  field_type: single_select
+                  id: 01FCNDV6P870EA6S7TK1DSYDG0
+                  name: Affected Team
+                  options:
+                  - custom_field_id: 01FCNDV6P870EA6S7TK1DSYDG0
+                    id: 01FCNDV6P870EA6S7TK1DSYDG0
+                    sort_key: 10
+                    value: Product
+                  required: never
+                  required_v2: never
+                  show_before_closure: true
+                  show_before_creation: true
+                  show_before_update: true
+                  show_in_announcement_post: true
+                  updated_at: '2021-08-17T13:28:57.801578Z'
+              schema:
+                $ref: '#/components/schemas/CustomFieldsUpdateResultV1'
+          description: OK response.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'invalid_request_error: There was a problem with the request, like a missing header or querying a resource that doesn''t exist.'
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'authentication_error: Authentication failed.'
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'resource_forbidden: Access to this resource is forbidden for the authenticated user.'
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_found: The referenced resource could not be found.'
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'method_not_allowed: The endpoint does not support this operation for the specified resource.'
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'not_acceptable: Requested a media type this endpoint does not support.'
+        '408':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'request_timeout: The request took too long to process.
+
+
+            client_timeout: The request was cancelled by the client.'
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'conflict: Request conflicted with current state of the resource, likely a concurrent update.'
+        '412':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'precondition_failed: A required condition hasn''t been met.'
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'payload_too_large: The request payload is too large.'
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'validation_error: A required field was not provided, or the provided data was invalid.'
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'too_many_requests: Too many requests hit the API too quickly. We recommend an exponential backoff of your requests.
+
+
+            rate_limit_reached: The rate limit associated with this resource or API key has been exceeded. Try again later.'
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'api_error: Something went wrong and has been reported internally.'
+      summary: Update Custom Fields V1
+      tags:
+      - Custom Fields V1
+      x-docs-display-name: Update
+      x-docs-group-name: Custom Fields V1
+      x-docs-resource-type: CustomFieldV1
+      x-mint:
+        content: 🔑 Requires the `organisation_settings.update` scope.
+      x-rbac-scopes:
+      - organisation_settings.update
+      x-operation-id-source: normalized
+      x-operation-id-original: Custom Fields V1#Update
+components:
+  schemas:
+    CustomFieldOptionV1:
+      example:
+        custom_field_id: 01FCNDV6P870EA6S7TK1DSYDG0
+        id: 01FCNDV6P870EA6S7TK1DSYDG0
+        sort_key: 10
+        value: Product
+      properties:
+        custom_field_id:
+          description: ID of the custom field this option belongs to
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+        id:
+          description: Unique identifier for the custom field option
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+        sort_key:
+          default: 1000
+          description: Sort key used to order the custom field options correctly
+          example: 10
+          format: int64
+          type: integer
+        value:
+          description: Human readable name for the custom field option. Values must not start or end with whitespace, or contain tabs or newlines.
+          example: Product
+          type: string
+      required:
+      - id
+      - custom_field_id
+      - value
+      - sort_key
+      type: object
+    ErrorRateLimit:
+      example:
+        limit: 100
+        name: client_ip
+        remaining: 98
+        retry_after: '2020-01-01T00:00:00Z'
+      properties:
+        limit:
+          description: The maximum number of requests that the consumer is permitted to make per minute
+          example: 100
+          format: int64
+          type: integer
+        name:
+          description: Which rate limit was exceeded
+          example: client_ip
+          type: string
+        remaining:
+          description: The number of requests remaining in the current rate limit window
+          example: 98
+          format: int64
+          type: integer
+        retry_after:
+          description: When the client can retry, as an RFC3339 timestamp in UTC. Prefer the Retry-After response header, which carries the same instant as a number of seconds
+          example: '2020-01-01T00:00:00Z'
+          type: string
+      required:
+      - name
+      - limit
+      - remaining
+      - retry_after
+      type: object
+    CustomFieldsCreatePayloadV1:
+      example:
+        description: Which team is impacted by this issue
+        field_type: single_select
+        name: Affected Team
+        required: never
+        required_v2: never
+        show_before_closure: true
+        show_before_creation: true
+        show_before_update: true
+        show_in_announcement_post: true
+      properties:
+        description:
+          description: Description of the custom field
+          example: Which team is impacted by this issue
+          type: string
+        field_type:
+          description: Type of custom field
+          enum:
+          - single_select
+          - multi_select
+          - text
+          - link
+          - numeric
+          example: single_select
+          type: string
+        name:
+          description: Human readable name for the custom field
+          example: Affected Team
+          maxLength: 50
+          type: string
+        required:
+          description: 'When this custom field must be set during the incident lifecycle. [DEPRECATED: please use required_v2 instead].'
+          enum:
+          - never
+          - before_closure
+          - always
+          example: never
+          type: string
+        required_v2:
+          description: When this custom field must be set during the incident lifecycle.
+          enum:
+          - never
+          - before_resolution
+          - always
+          example: never
+          type: string
+        show_before_closure:
+          description: Whether a custom field should be shown in the incident resolve modal. If this custom field is required before resolution, but no value has been set for it, the field will be shown in the resolve modal whatever the value of this setting.
+          example: true
+          type: boolean
+        show_before_creation:
+          description: Whether a custom field should be shown in the incident creation modal. This must be true if the field is always required.
+          example: true
+          type: boolean
+        show_before_update:
+          description: Whether a custom field should be shown in the incident update modal.
+          example: true
+          type: boolean
+        show_in_announcement_post:
+          description: Whether a custom field should be shown in the list of fields as part of the announcement post when set.
+          example: true
+          type: boolean
+      required:
+      - name
+      - description
+      - field_type
+      - show_before_creation
+      - show_before_closure
+      - show_before_update
+      type: object
+    ErrorResponse:
+      example:
+        debug:
+          message: 'Something broke: and something else: and something else'
+          stacktrace:
+          - thing.go:123
+        errors:
+        - code: trial_expired
+          message: Default incident call link must be a valid URL
+          metadata:
+            abc123: abc123
+          source:
+            field: default_call_url
+            pointer: /settings/default_call_url
+        rate_limit:
+          limit: 100
+          name: client_ip
+          remaining: 98
+          retry_after: '2020-01-01T00:00:00Z'
+        request_id: 2T1p0e3j
+        status: 408
+        type: invalid_request_error
+      properties:
+        debug:
+          $ref: '#/components/schemas/ErrorDebug'
+        errors:
+          description: List of errors that caused this request to fail
+          example:
+          - code: trial_expired
+            message: Default incident call link must be a valid URL
+            metadata:
+              abc123: abc123
+            source:
+              field: default_call_url
+              pointer: /settings/default_call_url
+          items:
+            $ref: '#/components/schemas/ErrorSingle'
+          type: array
+        rate_limit:
+          $ref: '#/components/schemas/ErrorRateLimit'
+        request_id:
+          description: Unique identifier of the request
+          example: 2T1p0e3j
+          type: string
+        status:
+          description: HTTP status of the response
+          example: 408
+          format: int64
+          type: integer
+        type:
+          description: Machine-readable identifier for the general category of error
+          enum:
+          - invalid_request_error
+          - authentication_error
+          - resource_forbidden
+          - not_found
+          - not_acceptable
+          - method_not_allowed
+          - request_timeout
+          - conflict
+          - precondition_failed
+          - payload_too_large
+          - validation_error
+          - too_many_requests
+          - api_error
+          - rate_limit_reached
+          - client_timeout
+          example: invalid_request_error
+          type: string
+      required:
+      - type
+      - status
+      - request_id
+      - errors
+      type: object
+    CustomFieldsCreateResultV1:
+      example:
+        custom_field:
+          catalog_type_id: 01FCNDV6P870EA6S7TK1DSYDG0
+          created_at: '2021-08-17T13:28:57.801578Z'
+          description: Which team is impacted by this issue
+          field_type: single_select
+          id: 01FCNDV6P870EA6S7TK1DSYDG0
+          name: Affected Team
+          options:
+          - custom_field_id: 01FCNDV6P870EA6S7TK1DSYDG0
+            id: 01FCNDV6P870EA6S7TK1DSYDG0
+            sort_key: 10
+            value: Product
+          required: never
+          required_v2: never
+          show_before_closure: true
+          show_before_creation: true
+          show_before_update: true
+          show_in_announcement_post: true
+          updated_at: '2021-08-17T13:28:57.801578Z'
+      properties:
+        custom_field:
+          $ref: '#/components/schemas/CustomFieldV1'
+      required:
+      - custom_field
+      type: object
+    ErrorDebug:
+      example:
+        message: 'Something broke: and something else: and something else'
+        stacktrace:
+        - thing.go:123
+      properties:
+        message:
+          description: Original internal error message
+          example: 'Something broke: and something else: and something else'
+          type: string
+        stacktrace:
+          description: Stacktrace of the error, if applicable
+          example:
+          - thing.go:123
+          items:
+            example: thing.go:123
+            type: string
+          type: array
+      required:
+      - message
+      - stacktrace
+      type: object
+    CustomFieldsShowResultV1:
+      example:
+        custom_field:
+          catalog_type_id: 01FCNDV6P870EA6S7TK1DSYDG0
+          created_at: '2021-08-17T13:28:57.801578Z'
+          description: Which team is impacted by this issue
+          field_type: single_select
+          id: 01FCNDV6P870EA6S7TK1DSYDG0
+          name: Affected Team
+          options:
+          - custom_field_id: 01FCNDV6P870EA6S7TK1DSYDG0
+            id: 01FCNDV6P870EA6S7TK1DSYDG0
+            sort_key: 10
+            value: Product
+          required: never
+          required_v2: never
+          show_before_closure: true
+          show_before_creation: true
+          show_before_update: true
+          show_in_announcement_post: true
+          updated_at: '2021-08-17T13:28:57.801578Z'
+      properties:
+        custom_field:
+          $ref: '#/components/schemas/CustomFieldV1'
+      required:
+      - custom_field
+      type: object
+    ErrorSingle:
+      example:
+        code: trial_expired
+        message: Default incident call link must be a valid URL
+        metadata:
+          abc123: abc123
+        source:
+          field: default_call_url
+          pointer: /settings/default_call_url
+      properties:
+        code:
+          description: Machine-readable identifier for this specific error
+          example: trial_expired
+          type: string
+        message:
+          description: Human readable description of the error
+          example: Default incident call link must be a valid URL
+          type: string
+        metadata:
+          additionalProperties:
+            example: abc123
+            type: string
+          description: Additional metadata about the error, keyed by a string identifier
+          example:
+            abc123: abc123
+          type: object
+        source:
+          $ref: '#/components/schemas/ErrorSource'
+      required:
+      - code
+      - message
+      type: object
+    CustomFieldsListResultV1:
+      example:
+        custom_fields:
+        - catalog_type_id: 01FCNDV6P870EA6S7TK1DSYDG0
+          created_at: '2021-08-17T13:28:57.801578Z'
+          description: Which team is impacted by this issue
+          field_type: single_select
+          id: 01FCNDV6P870EA6S7TK1DSYDG0
+          name: Affected Team
+          options:
+          - custom_field_id: 01FCNDV6P870EA6S7TK1DSYDG0
+            id: 01FCNDV6P870EA6S7TK1DSYDG0
+            sort_key: 10
+            value: Product
+          required: never
+          required_v2: never
+          show_before_closure: true
+          show_before_creation: true
+          show_before_update: true
+          show_in_announcement_post: true
+          updated_at: '2021-08-17T13:28:57.801578Z'
+      properties:
+        custom_fields:
+          example:
+          - catalog_type_id: 01FCNDV6P870EA6S7TK1DSYDG0
+            created_at: '2021-08-17T13:28:57.801578Z'
+            description: Which team is impacted by this issue
+            field_type: single_select
+            id: 01FCNDV6P870EA6S7TK1DSYDG0
+            name: Affected Team
+            options:
+            - custom_field_id: 01FCNDV6P870EA6S7TK1DSYDG0
+              id: 01FCNDV6P870EA6S7TK1DSYDG0
+              sort_key: 10
+              value: Product
+            required: never
+            required_v2: never
+            show_before_closure: true
+            show_before_creation: true
+            show_before_update: true
+            show_in_announcement_post: true
+            updated_at: '2021-08-17T13:28:57.801578Z'
+          items:
+            $ref: '#/components/schemas/CustomFieldV1'
+          type: array
+      required:
+      - custom_fields
+      type: object
+    CustomFieldsUpdateResultV1:
+      example:
+        custom_field:
+          catalog_type_id: 01FCNDV6P870EA6S7TK1DSYDG0
+          created_at: '2021-08-17T13:28:57.801578Z'
+          description: Which team is impacted by this issue
+          field_type: single_select
+          id: 01FCNDV6P870EA6S7TK1DSYDG0
+          name: Affected Team
+          options:
+          - custom_field_id: 01FCNDV6P870EA6S7TK1DSYDG0
+            id: 01FCNDV6P870EA6S7TK1DSYDG0
+            sort_key: 10
+            value: Product
+          required: never
+          required_v2: never
+          show_before_closure: true
+          show_before_creation: true
+          show_before_update: true
+          show_in_announcement_post: true
+          updated_at: '2021-08-17T13:28:57.801578Z'
+      properties:
+        custom_field:
+          $ref: '#/components/schemas/CustomFieldV1'
+      required:
+      - custom_field
+      type: object
+    ErrorSource:
+      example:
+        field: default_call_url
+        pointer: /settings/default_call_url
+      properties:
+        field:
+          description: Field name that is the source of the error
+          example: default_call_url
+          type: string
+        pointer:
+          description: JSON pointer to the request field that is the source of the error
+          example: /settings/default_call_url
+          type: string
+      required:
+      - field
+      - pointer
+      type: object
+    CustomFieldsUpdatePayloadV1:
+      example:
+        description: Which team is impacted by this issue
+        name: Affected Team
+        required: never
+        required_v2: never
+        show_before_closure: true
+        show_before_creation: true
+        show_before_update: true
+        show_in_announcement_post: true
+      properties:
+        description:
+          description: Description of the custom field
+          example: Which team is impacted by this issue
+          type: string
+        name:
+          description: Human readable name for the custom field
+          example: Affected Team
+          maxLength: 50
+          type: string
+        required:
+          description: 'When this custom field must be set during the incident lifecycle. [DEPRECATED: please use required_v2 instead].'
+          enum:
+          - never
+          - before_closure
+          - always
+          example: never
+          type: string
+        required_v2:
+          description: When this custom field must be set during the incident lifecycle.
+          enum:
+          - never
+          - before_resolution
+          - always
+          example: never
+          type: string
+        show_before_closure:
+          description: Whether a custom field should be shown in the incident resolve modal. If this custom field is required before resolution, but no value has been set for it, the field will be shown in the resolve modal whatever the value of this setting.
+          example: true
+          type: boolean
+        show_before_creation:
+          description: Whether a custom field should be shown in the incident creation modal. This must be true if the field is always required.
+          example: true
+          type: boolean
+        show_before_update:
+          description: Whether a custom field should be shown in the incident update modal.
+          example: true
+          type: boolean
+        show_in_announcement_post:
+          description: Whether a custom field should be shown in the list of fields as part of the announcement post when set.
+          example: true
+          type: boolean
+      required:
+      - name
+      - description
+      - show_before_creation
+      - show_before_closure
+      - show_before_update
+      type: object
+    CustomFieldV1:
+      example:
+        catalog_type_id: 01FCNDV6P870EA6S7TK1DSYDG0
+        created_at: '2021-08-17T13:28:57.801578Z'
+        description: Which team is impacted by this issue
+        field_type: single_select
+        id: 01FCNDV6P870EA6S7TK1DSYDG0
+        name: Affected Team
+        options:
+        - custom_field_id: 01FCNDV6P870EA6S7TK1DSYDG0
+          id: 01FCNDV6P870EA6S7TK1DSYDG0
+          sort_key: 10
+          value: Product
+        required: never
+        required_v2: never
+        show_before_closure: true
+        show_before_creation: true
+        show_before_update: true
+        show_in_announcement_post: true
+        updated_at: '2021-08-17T13:28:57.801578Z'
+      properties:
+        catalog_type_id:
+          description: For catalog fields, the ID of the associated catalog type
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+        created_at:
+          description: When the action was created
+          example: '2021-08-17T13:28:57.801578Z'
+          format: date-time
+          type: string
+        description:
+          description: Description of the custom field
+          example: Which team is impacted by this issue
+          type: string
+        field_type:
+          description: Type of custom field
+          enum:
+          - single_select
+          - multi_select
+          - text
+          - link
+          - numeric
+          example: single_select
+          type: string
+        id:
+          description: Unique identifier for the custom field
+          example: 01FCNDV6P870EA6S7TK1DSYDG0
+          type: string
+        name:
+          description: Human readable name for the custom field
+          example: Affected Team
+          maxLength: 50
+          type: string
+        options:
+          description: What options are available for this custom field, if this field has options
+          example:
+          - custom_field_id: 01FCNDV6P870EA6S7TK1DSYDG0
+            id: 01FCNDV6P870EA6S7TK1DSYDG0
+            sort_key: 10
+            value: Product
+          items:
+            $ref: '#/components/schemas/CustomFieldOptionV1'
+          type: array
+        required:
+          description: 'When this custom field must be set during the incident lifecycle. [DEPRECATED: please use required_v2 instead].'
+          enum:
+          - never
+          - before_closure
+          - always
+          example: never
+          type: string
+        required_v2:
+          description: When this custom field must be set during the incident lifecycle.
+          enum:
+          - never
+          - before_resolution
+          - always
+          example: never
+          type: string
+        show_before_closure:
+          description: Whether a custom field should be shown in the incident resolve modal. If this custom field is required before resolution, but no value has been set for it, the field will be shown in the resolve modal whatever the value of this setting.
+          example: true
+          type: boolean
+        show_before_creation:
+          description: Whether a custom field should be shown in the incident creation modal. This must be true if the field is always required.
+          example: true
+          type: boolean
+        show_before_update:
+          description: Whether a custom field should be shown in the incident update modal.
+          example: true
+          type: boolean
+        show_in_announcement_post:
+          description: Whether a custom field should be shown in the list of fields as part of the announcement post when set.
+          example: true
+          type: boolean
+        updated_at:
+          description: When the action was last updated
+          example: '2021-08-17T13:28:57.801578Z'
+          format: date-time
+          type: string
+      required:
+      - id
+      - name
+      - description
+      - field_type
+      - show_before_creation
+      - show_before_closure
+      - show_before_update
+      - options
+      - created_at
+      - updated_at
+      type: object
+  securitySchemes:
+    BearerAuth:
+      description: API key from your incident.io dashboard (Settings > API keys)
+      scheme: bearer
+      type: http
+externalDocs:
+  description: View our API docs at api-docs.incident.io
+  url: https://api-docs.incident.io/
