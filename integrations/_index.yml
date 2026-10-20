@@ -15,18 +15,6 @@
   relationship: platform-app
   status: not-a-workflow
   arazzo: null
-- slug: incident-io-crowdstrike-own
-  label: CrowdStrike (own)
-  partner: crowdstrike
-  partner_name: CrowdStrike (own)
-  type: marketplace
-  marketplace: own
-  channel: partner-built
-  evidence: https://marketplace.crowdstrike.com/listings/incident-io-on-call/
-  source: edge
-  relationship: platform-app
-  status: not-a-workflow
-  arazzo: null
 - slug: incident-io-zapier
   label: Zapier
   partner: zapier
@@ -114,6 +102,18 @@
     builder: Fivetran
   status: not-a-workflow
   arazzo: null
+- slug: incident-io-crowdstrike-own
+  label: CrowdStrike (own)
+  partner: crowdstrike
+  partner_name: CrowdStrike (own)
+  type: marketplace
+  marketplace: own
+  channel: partner-built
+  evidence: https://marketplace.crowdstrike.com/listings/incident-io-on-call/
+  source: edge
+  relationship: platform-app
+  status: not-a-workflow
+  arazzo: null
 - slug: incident-io-microsoft-teams-own
   label: Microsoft Teams (own)
   partner: microsoft-teams
@@ -136,6 +136,19 @@
   marketplace: own
   channel: partner-built
   evidence: https://slack.com/marketplace/A01DEGPUHHC-incidentio
+  source: edge
+  relationship: platform-app
+  status: not-a-workflow
+  arazzo: null
+- slug: incident-io-zendesk-own
+  label: Zendesk (own)
+  partner: zendesk
+  partner_name: Zendesk (own)
+  category: Workflows
+  type: marketplace
+  marketplace: own
+  channel: partner-built
+  evidence: https://www.zendesk.com/marketplace/apps/support/850653/incident-io/
   source: edge
   relationship: platform-app
   status: not-a-workflow
