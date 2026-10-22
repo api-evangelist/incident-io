@@ -21,6 +21,9 @@ checked:
 - https://www.indexventures.com/companies/
 - https://www.sequoiacap.com/our-companies/
 - https://www.sequoiacap.com/sitemap.xml
+- https://github.com/raycast/extensions/tree/84f9ac51336a8c69f70974a75bc067c0feae3658/extensions
+- https://www.raycast.com/api/v1/store_listings
+- backstage/integrations/backstage-integration-edges.yml
 marketplace_apps: []
 edges:
 - partner_name: Atlassian Marketplace
@@ -126,6 +129,75 @@ edges:
     builder: Fivetran
   detected_by: sweep-data-integration.py
   first_seen: '2026-10-18'
+- partner_name: Index Ventures
+  partner: index-ventures
+  partner_match: register
+  type: register
+  channel: standard-directory
+  relationship: standard-participant
+  direction: partner-built
+  evidence: https://www.indexventures.com/companies/incident/
+  category: vc portfolio participation
+  contract_reference:
+    register: Index Ventures companies (indexventures.com/companies/)
+    standard: null
+    spec_file: null
+    role: vc-portfolio-company
+    registered_name: incident.io
+    register_id: https://www.indexventures.com/companies/incident/
+    register_country: europe
+    register_website: http://incident.io
+    matched_domain: incident.io
+    matched_by: domain
+    signal_note: 'participation only: the venture firm''s own published portfolio lists the company (investment);
+      an ownership and participation record, not conformance or certification'
+    detected_by: sweep-vc-portfolios.py
+    detected: '2026-10-21'
+    sector: business-applications
+  detected_by: sweep-vc-portfolios.py
+  first_seen: '2026-10-21'
+- partner_name: Raycast
+  partner: raycast
+  partner_match: domain
+  partner_url: https://www.raycast.com
+  partner_domain: raycast.com
+  type: marketplace
+  marketplace: raycast-store
+  channel: connector-listing
+  relationship: connector-coverage
+  evidence: https://www.raycast.com/nkl/incident-io
+  app: Incident.io
+  category: Raycast Store extension (community wrapper)
+  listing_count: 1
+  contract_reference:
+    register: Raycast Store (raycast/extensions monorepo + store_listings JSON)
+    spec_file: null
+    role: raycast-community-wrapper
+    builder: community
+    authors:
+    - nkl
+    matched_domain: incident.io
+    matched_by: domain
+    monorepo_commit: 84f9ac51336a8c69f70974a75bc067c0feae3658
+    listings:
+    - title: Incident.io
+      store_url: https://www.raycast.com/nkl/incident-io
+      installs: 117
+      categories:
+      - Developer Tools
+      source: https://github.com/raycast/extensions/tree/84f9ac51336a8c69f70974a75bc067c0feae3658/extensions/incident-io/
+      author: nkl
+    categories:
+    - Developer Tools
+    identity_note: the extension's own source calls a host on the product's domain AND its title / package name
+      passes partner_link's name check; built by Raycast community developers, not the vendor
+    signal_note: 'coverage: Raycast''s store reaches the product through community-built extensions; one edge per
+      (product, store); install / listing counts are context, never counted'
+    detected_by: sweep-raycast-store-extensions.py
+    detected: '2026-10-22'
+  detected_by: sweep-raycast-store-extensions.py
+  first_seen: '2026-10-22'
+  direction: partner-built
 - partner_name: CrowdStrike (own)
   partner: crowdstrike
   partner_match: mirror
@@ -308,32 +380,22 @@ edges:
   category: infrastructure-as-code provider registry listing
   badges:
   - Verified publisher (Terraform partner tier)
-- partner_name: Index Ventures
-  partner: index-ventures
-  partner_match: register
-  type: register
-  channel: standard-directory
-  relationship: standard-participant
-  direction: partner-built
-  evidence: https://www.indexventures.com/companies/incident/
-  category: vc portfolio participation
-  contract_reference:
-    register: Index Ventures companies (indexventures.com/companies/)
-    standard: null
-    spec_file: null
-    role: vc-portfolio-company
-    registered_name: incident.io
-    register_id: https://www.indexventures.com/companies/incident/
-    register_country: europe
-    register_website: http://incident.io
-    matched_domain: incident.io
-    matched_by: domain
-    signal_note: 'participation only: the venture firm''s own published portfolio lists the company (investment);
-      an ownership and participation record, not conformance or certification'
-    detected_by: sweep-vc-portfolios.py
-    detected: '2026-10-21'
-    sector: business-applications
-  detected_by: sweep-vc-portfolios.py
-  first_seen: '2026-10-21'
+- partner_name: Backstage (own)
+  partner: backstage
+  partner_match: mirror
+  mirror_match: domain
+  type: marketplace
+  relationship: platform-app
+  direction: third-party
+  channel: partner-built
+  marketplace: own
+  evidence: https://github.com/backstage/backstage/tree/d72327203d5d0812bee2eace8688fa5ab22867be/microsite/data/plugins/incident-io.yaml
+  mirror_of: backstage/integrations/backstage-integration-edges.yml
+  apps:
+  - incident.io
+  listing_count: 1
+  detected: '2026-10-22'
+  detected_by: mirror-platform-listings.py
+  category: Monitoring
 source:
 - https://marketplace.atlassian.com/
