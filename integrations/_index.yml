@@ -285,3 +285,16 @@
   relationship: platform-app
   status: not-a-workflow
   arazzo: null
+- slug: incident-io-intercom-own
+  label: Intercom (own)
+  partner: intercom
+  partner_name: Intercom (own)
+  category: Issue tracking & Ticketing
+  type: marketplace
+  marketplace: own
+  channel: partner-built
+  evidence: https://www.intercom.com/app-store/?app_package_code=incident-io-status-page-9tsq
+  source: edge
+  relationship: platform-app
+  status: not-a-workflow
+  arazzo: null
