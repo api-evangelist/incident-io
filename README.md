@@ -1,4 +1,4 @@
-# Incident.io (incident-io)
+# Incident.io
 
 <!-- API-EVANGELIST-PROVENANCE:BEGIN -->
 > ### About this repository
@@ -66,51 +66,205 @@
 
 incident.io is an incident management platform that helps teams declare, manage, and learn from incidents.
 
-**APIs.json:** [https://raw.githubusercontent.com/api-evangelist/incident-io/refs/heads/main/apis.yml](https://raw.githubusercontent.com/api-evangelist/incident-io/refs/heads/main/apis.yml)
+**Areas:** AIOps · Incident Management · Monitoring · Incident Response
 
-## Scope
+## Incident.io on APIs.io
 
-- **Type:** Index
+Everything profiled for Incident.io is published on APIs.io rather than in this repository. Start at the provider page — **[apis.io/providers/incident-io/](https://apis.io/providers/incident-io/)** — or go straight to one of the APIs or properties below.
 
-## Tags
+### APIs (25)
 
-- AIOps
-- Incident Management
+- [Incident.io Actions API](https://apis.io/apis/incident-io/incident-io-actions-api/) — The Actions API from Incident.io — 2 operation(s) for actions.
+- [Incident.io Alert Attributes API](https://apis.io/apis/incident-io/incident-io-alert-attributes-api/) — The Alert Attributes API from Incident.io — 2 operation(s) for alert attributes.
+- [Incident.io Alert Routes API](https://apis.io/apis/incident-io/incident-io-alert-routes-api/) — The Alert Routes API from Incident.io — 2 operation(s) for alert routes.
+- [Incident.io Alert Sources API](https://apis.io/apis/incident-io/incident-io-alert-sources-api/) — The Alert Sources API from Incident.io — 2 operation(s) for alert sources.
+- [Incident.io Alerts API](https://apis.io/apis/incident-io/incident-io-alerts-api/) — The Alerts API from Incident.io — 3 operation(s) for alerts.
+- [Incident.io API Keys API](https://apis.io/apis/incident-io/incident-io-api-keys-api/) — The API Keys API from Incident.io — 3 operation(s) for api keys.
+- [Incident.io Catalog Entries API](https://apis.io/apis/incident-io/incident-io-catalog-entries-api/) — The Catalog Entries API from Incident.io — 2 operation(s) for catalog entries.
+- [Incident.io Catalog Types API](https://apis.io/apis/incident-io/incident-io-catalog-types-api/) — The Catalog Types API from Incident.io — 2 operation(s) for catalog types.
+- [Incident.io Custom Fields API](https://apis.io/apis/incident-io/incident-io-custom-fields-api/) — The Custom Fields API from Incident.io — 2 operation(s) for custom fields.
+- [Incident.io Escalation Paths API](https://apis.io/apis/incident-io/incident-io-escalation-paths-api/) — The Escalation Paths API from Incident.io — 2 operation(s) for escalation paths.
+- [Incident.io Escalations API](https://apis.io/apis/incident-io/incident-io-escalations-api/) — The Escalations API from Incident.io — 2 operation(s) for escalations.
+- [Incident.io Follow-ups API](https://apis.io/apis/incident-io/incident-io-follow-ups-api/) — The Follow-ups API from Incident.io — 2 operation(s) for follow-ups.
+- [Incident.io Incident Roles API](https://apis.io/apis/incident-io/incident-io-incident-roles-api/) — The Incident Roles API from Incident.io — 2 operation(s) for incident roles.
+- [Incident.io Incident Statuses API](https://apis.io/apis/incident-io/incident-io-incident-statuses-api/) — The Incident Statuses API from Incident.io — 2 operation(s) for incident statuses.
+- [Incident.io Incident Types API](https://apis.io/apis/incident-io/incident-io-incident-types-api/) — The Incident Types API from Incident.io — 2 operation(s) for incident types.
+- [Incident.io Incidents API](https://apis.io/apis/incident-io/incident-io-incidents-api/) — The Incidents API from Incident.io — 2 operation(s) for incidents.
+- [Incident.io Maintenance Windows API](https://apis.io/apis/incident-io/incident-io-maintenance-windows-api/) — The Maintenance Windows API from Incident.io — 2 operation(s) for maintenance windows.
+- [Incident.io Postmortem Documents API](https://apis.io/apis/incident-io/incident-io-postmortem-documents-api/) — The Postmortem Documents API from Incident.io — 2 operation(s) for postmortem documents.
+- [Incident.io Schedules API](https://apis.io/apis/incident-io/incident-io-schedules-api/) — The Schedules API from Incident.io — 2 operation(s) for schedules.
+- [Incident.io Severities API](https://apis.io/apis/incident-io/incident-io-severities-api/) — The Severities API from Incident.io — 2 operation(s) for severities.
+- [Incident.io Status Pages API](https://apis.io/apis/incident-io/incident-io-status-pages-api/) — The Status Pages API from Incident.io — 2 operation(s) for status pages.
+- [Incident.io Teams API](https://apis.io/apis/incident-io/incident-io-teams-api/) — The Teams API from Incident.io — 2 operation(s) for teams.
+- [Incident.io Users API](https://apis.io/apis/incident-io/incident-io-users-api/) — The Users API from Incident.io — 2 operation(s) for users.
+- [Incident.io Utilities API](https://apis.io/apis/incident-io/incident-io-utilities-api/) — The Utilities API from Incident.io — 3 operation(s) for utilities.
+- [Incident.io Workflows API](https://apis.io/apis/incident-io/incident-io-workflows-api/) — The Workflows API from Incident.io — 2 operation(s) for workflows.
 
-## Timestamps
+### Published properties
 
-- **Created:** 2026-03-27
-- **Modified:** 2026-05-19
+Each property below is a page on APIs.io carrying the machine-readable artifact and what it says.
 
-## APIs
+#### GraphQL (1)
 
-### Incident.io
+GraphQL schemas.
 
-incident.io is an incident management platform that helps teams declare, manage, and learn from incidents.
+- [Moved to /providers/incident-io/](https://apis.io/graphqls/incident-io/incident-io-graphql/)
 
-- **Human URL:** [https://incident.io](https://incident.io)
+#### MCP servers (1)
 
-#### Tags
+Model Context Protocol servers that expose the API to agents.
 
-- AIOps
+- [incident-io](https://apis.io/servers/incident-io/incident-io/)
 
-#### Properties
+#### Agentic access (1)
 
-- [Documentation](https://api-docs.incident.io)
-- [OpenAPI](openapi/incident-io-openapi.yml) — [OpenAPI Specification](https://spec.openapis.org/oas/latest.html)
-- [Postman Collection](collections/incident-io.postman_collection.json) — [Postman Collection 2.1](https://schema.getpostman.com/json/collection/v2.1.0/collection.json)
-- [Open Collection](collections/incident-io.opencollection.json) — [Open Collection 1.0](https://schema.opencollection.com/opencollection/v1.0.0.json)
+Which operations an agent can call, which act, and which need a human in the loop.
 
-## Common Properties
+- [Incident Io Agentic Access](https://apis.io/agentic-access/incident-io/incident-io-agentic-access/)
 
-- [GitHub Organization](https://github.com/incident-io)
-- [LinkedIn](https://www.linkedin.com/company/incident-io)
+#### JSON Schema (2)
+
+The data models the API reads and writes.
+
+- [ListResponse](https://apis.io/schemas/incident-io/incident-io-listresponse/)
+- [Resource](https://apis.io/schemas/incident-io/incident-io-resource/)
+
+#### JSON Structure (1)
+
+Data models expressed in JSON Structure.
+
+- [Incident Io Structure](https://apis.io/json-structure/incident-io/incident-io-structure/)
+
+#### Vocabulary (1)
+
+The provider's domain terms, defined.
+
+- [Incident.io Domain Vocabulary](https://apis.io/vocabularies/incident-io/incident-io-vocabulary/)
+
+#### Collections (26)
+
+Postman and Open Collection request collections.
+
+- [Incident.io API](https://apis.io/collections/incident-io/open-incident-io/)
+- [Incident.io Actions API](https://apis.io/collections/incident-io/open-incident-io-actions-api/)
+- [Incident.io Actions Alert Attributes API](https://apis.io/collections/incident-io/open-incident-io-alert-attributes-api/)
+- [Incident.io Actions Alert Routes API](https://apis.io/collections/incident-io/open-incident-io-alert-routes-api/)
+- [Incident.io Actions Alert Sources API](https://apis.io/collections/incident-io/open-incident-io-alert-sources-api/)
+- [Incident.io Actions Alerts API](https://apis.io/collections/incident-io/open-incident-io-alerts-api/)
+- [Incident.io Actions API Keys API](https://apis.io/collections/incident-io/open-incident-io-api-keys-api/)
+- [Incident.io Actions Catalog Entries API](https://apis.io/collections/incident-io/open-incident-io-catalog-entries-api/)
+- [Incident.io Actions Catalog Types API](https://apis.io/collections/incident-io/open-incident-io-catalog-types-api/)
+- [Incident.io Actions Custom Fields API](https://apis.io/collections/incident-io/open-incident-io-custom-fields-api/)
+- [Incident.io Actions Escalation Paths API](https://apis.io/collections/incident-io/open-incident-io-escalation-paths-api/)
+- [Incident.io Actions Escalations API](https://apis.io/collections/incident-io/open-incident-io-escalations-api/)
+- [Incident.io Actions Follow-ups API](https://apis.io/collections/incident-io/open-incident-io-follow-ups-api/)
+- [Incident.io Actions Incident Roles API](https://apis.io/collections/incident-io/open-incident-io-incident-roles-api/)
+- [Incident.io Actions Incident Statuses API](https://apis.io/collections/incident-io/open-incident-io-incident-statuses-api/)
+- [Incident.io Actions Incident Types API](https://apis.io/collections/incident-io/open-incident-io-incident-types-api/)
+- [Incident.io Actions Incidents API](https://apis.io/collections/incident-io/open-incident-io-incidents-api/)
+- [Incident.io Actions Maintenance Windows API](https://apis.io/collections/incident-io/open-incident-io-maintenance-windows-api/)
+- [Incident.io Actions Postmortem Documents API](https://apis.io/collections/incident-io/open-incident-io-postmortem-documents-api/)
+- [Incident.io Actions Schedules API](https://apis.io/collections/incident-io/open-incident-io-schedules-api/)
+- [Incident.io Actions Severities API](https://apis.io/collections/incident-io/open-incident-io-severities-api/)
+- [Incident.io Actions Status Pages API](https://apis.io/collections/incident-io/open-incident-io-status-pages-api/)
+- [Incident.io Actions Teams API](https://apis.io/collections/incident-io/open-incident-io-teams-api/)
+- [Incident.io Actions Users API](https://apis.io/collections/incident-io/open-incident-io-users-api/)
+- [Incident.io Actions Utilities API](https://apis.io/collections/incident-io/open-incident-io-utilities-api/)
+- …and 1 more published on APIs.io
+
+#### Governance rules (1)
+
+Spectral rulesets for the provider's contracts.
+
+- [Incident.io — jsonschema rules](https://apis.io/rules/incident-io/incident-io-jsonschema-spectral-rules/)
+
+#### Security (4)
+
+Authentication, trust centre, and vulnerability disclosure.
+
+- [Incident Io Authentication](https://apis.io/security/incident-io/incident-io-authentication/)
+- [Incident Io Domain Security](https://apis.io/security/incident-io/incident-io-domain-security/)
+- [Incident Io Trust Center](https://apis.io/security/incident-io/incident-io-trust-center/)
+- [Incident Io Vulnerability Disclosure](https://apis.io/security/incident-io/incident-io-vulnerability-disclosure/)
+
+#### Plans and pricing (1)
+
+Published plans, tiers and prices.
+
+- [Incident Io Plans Pricing](https://apis.io/plans/incident-io/incident-io-plans-pricing/)
+
+#### Rate limits (1)
+
+Published request limits.
+
+- [Incident Io Rate Limits](https://apis.io/rate-limits/incident-io/incident-io-rate-limits/)
+
+#### FinOps (1)
+
+What the API costs to run, by operation.
+
+- [Incident Io Finops](https://apis.io/finops/incident-io/incident-io-finops/)
+
+## Where to find this API
+
+Links to the company's own pages. This repository publishes no copy of their specifications — the canonical document is theirs and lives at the URLs below.
+
 - [Website](https://incident.io)
 - [Documentation](https://api-docs.incident.io)
-- [Features](undefined)
-- [L L Ms Txt](https://incident.io/llms.txt)
+- [Blog](https://incident.io/blog)
+- [GitHub](https://github.com/incident-io)
 
-## Maintainers
+## API Evangelist rating
 
-**FN:** Kin Lane
-**Email:** kin@apievangelist.com
+**Kin Score 28.9** — thin · rubric 0.25.0 · scored 2026-10-23
+
+| Facet | Score |
+|---|---|
+| Discoverability | 50.0 |
+| Contract quality | 54.4 |
+| Contract governance | 9.8 |
+| Operational transparency | 21.1 |
+| Developer ergonomics | 14.3 |
+| Access clarity | 15.8 |
+
+**Agent readiness 46.9** — agent-native
+
+| Agent-readiness dimension | Result |
+|---|---|
+| Spec Presence | yes |
+| Agentic Access | derived (partial credit) |
+| Reversibility Documented | — |
+| MCP Server | verified |
+| Auth Clarity | bearer (partial credit) |
+| Idempotency | verified |
+| Error Semantics | verified |
+| OpenAPI Examples | verified |
+| Rate Limit Signal | derived (partial credit) |
+| Event Surface Described | — |
+| Agent Skills | — |
+| Well Known Catalog | — |
+| Consent Identity | — |
+| Agent Card | — |
+| Dry Run Mode | — |
+| Delegated Identity | — |
+| Protected Resource Metadata | verified |
+| Dynamic Client Registration | — |
+| Agentic Commerce | — |
+| Pagination Ratio | — |
+| Operation Distinctiveness | distinct |
+
+**Regulatory alignment 22.5** — Horizontal (data, software, accessibility, platform)
+
+The rubric is published at [github.com/api-evangelist/kin-score](https://github.com/api-evangelist/kin-score). The per-check breakdown behind these numbers — which checks were earned, partial or missed — along with score history and how this provider compares to its peers, is available at [apis.io/providers/incident-io/](https://apis.io/providers/incident-io/).
+
+## How this profile is made
+
+API Evangelist profiles a company's public API surface the way a developer would find it: the website, developer portal and documentation, the specifications it publishes, its public repositories, and its pricing, status and changelog pages. From that it derives the properties above — contracts split per API, workflows, schemas, collections, governance rules, plans and rate limits — and scores them against the published [Kin Score rubric](https://github.com/api-evangelist/kin-score).
+
+The artifacts are published on [APIs.io](https://apis.io), not in this repository. This repository is the public record for Incident.io: the place to say something is wrong, missing or out of date, and to ask for a re-score or a removal.
+
+## Open an issue
+
+- **Something about this listing** — a wrong description, a missing API, a stale artifact or a question about the rating: [open an issue on this repository](https://github.com/api-evangelist/incident-io/issues/new).
+- **A new API, or one that is not in the catalog yet** — [submit it on APIs.io](https://apis.io/add/).
+- **Anything else** — [the APIs.io inbox](https://github.com/api-search/inbox/issues/new) or [info@apievangelist.com](mailto:info@apievangelist.com).
